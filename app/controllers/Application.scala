@@ -8,11 +8,11 @@ import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent._
 import scala.sys.process._
 import scala.util.Try
 
-class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
+class Application @Inject()(val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   val probForm = Form {
     mapping(
@@ -31,14 +31,16 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
       },
       answer => {
         val p = Promise[Result]()
-        p.success {
-          if (!sbtInstalled) BadRequest {
+        if (!sbtInstalled) p.success {
+          BadRequest(
             views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
-          } else {
-            Ok(Seq("pwd").!!) // todo do not block here
-
-
-          }
+          )
+        } else {
+          // todo try to avoid Future at all
+          Future(blocking {
+            val tryTest = Try(Seq("pwd").!!)
+            p.success(Ok(tryTest.getOrElse("Test failed")))
+          })
         }
         p.future
       })
