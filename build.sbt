@@ -1,5 +1,6 @@
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
+  .settings(testSettings: _*)
   .settings(
     name := "devgym",
     version := "1.0-SNAPSHOT",
@@ -7,4 +8,6 @@ lazy val root = (project in file("."))
     routesGenerator := InjectedRoutesGenerator
   )
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+lazy val testSettings = Seq(
+  libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+)
