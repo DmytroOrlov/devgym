@@ -1,10 +1,7 @@
-package sleepin
+package tests
 
-import org.scalatest.{Matchers, FlatSpec}
+import org.scalatest.{FlatSpec, Matchers}
 
-/**
-  * @author Alexey Novakov
-  */
 class SleepInTest extends FlatSpec with Matchers {
   behavior of "SleepIn"
 
