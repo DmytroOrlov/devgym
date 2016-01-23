@@ -6,7 +6,7 @@
     <div class="task">@task</div>
     <div class="form">
     @form(routes.Application.postProb()) {
-        @textarea(defForm("prob"))
+        @textarea(defForm("prob"), 'rows -> "25", 'cols -> "80"))
 
         <div class="submit">
             <input type="submit" value="Submit"/>
