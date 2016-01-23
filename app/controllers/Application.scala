@@ -4,6 +4,7 @@ import com.google.inject.Inject
 import controllers.Application._
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 
@@ -13,8 +14,12 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
 
   val probForm = Form {
     mapping(
-      "prob" -> nonEmptyText
+      "prob" -> nonEmptyAndChanged(original = blank)
     )(ProbForm.apply)(ProbForm.unapply)
+  }
+
+  def nonEmptyAndChanged(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
+    if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid
   }
 
   def index = Action(Redirect(routes.Application.getProb))
@@ -27,9 +32,11 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
         Future.successful(BadRequest(views.html.prob(task, errorForm)))
       },
       answer => {
-        Future.successful(Ok(answer.prob))
+        runTest(answer.prob)
       })
   }
+
+  def runTest(answerCode: String): Future[Result] = ???
 }
 
 case class ProbForm(prob: String)
