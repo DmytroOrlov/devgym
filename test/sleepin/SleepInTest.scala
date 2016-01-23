@@ -22,8 +22,8 @@ class SleepInTest extends FlatSpec with Matchers {
   }
 }
 
-//object UserSolution {
-//  def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {
-//    !weekday || vacation
-//  }
-//}
+object UserSolution {
+  def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {
+    !weekday || vacation
+  }
+}
