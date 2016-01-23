@@ -50,7 +50,7 @@ case class ProbForm(prob: String)
 object Application {
   val task = "The parameter weekday is true if it is a weekday, and the parameter vacation is true if we are on vacation. We sleep in if it is not a weekday or we're on vacation. Return true if we sleep in.\n\nsleepIn(false, false) → true\nsleepIn(true, false) → false\nsleepIn(false, true) → true"
 
-  val blank = "public boolean sleepIn(boolean weekday, boolean vacation) {\n  \n}"
+  val blank = "def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {\n  \n}"
 
   def nonEmptyAndChanged(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid
