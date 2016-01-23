@@ -31,12 +31,14 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
       },
       answer => {
         val p = Promise[Result]()
-        if (!sbtInstalled) p.success {
-          BadRequest(
+        p.success {
+          if (!sbtInstalled) BadRequest {
             views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
-          )
-        } else {
+          } else {
+            Ok(Seq("pwd").!!)
 
+
+          }
         }
         p.future
       })
