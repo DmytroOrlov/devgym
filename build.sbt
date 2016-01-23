@@ -7,7 +7,7 @@ lazy val root = (project in file("."))
     scalaVersion := "2.11.7",
     routesGenerator := InjectedRoutesGenerator,
     mappings in Universal ++=
-      (baseDirectory.value / "test" / "tests" * "*" get) map
+      (baseDirectory.value / "test" / "tests" * "*").get map
         (x => x -> ("tests/" + x.getName))
   )
 
