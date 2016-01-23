@@ -1,12 +1,46 @@
 package controllers
 
-import play.api._
+import com.google.inject.Inject
+import controllers.Application._
+import play.api.data.Form
+import play.api.data.Forms._
+import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 
-class Application extends Controller {
+import scala.concurrent.Future
 
-  def index = Action {
-    Ok(views.html.index("Your new application is ready."))
+class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
+
+  val probForm = Form {
+    mapping(
+      "prob" -> nonEmptyText
+    )(ProbForm.apply)(ProbForm.unapply)
   }
 
+  def index = Action(Redirect(routes.Application.getProb))
+
+  def getProb = Action(Ok(views.html.prob(task, probForm.fill(ProbForm(blank)))))
+
+  def postProb() = Action.async { implicit request =>
+    probForm.bindFromRequest.fold(
+      errorForm => {
+        Future.successful(BadRequest(views.html.prob(task, errorForm)))
+      },
+      answer => {
+        Future.successful(Ok(answer.prob))
+      })
+  }
+}
+
+case class ProbForm(prob: String)
+
+object Application {
+  val task =
+    """The parameter weekday is true if it is a weekday, and the parameter vacation is true if we are on vacation. We sleep in if it is not a weekday or we're on vacation. Return true if we sleep in.
+      |
+      |sleepIn(false, false) → true
+      |sleepIn(true, false) → false
+      |sleepIn(false, true) → true"""
+
+  val blank = "public boolean sleepIn(boolean weekday, boolean vacation) {\n  \n}"
 }
