@@ -6,3 +6,5 @@ lazy val root = (project in file("."))
     scalaVersion := "2.11.7",
     routesGenerator := InjectedRoutesGenerator
   )
+
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
