@@ -8,7 +8,9 @@ import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 
-import scala.concurrent.{Promise, Future}
+import scala.concurrent.{Future, Promise}
+import scala.sys.process._
+import scala.util.Try
 
 class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
@@ -28,14 +30,16 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
         Future.successful(BadRequest(views.html.prob(task, errorForm)))
       },
       answer => {
-        runTest(answer.prob)
+        val p = Promise[Result]()
+        if (!sbtInstalled) p.success {
+          BadRequest(
+            views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
+          )
+        } else {
+
+        }
+        p.future
       })
-  }
-
-  def runTest(answerCode: String): Future[Result] = {
-    val p = Promise[Result]()
-
-    p.future
   }
 }
 
@@ -49,4 +53,8 @@ object Application {
   def nonEmptyAndChanged(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid
   }
+
+  def sbt(command: String): Try[Boolean] = Try(Seq("sbt", command).! == 0)
+
+  lazy val sbtInstalled = sbt("--version").isSuccess // no exception, so sbt is in the PATH
 }
