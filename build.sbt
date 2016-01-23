@@ -9,5 +9,10 @@ lazy val root = (project in file("."))
   )
 
 lazy val testSettings = Seq(
-  libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+  libraryDependencies ++= Seq(
+    "org.scalatest" %% "scalatest" % "2.2.6" % "test",
+    "org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
+    "org.scalatestplus" %% "play" % "1.4.0" % "test",
+    "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
+  )
 )
