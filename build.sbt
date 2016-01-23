@@ -5,7 +5,10 @@ lazy val root = (project in file("."))
     name := "devgym",
     version := "1.0-SNAPSHOT",
     scalaVersion := "2.11.7",
-    routesGenerator := InjectedRoutesGenerator
+    routesGenerator := InjectedRoutesGenerator,
+    mappings in Universal ++=
+      (baseDirectory.value / "test" / "tests" * "*" get) map
+        (x => x -> ("tests/" + x.getName))
   )
 
 lazy val testSettings = Seq(
