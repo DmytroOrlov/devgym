@@ -1,0 +1,15 @@
+.task {
+    white-space: pre-line;
+}
+
+.info {
+    display: none;
+}
+
+.error {
+    color: red;
+}
+
+dd {
+    margin: 0;
+}
