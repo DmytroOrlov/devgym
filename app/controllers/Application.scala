@@ -35,7 +35,7 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
           if (!sbtInstalled) BadRequest {
             views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
           } else {
-            Ok(Seq("pwd").!!)
+            Ok(Seq("pwd").!!) // todo do not block here
 
 
           }
