@@ -1,5 +1,9 @@
 package controllers
 
+import java.nio.charset.Charset
+import java.nio.file._
+import java.nio.file.attribute.BasicFileAttributes
+
 import com.google.inject.Inject
 import controllers.Application._
 import play.api.data.Form
@@ -12,7 +16,7 @@ import scala.concurrent._
 import scala.sys.process._
 import scala.util.Try
 
-class Application @Inject()(val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
+class Application @Inject()(app: play.api.Application, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   val probForm = Form {
     mapping(
@@ -35,13 +39,52 @@ class Application @Inject()(val messagesApi: MessagesApi)(implicit ec: Execution
           BadRequest(
             views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
           )
-        } else {
-          // todo try to avoid Future at all
-          Future(blocking {
-            val tryTest = Try(Seq("pwd").!!)
-            p.success(Ok(tryTest.getOrElse("Test failed")))
+        } else Future(blocking {
+          import scala.collection.JavaConversions._
+          p.success(Ok {
+            Try {
+              val lines = List(
+                """lazy val root = (project in file("."))""",
+                """  .settings(""",
+                """    scalaVersion := "2.11.7",""",
+                """    libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"""",
+                """  )"""
+              )
+              val dir = Files.createTempDirectory("test")
+              Files.write(dir.resolve("build.sbt"), lines, Charset.forName("UTF-8"))
+              dir
+            }.flatMap { d =>
+              Try {
+                Files.createDirectory(d.resolve("project"))
+                d
+              }
+            }.flatMap { d =>
+              Try {
+                Files.write(d.resolve("project").resolve("build.properties"), List("sbt.version=0.13.9"), Charset.forName("UTF-8"))
+                d
+              }
+            }.flatMap { d =>
+              Try {
+                val targetPath = d.resolve("src").resolve("test").resolve("scala")
+                val sourcePath = Paths.get(app.path.getAbsolutePath, "tests")
+                Files.walkFileTree(sourcePath, new SimpleFileVisitor[Path] {
+                  override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+                    Files.createDirectories(targetPath)
+                    FileVisitResult.CONTINUE
+                  }
+
+                  override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+                    Files.copy(file, targetPath.resolve(sourcePath.relativize(file)))
+                    FileVisitResult.CONTINUE
+                  }
+                })
+                d
+              }
+            }.flatMap { d =>
+              Try(Process(Seq("sbt", "-Dsbt.log.noformat=true", "test"), d.toFile).!!)
+            }.getOrElse("Test failed")
           })
-        }
+        })
         p.future
       })
   }
