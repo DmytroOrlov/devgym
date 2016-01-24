@@ -40,9 +40,7 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
             views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
           )
         } else Future(blocking {
-          p.success(Ok {
-            createProjectAndTest(answer.prob)
-          })
+          p.success(Ok(createProjectAndTest(answer.prob)))
         })
         p.future
       })
@@ -51,51 +49,39 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
   def createProjectAndTest(solution: String): String = {
     import scala.collection.JavaConversions._
     Try {
-      val lines = List(
+      val buildSbt = List(
         """lazy val root = (project in file("."))""",
         """  .settings(""",
         """    scalaVersion := "2.11.7",""",
         """    libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"""",
         """  )"""
       )
-      val dir = Files.createTempDirectory("test")
-      Files.write(dir.resolve("build.sbt"), lines, StandardCharsets.UTF_8)
-      dir
-    }.flatMap { d =>
-      Try {
-        Files.createDirectory(d.resolve("project"))
-        d
-      }
-    }.flatMap { d =>
-      Try {
-        Files.write(d.resolve("project").resolve("build.properties"), List("sbt.version=0.13.9"), StandardCharsets.UTF_8)
-        d
-      }
-    }.flatMap { d =>
-      Try {
-        val solutionTargetPath = d.resolve("src").resolve("main").resolve("scala")
-        Files.createDirectories(solutionTargetPath)
-        Files.write(solutionTargetPath.resolve("UserSolution.scala"), List("package tests", s"object SleepInSolution {$solution}"), StandardCharsets.UTF_8)
+      val d = Files.createTempDirectory("test")
+      Files.write(d.resolve("build.sbt"), buildSbt, StandardCharsets.UTF_8)
 
-        val testTargetPath = d.resolve("src").resolve("test").resolve("scala")
-        Files.createDirectories(testTargetPath)
-        val testSourcePath = Paths.get(app.path.getAbsolutePath, "test", "tests")
+      val project = d.resolve("project")
+      Files.createDirectory(project)
 
-        Files.walkFileTree(testSourcePath, new SimpleFileVisitor[Path] {
-          override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-            Files.copy(file, testTargetPath.resolve(testSourcePath.relativize(file)))
-            FileVisitResult.CONTINUE
-          }
-        })
-        d
-      }
-    }.flatMap { d =>
+      Files.write(project.resolve("build.properties"), List("sbt.version=0.13.9"), StandardCharsets.UTF_8)
+
+      val solutionTargetPath = d.resolve("src").resolve("main").resolve("scala")
+      Files.createDirectories(solutionTargetPath)
+      Files.write(solutionTargetPath.resolve("UserSolution.scala"), List("package tests", s"object SleepInSolution {$solution}"), StandardCharsets.UTF_8)
+
+      val testTargetPath = d.resolve("src").resolve("test").resolve("scala")
+      Files.createDirectories(testTargetPath)
+      val testSourcePath = Paths.get(app.path.getAbsolutePath, "test", "tests")
+
+      Files.walkFileTree(testSourcePath, new SimpleFileVisitor[Path] {
+        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          Files.copy(file, testTargetPath.resolve(testSourcePath.relativize(file)))
+          FileVisitResult.CONTINUE
+        }
+      })
       val sbtCommands = Seq("sbt", "-Dsbt.log.noformat=true", "test")
-      Try {
-        val output = new StringBuffer
-        Process(sbtCommands, d.toFile).!(ProcessLogger(line => output append line append "\n"))
-        output.toString
-      }
+      val output = new StringBuilder
+      Process(sbtCommands, d.toFile).!(ProcessLogger(line => output append line append "\n"))
+      output.toString()
     }.getOrElse("Test failed")
   }
 }

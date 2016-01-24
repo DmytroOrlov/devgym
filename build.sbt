@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
     routesGenerator := InjectedRoutesGenerator,
     mappings in Universal ++=
       (baseDirectory.value / "test" / "tests" * "*").get map
-        (x => x -> ("tests/" + x.getName))
+        (x => x -> ("test/tests/" + x.getName))
   )
 
 lazy val testSettings = Seq(
