@@ -1,6 +1,6 @@
 package controllers
 
-import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 
@@ -40,53 +40,63 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
             views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
           )
         } else Future(blocking {
-          import scala.collection.JavaConversions._
           p.success(Ok {
-            Try {
-              val lines = List(
-                """lazy val root = (project in file("."))""",
-                """  .settings(""",
-                """    scalaVersion := "2.11.7",""",
-                """    libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"""",
-                """  )"""
-              )
-              val dir = Files.createTempDirectory("test")
-              Files.write(dir.resolve("build.sbt"), lines, Charset.forName("UTF-8"))
-              dir
-            }.flatMap { d =>
-              Try {
-                Files.createDirectory(d.resolve("project"))
-                d
-              }
-            }.flatMap { d =>
-              Try {
-                Files.write(d.resolve("project").resolve("build.properties"), List("sbt.version=0.13.9"), Charset.forName("UTF-8"))
-                d
-              }
-            }.flatMap { d =>
-              Try {
-                val targetPath = d.resolve("src").resolve("test").resolve("scala")
-                val sourcePath = Paths.get(app.path.getAbsolutePath, "tests")
-                Files.walkFileTree(sourcePath, new SimpleFileVisitor[Path] {
-                  override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
-                    Files.createDirectories(targetPath)
-                    FileVisitResult.CONTINUE
-                  }
-
-                  override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-                    Files.copy(file, targetPath.resolve(sourcePath.relativize(file)))
-                    FileVisitResult.CONTINUE
-                  }
-                })
-                d
-              }
-            }.flatMap { d =>
-              Try(Process(Seq("sbt", "-Dsbt.log.noformat=true", "test"), d.toFile).!!)
-            }.getOrElse("Test failed")
+            createProjectAndTest(answer.prob)
           })
         })
         p.future
       })
+  }
+
+  def createProjectAndTest(solution: String): String = {
+    import scala.collection.JavaConversions._
+    Try {
+      val lines = List(
+        """lazy val root = (project in file("."))""",
+        """  .settings(""",
+        """    scalaVersion := "2.11.7",""",
+        """    libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"""",
+        """  )"""
+      )
+      val dir = Files.createTempDirectory("test")
+      Files.write(dir.resolve("build.sbt"), lines, StandardCharsets.UTF_8)
+      dir
+    }.flatMap { d =>
+      Try {
+        Files.createDirectory(d.resolve("project"))
+        d
+      }
+    }.flatMap { d =>
+      Try {
+        Files.write(d.resolve("project").resolve("build.properties"), List("sbt.version=0.13.9"), StandardCharsets.UTF_8)
+        d
+      }
+    }.flatMap { d =>
+      Try {
+        val solutionTargetPath = d.resolve("src").resolve("main").resolve("scala")
+        Files.createDirectories(solutionTargetPath)
+        Files.write(solutionTargetPath.resolve("UserSolution.scala"), List("package tests", s"object SleepInSolution {$solution}"), StandardCharsets.UTF_8)
+
+        val testTargetPath = d.resolve("src").resolve("test").resolve("scala")
+        Files.createDirectories(testTargetPath)
+        val testSourcePath = Paths.get(app.path.getAbsolutePath, "test", "tests")
+
+        Files.walkFileTree(testSourcePath, new SimpleFileVisitor[Path] {
+          override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+            Files.copy(file, testTargetPath.resolve(testSourcePath.relativize(file)))
+            FileVisitResult.CONTINUE
+          }
+        })
+        d
+      }
+    }.flatMap { d =>
+      val sbtCommands = Seq("sbt", "-Dsbt.log.noformat=true", "test")
+      Try {
+        val output = new StringBuffer
+        Process(sbtCommands, d.toFile).!(ProcessLogger(line => output append line append "\n"))
+        output.toString
+      }
+    }.getOrElse("Test failed")
   }
 }
 
@@ -103,5 +113,5 @@ object Application {
 
   def sbt(command: String): Try[Boolean] = Try(Seq("sbt", command).! == 0)
 
-  lazy val sbtInstalled = sbt("--version").isSuccess // no exception, so sbt is in the PATH
+  lazy val sbtInstalled = sbt("sbtVersion").isSuccess // no exception, so sbt is in the PATH
 }
