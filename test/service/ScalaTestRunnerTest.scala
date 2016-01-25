@@ -4,13 +4,15 @@ import org.scalatest.{FlatSpec, Matchers, Suite}
 
 class ScalaTestRunnerTest extends FlatSpec with Matchers {
   it should "not return failed status when correct solution is provided" in {
-    val report = getReport("def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {!weekday || vacation}")
+    val correctSolution = "def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {!weekday || vacation}"
+    val report = getReport(correctSolution)
 
     report shouldNot (be(empty) and include regex "FAILED")
   }
 
   it should "return failed status when incorrect solution is provided" in {
-    val report = getReport("def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {weekday || vacation}")
+    val incorrectSolution = "def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {weekday || vacation}"
+    val report = getReport(incorrectSolution)
 
     report should (not be empty and include regex "FAILED")
   }
