@@ -24,7 +24,7 @@ object ScalaTestRunner {
       stream.toString
     } match {
       case Success(s) => s
-      case Failure(e) => s"Test failed with error:\n${e.getMessage}'"
+      case Failure(e) => s"Test failed in runtime with error:\n${e.getMessage}'"
     }
   }
 
@@ -38,14 +38,4 @@ object ScalaTestRunner {
     val solutionInstance = tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
     solutionInstance
   }
-}
-
-//TODO: move to unit tests & delete below code
-object ScalaTestRunnerApp extends App {
-  val report = ScalaTestRunner.execSuite(
-    "def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {!weekday || vacation}",
-    Class.forName("tasktest.SleepInTest").asInstanceOf[Class[Suite]],
-    Class.forName("tasktest.SleepInSolution").asInstanceOf[Class[AnyRef]]
-  )
-  println(report)
 }
