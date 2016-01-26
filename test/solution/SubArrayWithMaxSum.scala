@@ -1,16 +1,11 @@
 package solution
 
-import org.scalatest.{Matchers, FlatSpec}
-import service.ScalaTestRunner
-import tasktest.{SubArrayWithMaxSumTest, SubArrayWithMaxSumSolution}
+import tasktest.{SubArrayWithMaxSumSolution, SubArrayWithMaxSumTest}
 
-class TestForTest extends FlatSpec with Matchers {
+class TTSubArrayWithMaxSum extends BaseRunnerTest {
   behavior of "ScalaTestRunner for SubArrayWithMaxSum"
 
-  it should "pass all tests for correct solution" in {
-    val suiteInstance = new SubArrayWithMaxSumTest(new SubArrayWithMaxSum)
-    ScalaTestRunner.execSuite(suiteInstance) shouldNot include regex ScalaTestRunner.failedMarker
-  }
+  override val suiteInstance = new SubArrayWithMaxSumTest(new SubArrayWithMaxSum)
 }
 
 //solution
