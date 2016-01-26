@@ -11,21 +11,27 @@ import scala.util.{Failure, Success, Try}
   * Runs scalatest library test suite using the 'execute' method
   */
 object ScalaTestRunner {
+  val failedMarker = "FAILED"
+  val failedInRuntimeMarker = "failed in runtime"
 
   def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String = {
     Try {
       val solutionInstance = createSolutionInstance(solution, solutionTrait)
-      val stream = new ByteArrayOutputStream
-
-      Console.withOut(stream) {
-        suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance).execute(stats = true, fullstacks = true, durations = true)
-      }
-
-      stream.toString
+      execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
     } match {
       case Success(s) => s
       case Failure(e) => s"Test failed in runtime with error:\n${e.getMessage}'"
     }
+  }
+
+  def execSuite(suiteInstance: Suite) = {
+    val stream = new ByteArrayOutputStream
+
+    Console.withOut(stream) {
+      suiteInstance.execute(stats = true, fullstacks = true, durations = true)
+    }
+
+    stream.toString
   }
 
   private def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
