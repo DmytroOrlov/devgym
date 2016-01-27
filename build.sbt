@@ -1,5 +1,6 @@
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
+  .settings(runtimeSettings)
   .settings(testSettings: _*)
   .settings(
     name := "devgym",
@@ -11,9 +12,15 @@ lazy val root = (project in file("."))
         (x => x -> ("test/tests/" + x.getName))
   )
 
+lazy val runtimeSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    "org.scalatest" %% "scalatest" % "2.2.6"
+  )
+)
+
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "2.2.6" % "test",
     "org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
     "org.scalatestplus" %% "play" % "1.4.0" % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"

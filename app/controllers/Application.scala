@@ -1,16 +1,14 @@
 package controllers
 
-import java.nio.charset.StandardCharsets
-import java.nio.file._
-import java.nio.file.attribute.BasicFileAttributes
-
 import com.google.inject.Inject
 import controllers.Application._
+import org.scalatest.Suite
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
+import service.{SbtTestRunner, ScalaTestRunner}
 
 import scala.concurrent._
 import scala.sys.process._
@@ -40,58 +38,37 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
             views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
           )
         } else Future(blocking {
-          p.success(Ok(createProjectAndTest(answer.prob)))
+          p.success(Ok(testSolution(answer.prob, app.path.getAbsolutePath)))
         })
         p.future
       })
   }
 
-  def createProjectAndTest(solution: String): String = {
-    import scala.collection.JavaConversions._
-    Try {
-      val buildSbt = List(
-        """lazy val root = (project in file("."))""",
-        """  .settings(""",
-        """    scalaVersion := "2.11.7",""",
-        """    libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"""",
-        """  )"""
-      )
-      val d = Files.createTempDirectory("test")
-      Files.write(d.resolve("build.sbt"), buildSbt, StandardCharsets.UTF_8)
-
-      val project = d.resolve("project")
-      Files.createDirectory(project)
-
-      Files.write(project.resolve("build.properties"), List("sbt.version=0.13.9"), StandardCharsets.UTF_8)
-
-      val solutionTargetPath = d.resolve("src").resolve("main").resolve("scala")
-      Files.createDirectories(solutionTargetPath)
-      Files.write(solutionTargetPath.resolve("UserSolution.scala"), List("package tests", s"object SleepInSolution {$solution}"), StandardCharsets.UTF_8)
-
-      val testTargetPath = d.resolve("src").resolve("test").resolve("scala")
-      Files.createDirectories(testTargetPath)
-      val testSourcePath = Paths.get(app.path.getAbsolutePath, "test", "tests")
-
-      Files.walkFileTree(testSourcePath, new SimpleFileVisitor[Path] {
-        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-          Files.copy(file, testTargetPath.resolve(testSourcePath.relativize(file)))
-          FileVisitResult.CONTINUE
-        }
-      })
-      val sbtCommands = Seq("sbt", "-Dsbt.log.noformat=true", "test")
-      val output = new StringBuilder
-      Process(sbtCommands, d.toFile).!(ProcessLogger(line => output append line append "\n"))
-      output.toString()
-    }.getOrElse("Test failed")
+  def testSolution(solution: String, appAbsolutePath: String): String = {
+    ScalaTestRunner.execSuite(
+      solution,
+      Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
+      Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]]
+    )
+    //SbtTestRunner.createProjectAndTest(solution, appAbsolutePath)
   }
 }
 
 case class ProbForm(prob: String)
 
 object Application {
-  val task = "The parameter weekday is true if it is a weekday, and the parameter vacation is true if we are on vacation. We sleep in if it is not a weekday or we're on vacation. Return true if we sleep in.\n\nsleepIn(false, false) → true\nsleepIn(true, false) → false\nsleepIn(false, true) → true"
+  val task = "Implement apply function to return  a suи-array of original array 'a', " +
+    "which has maximum sum of its elements.\n For example, " +
+    "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
+    "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
+  "You can add required Scala class using regular 'import' statement"
 
-  val blank = "def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {\n  \n}"
+  val blank =
+    """class SubArrayWithMaxSum {
+       |  def apply(a: Array[Int]): Array[Int] = {
+       |
+       |  }
+       |}""".stripMargin
 
   def nonEmptyAndChanged(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid
