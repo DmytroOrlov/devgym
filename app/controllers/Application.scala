@@ -18,7 +18,7 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
 
   val probForm = Form {
     mapping(
-      "prob" -> nonEmptyAndDirty(original = blank)
+      prob -> nonEmptyAndDirty(original = blank)
     )(ProbForm.apply)(ProbForm.unapply)
   }
 
@@ -34,7 +34,7 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
       answer => {
         if (!sbtInstalled) Future.successful {
           BadRequest(
-            views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
+            views.html.prob(task, probForm.bindFromRequest().withError(prob, "Cannot test your code now"))
           )
         } else Future(blocking {
           Ok(testSolution(answer.prob, app.path.getAbsolutePath))
@@ -55,6 +55,8 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
 case class ProbForm(prob: String)
 
 object Application {
+  val prob = "prob"
+
   val task = "Implement apply function to return  a sub-array of original array 'a', " +
     "which has maximum sum of its elements.\n For example, " +
     "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
