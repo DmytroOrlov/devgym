@@ -57,7 +57,7 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
 case class ProbForm(prob: String)
 
 object Application {
-  val task = "Implement apply function to return  a suи-array of original array 'a', " +
+  val task = "Implement apply function to return  a sub-array of original array 'a', " +
     "which has maximum sum of its elements.\n For example, " +
     "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
     "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +

@@ -38,6 +38,3 @@ class SubArrayWithMaxSum extends SubArrayWithMaxSumSolution {
     else a.slice(left, right + 1)
   }
 }
-
-
-
