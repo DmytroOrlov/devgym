@@ -18,7 +18,7 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
 
   val probForm = Form {
     mapping(
-      "prob" -> nonEmptyAndChanged(original = blank)
+      "prob" -> nonEmptyAndDirty(original = blank)
     )(ProbForm.apply)(ProbForm.unapply)
   }
 
@@ -70,7 +70,7 @@ object Application {
        |  }
        |}""".stripMargin
 
-  def nonEmptyAndChanged(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
+  def nonEmptyAndDirty(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid
   }
 
