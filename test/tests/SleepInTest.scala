@@ -2,6 +2,7 @@ package tests
 
 import org.scalatest.{FlatSpec, Matchers}
 
+//let's keep this single test in tests as it is an example fot SbtRunner test-task
 class SleepInTest extends FlatSpec with Matchers {
   behavior of "SleepIn"
 
