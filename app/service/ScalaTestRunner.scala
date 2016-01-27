@@ -2,7 +2,7 @@ package service
 
 import java.io.ByteArrayOutputStream
 
-import org.scalatest.{run, Suite}
+import org.scalatest.Suite
 
 import scala.util.{Failure, Success, Try}
 
