@@ -57,9 +57,18 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
 case class ProbForm(prob: String)
 
 object Application {
-  val task = "The parameter weekday is true if it is a weekday, and the parameter vacation is true if we are on vacation. We sleep in if it is not a weekday or we're on vacation. Return true if we sleep in.\n\nsleepIn(false, false) → true\nsleepIn(true, false) → false\nsleepIn(false, true) → true"
+  val task = "Implement apply function to return  a suи-array of original array 'a', " +
+    "which has maximum sum of its elements.\n For example, " +
+    "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
+    "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
+  "You can add required Scala class using regular 'import' statement"
 
-  val blank = "def apply(a: Array[Int]): Array[Int] = {\n  \n}"
+  val blank =
+    """class SubArrayWithMaxSum {
+       |  def apply(a: Array[Int]): Array[Int] = {
+       |
+       |  }
+       |}""".stripMargin
 
   def nonEmptyAndChanged(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid

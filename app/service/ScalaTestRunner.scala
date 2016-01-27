@@ -13,6 +13,7 @@ import scala.util.{Failure, Success, Try}
 object ScalaTestRunner {
   val failedMarker = "FAILED"
   val failedInRuntimeMarker = "failed in runtime"
+  val userClass = "UserSolution"
 
   def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String = {
     Try {
@@ -24,11 +25,11 @@ object ScalaTestRunner {
     }
   }
 
-  def execSuite(suiteInstance: Suite) = {
+  def execSuite(suiteInstance: Suite): String = {
     val stream = new ByteArrayOutputStream
 
     Console.withOut(stream) {
-      suiteInstance.execute(stats = true, fullstacks = true, durations = true)
+      suiteInstance.execute(stats = true, shortstacks = true, durations = true)
     }
 
     stream.toString
@@ -40,8 +41,8 @@ object ScalaTestRunner {
     import scala.tools.reflect.ToolBox
     val tb = cm.mkToolBox()
 
-    val dynamicCode = s"import ${solutionTrait.getName}; new ${solutionTrait.getSimpleName} {$solution}"
-    val solutionInstance = tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
-    solutionInstance
+    val patchedSolution = solution.replaceFirst("(class [A-Za-z0-9]* )", s"class $userClass extends ${solutionTrait.getSimpleName} ")
+    val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
+    tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
   }
 }
