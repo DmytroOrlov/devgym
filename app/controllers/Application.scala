@@ -15,6 +15,7 @@ import scala.sys.process._
 import scala.util.Try
 
 class Application @Inject()(app: play.api.Application, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
+  val appPath = app.path.getAbsolutePath
 
   val probForm = Form {
     mapping(
@@ -37,7 +38,7 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
             views.html.prob(task, probForm.bindFromRequest().withError(prob, "Cannot test your code now"))
           )
         } else Future(blocking {
-          Ok(testSolution(answer.prob, app.path.getAbsolutePath))
+          Ok(testSolution(answer.prob, appPath))
         })
       })
   }
