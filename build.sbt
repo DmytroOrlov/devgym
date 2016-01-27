@@ -1,7 +1,7 @@
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(runtimeSettings)
-  .settings(testSettings: _*)
+  .settings(testSettings)
   .settings(
     name := "devgym",
     version := "1.0-SNAPSHOT",
