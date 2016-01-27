@@ -2,7 +2,7 @@ package service
 
 import java.io.ByteArrayOutputStream
 
-import org.scalatest.Suite
+import org.scalatest.{run, Suite}
 
 import scala.util.{Failure, Success, Try}
 
@@ -29,7 +29,7 @@ object ScalaTestRunner {
     val stream = new ByteArrayOutputStream
 
     Console.withOut(stream) {
-      suiteInstance.execute(stats = true, shortstacks = true, durations = true)
+      suiteInstance.execute(color = false)
     }
 
     stream.toString
