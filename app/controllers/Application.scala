@@ -2,6 +2,7 @@ package controllers
 
 import com.google.inject.Inject
 import controllers.Application._
+import controllers.UserController._
 import org.scalatest.Suite
 import play.api.data.Form
 import play.api.data.Forms._
@@ -23,7 +24,9 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
     )(ProbForm.apply)(ProbForm.unapply)
   }
 
-  def index = Action(Redirect(routes.Application.getProb))
+  def index = Action { implicit request =>
+    Ok(views.html.index())
+  }
 
   def getProb = Action(Ok(views.html.prob(task, probForm.fill(ProbForm(blank)))))
 
@@ -43,6 +46,14 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
       })
   }
 
+  def logout = Action { implicit request =>
+    request.session.get(username).fold(Redirect(routes.UserController.getRegister).withNewSession) { _ =>
+      Redirect(routes.UserController.getRegister)
+        .withNewSession
+        .flashing(flashToUser -> logoutDone)
+    }
+  }
+
   def testSolution(solution: String, appAbsolutePath: String): String = {
     ScalaTestRunner.execSuite(
       solution,
@@ -56,20 +67,21 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
 case class ProbForm(prob: String)
 
 object Application {
+  val logoutDone = "Logout done"
   val prob = "prob"
 
   val task = "Implement apply function to return  a sub-array of original array 'a', " +
     "which has maximum sum of its elements.\n For example, " +
     "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
     "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
-  "You can add required Scala class using regular 'import' statement"
+    "You can add required Scala class using regular 'import' statement"
 
   val blank =
     """class SubArrayWithMaxSum {
-       |  def apply(a: Array[Int]): Array[Int] = {
-       |
-       |  }
-       |}""".stripMargin
+      |  def apply(a: Array[Int]): Array[Int] = {
+      |
+      |  }
+      |}""".stripMargin
 
   def nonEmptyAndDirty(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid

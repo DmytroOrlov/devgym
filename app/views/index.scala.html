@@ -1,0 +1,6 @@
+@()(implicit flash: Flash)
+@mainFlashToUser("Server") {
+    <h1>Server content</h1>
+    <div><a href="@routes.Application.getProb()">Prob</a></div>
+    <div><a href="@routes.Application.logout()">Logout</a></div>
+}

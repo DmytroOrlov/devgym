@@ -16,6 +16,9 @@ lazy val root = (project in file("."))
 
 lazy val runtimeSettings = Seq(
   libraryDependencies ++= Seq(
+    "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0-rc1" exclude("org.xerial.snappy", "snappy-java"),
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scalatest" %% "scalatest" % "2.2.6"
   )
