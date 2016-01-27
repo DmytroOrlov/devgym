@@ -1,3 +1,5 @@
+val scalaVer = "2.11.7"
+
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
   .settings(runtimeSettings)
@@ -5,7 +7,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "devgym",
     version := "1.0-SNAPSHOT",
-    scalaVersion := "2.11.7",
+    scalaVersion := scalaVer,
     routesGenerator := InjectedRoutesGenerator,
     mappings in Universal ++=
       (baseDirectory.value / "test" / "tests" * "*").get map
@@ -14,7 +16,7 @@ lazy val root = (project in file("."))
 
 lazy val runtimeSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+    "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scalatest" %% "scalatest" % "2.2.6"
   )
 )
