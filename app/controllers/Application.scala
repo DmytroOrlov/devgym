@@ -32,15 +32,13 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
         Future.successful(BadRequest(views.html.prob(task, errorForm)))
       },
       answer => {
-        val p = Promise[Result]()
-        if (!sbtInstalled) p.success {
+        if (!sbtInstalled) Future.successful {
           BadRequest(
             views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
           )
         } else Future(blocking {
-          p.success(Ok(testSolution(answer.prob, app.path.getAbsolutePath)))
+          Ok(testSolution(answer.prob, app.path.getAbsolutePath))
         })
-        p.future
       })
   }
 
