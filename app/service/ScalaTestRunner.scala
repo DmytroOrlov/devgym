@@ -25,15 +25,11 @@ object ScalaTestRunner {
     }
   }
 
-  def execSuite(suiteInstance: Suite): String = {
-    val stream = new ByteArrayOutputStream
-
+  def execSuite(suiteInstance: Suite): String = new ByteArrayOutputStream { stream =>
     Console.withOut(stream) {
       suiteInstance.execute(color = false)
     }
-
-    stream.toString
-  }
+  }.toString
 
   private def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
     import scala.reflect.runtime._
