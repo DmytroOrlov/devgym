@@ -62,14 +62,14 @@ object Application {
     "which has maximum sum of its elements.\n For example, " +
     "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
     "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
-  "You can add required Scala class using regular 'import' statement"
+    "You can add required Scala class using regular 'import' statement"
 
   val blank =
     """class SubArrayWithMaxSum {
-       |  def apply(a: Array[Int]): Array[Int] = {
-       |
-       |  }
-       |}""".stripMargin
+      |  def apply(a: Array[Int]): Array[Int] = {
+      |
+      |  }
+      |}""".stripMargin
 
   def nonEmptyAndDirty(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid

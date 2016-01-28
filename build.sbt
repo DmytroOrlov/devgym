@@ -2,8 +2,7 @@ val scalaVer = "2.11.7"
 
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
-  .settings(runtimeSettings)
-  .settings(testSettings)
+  .settings(runtimeSettings ++ testSettings)
   .settings(
     name := "devgym",
     version := "1.0-SNAPSHOT",
@@ -16,6 +15,8 @@ lazy val root = (project in file("."))
 
 lazy val runtimeSettings = Seq(
   libraryDependencies ++= Seq(
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0",
+
     "org.scala-lang" % "scala-compiler" % scalaVer,
     "org.scalatest" %% "scalatest" % "2.2.6"
   )
