@@ -2,8 +2,7 @@ val scalaVer = "2.11.7"
 
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
-  .settings(runtimeSettings)
-  .settings(testSettings)
+  .settings(runtimeSettings ++ testSettings)
   .settings(
     name := "devgym",
     version := "1.0-SNAPSHOT",
