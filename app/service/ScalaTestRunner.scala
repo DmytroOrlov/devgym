@@ -21,19 +21,15 @@ object ScalaTestRunner {
       execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
     } match {
       case Success(s) => s
-      case Failure(e) => s"Test failed in runtime with error:\n${e.getMessage}'"
+      case Failure(e) => s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"
     }
   }
 
-  def execSuite(suiteInstance: Suite): String = {
-    val stream = new ByteArrayOutputStream
-
+  def execSuite(suiteInstance: Suite): String = new ByteArrayOutputStream { stream =>
     Console.withOut(stream) {
       suiteInstance.execute(color = false)
     }
-
-    stream.toString
-  }
+  }.toString
 
   private def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
     import scala.reflect.runtime._
