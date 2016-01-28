@@ -1,2 +1,5 @@
 prob = Submit your solution
 error.changesRequired = Change something :)
+name = Name
+password = Password
+verify = Verify

@@ -4,6 +4,7 @@
 
 @mainFlashToUser("Register") {
     <h1>Register</h1>
+    <div class="register">
     @form(routes.UserController.postRegister()) {
         @inputText(user("name"))
         @inputPassword(user("password"))
@@ -13,4 +14,6 @@
             <input type="submit" value="Register"/>
         </div>
     }
+    </div>
+    <div><a href="@routes.Application.index()">Home</a></div>
 }

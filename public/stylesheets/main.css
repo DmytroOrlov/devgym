@@ -7,18 +7,23 @@ h1 {
     font-family: 'Roboto Condensed', sans-serif;
 }
 
-.task {
-    white-space: pre-line;
-}
-
-.info {
+dd.info {
     display: none;
 }
 
-.error {
+dd.error {
     color: red;
 }
 
-dd {
+div.prob > form > dl > dd {
     margin: 0;
+}
+
+div.register > form > dl > dt {
+    float: left;
+    width: 65px;
+}
+
+div.task {
+    white-space: pre-line;
 }
