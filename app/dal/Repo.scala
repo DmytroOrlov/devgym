@@ -13,5 +13,5 @@ class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
     "INSERT INTO user (name, password, uuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
 
-  def create(user: User): Future[Unit] = toFutureUnit(session.executeAsync(createUserStatement.bind(user.name, user.password)))
+  def create(user: User) = toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password)))
 }

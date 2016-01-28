@@ -34,20 +34,23 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
   }
 
   def postRegister() = Action.async { implicit request =>
+    def nameBusy = Ok(views.html.register(registerForm.bindFromRequest
+      .withError("name", nameRegistered)))
+
     registerForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.register(withPasswordMatchError(errorForm))))
       },
       user => {
         val hash = passwordHash(user.password, Random.nextInt().toString)
-        repo.create(User(user.name, hash)).map { _ =>
-          Redirect(routes.Application.index)
+        repo.create(User(user.name, hash)).map { r =>
+          if (r.one().getBool("[applied]")) Redirect(routes.Application.index)
             .withSession(username -> user.name)
             .flashing(flashToUser -> userRegistered)
+          else nameBusy
         }.recover {
           case e => logger.warn(e.getMessage, e)
-            Ok(views.html.register(registerForm.bindFromRequest
-              .withError("name", nameRegistered)))
+            nameBusy
         }
       }
     )
