@@ -21,7 +21,7 @@ object ScalaTestRunner {
       execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
     } match {
       case Success(s) => s
-      case Failure(e) => s"Test failed in runtime with error:\n${e.getMessage}'"
+      case Failure(e) => s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"
     }
   }
 
