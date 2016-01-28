@@ -9,7 +9,7 @@ import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
-import service.{SbtTestRunner, ScalaTestRunner}
+import service.ScalaTestRunner
 
 import scala.concurrent._
 import scala.sys.process._
@@ -47,8 +47,9 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
   }
 
   def logout = Action { implicit request =>
-    request.session.get(username).fold(Redirect(routes.UserController.getRegister).withNewSession) { _ =>
-      Redirect(routes.UserController.getRegister)
+    val redirectTo = Redirect(routes.Application.index)
+    request.session.get(username).fold(redirectTo.withNewSession) { _ =>
+      redirectTo
         .withNewSession
         .flashing(flashToUser -> logoutDone)
     }
