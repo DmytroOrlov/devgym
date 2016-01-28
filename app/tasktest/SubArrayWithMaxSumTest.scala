@@ -3,7 +3,7 @@ package tasktest
 import org.scalatest.{FlatSpec, Matchers}
 
 class SubArrayWithMaxSumTest(solution: SubArrayWithMaxSumSolution) extends FlatSpec with Matchers {
-  behavior of "MaxSubArraySolver"
+  behavior of "SubArrayWithMaxSum"
 
   it should "return max sum sub array within given array" in {
     solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)) should be(Array(4, -1, 2, 1))

@@ -3,6 +3,8 @@ package tasktest
 import org.scalatest.{FlatSpec, Matchers}
 
 class UniqueNumbersInArrayTest(solution: UniqueNumbersInArraySolution) extends FlatSpec with Matchers {
+  behavior of "UniqueNumbersInArray"
+
   it should "return count of unique numbers in array " in {
     solution.uniqueNumbers(Array(4, 2, 2, 32, 3, 32, 2)) should be(4)
   }

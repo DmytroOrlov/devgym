@@ -15,10 +15,11 @@ import scala.sys.process._
 import scala.util.Try
 
 class Application @Inject()(app: play.api.Application, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
+  val appPath = app.path.getAbsolutePath
 
   val probForm = Form {
     mapping(
-      "prob" -> nonEmptyAndChanged(original = blank)
+      prob -> nonEmptyAndDirty(original = blank)
     )(ProbForm.apply)(ProbForm.unapply)
   }
 
@@ -32,15 +33,13 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
         Future.successful(BadRequest(views.html.prob(task, errorForm)))
       },
       answer => {
-        val p = Promise[Result]()
-        if (!sbtInstalled) p.success {
+        if (!sbtInstalled) Future.successful {
           BadRequest(
-            views.html.prob(task, probForm.bindFromRequest().withError("prob", "Cannot test your code now"))
+            views.html.prob(task, probForm.bindFromRequest().withError(prob, "Cannot test your code now"))
           )
         } else Future(blocking {
-          p.success(Ok(testSolution(answer.prob, app.path.getAbsolutePath)))
+          Ok(testSolution(answer.prob, appPath))
         })
-        p.future
       })
   }
 
@@ -57,7 +56,9 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
 case class ProbForm(prob: String)
 
 object Application {
-  val task = "Implement apply function to return  a suи-array of original array 'a', " +
+  val prob = "prob"
+
+  val task = "Implement apply function to return  a sub-array of original array 'a', " +
     "which has maximum sum of its elements.\n For example, " +
     "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
     "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
@@ -70,7 +71,7 @@ object Application {
        |  }
        |}""".stripMargin
 
-  def nonEmptyAndChanged(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
+  def nonEmptyAndDirty(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid
   }
 
