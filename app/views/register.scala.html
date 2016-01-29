@@ -4,7 +4,8 @@
 
 @mainFlashToUser("DevGym - Register") {
     <h1>Register</h1>
-    <div class="register">
+    <div><a href="@routes.Application.index()">Home</a></div>
+    <div class="registerFrom">
     @form(routes.UserController.postRegister()) {
         @inputText(user("name"))
         @inputPassword(user("password"))
@@ -15,5 +16,4 @@
         </div>
     }
     </div>
-    <div><a href="@routes.Application.index()">Home</a></div>
 }

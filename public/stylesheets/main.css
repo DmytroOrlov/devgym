@@ -15,18 +15,18 @@ dd.error {
     color: red;
 }
 
-div.prob > form > dl > dd {
+div.solutionForm > form > dl > dd {
     margin: 0;
 }
-div.prob, div.report {
+div.solutionForm, div.report {
     float: left;
 }
 
-div.register > form > dl > dt {
+div.registerFrom > form > dl > dt {
     float: left;
     width: 65px;
 }
 
-div.task {
+div.taskDescription {
     white-space: pre-line;
 }

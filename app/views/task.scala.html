@@ -1,19 +1,19 @@
-@(task: String, defForm: Form[ProbForm])(implicit messages: Messages, req: RequestHeader)
+@(taskDescription: String, solution: Form[SolutionForm])(implicit messages: Messages, req: RequestHeader)
 
 @import helper._
 
 @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.Application.postProbAjax
+    routes.javascript.Application.postSolutionAjax
 )
 
 @main("DevGym - Task ") {
     <div><a href="@routes.Application.index()">Home</a></div><br/>
 
-    <div class="task">@task</div>
+    <div class="taskDescription">@taskDescription</div>
     <div>
-        <div class="prob">
-        @form(routes.Application.postProb()) {
-            @textarea(defForm(Application.solutionKey), 'rows -> "25", 'cols -> "80")
+        <div class="solutionForm">
+        @form(routes.Application.postSolution()) {
+            @textarea(solution(Application.solution), 'rows -> "25", 'cols -> "80")
 
             <div class="submit">
                 <input type="button" value="Submit" id="submit"/>
@@ -32,7 +32,7 @@
                 report.empty();
                 var solution = $("#solution").val();
 
-                jsRoutes.controllers.Application.postProbAjax(solution).ajax({
+                jsRoutes.controllers.Application.postSolutionAjax(solution).ajax({
                     success: function(data){
                         report.html(data);
                     }, error: function(data) {
