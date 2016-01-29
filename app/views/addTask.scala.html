@@ -8,7 +8,8 @@
     @form(routes.Application.postAddTask()) {
         @textarea(task(Application.taskDescription), 'rows -> "8", 'cols -> "80")
         @textarea(task(Application.solutionTemplate), 'rows -> "6", 'cols -> "80")
-        @textarea(task(Application.referenceSolution), 'rows -> "25", 'cols -> "80")
+        @textarea(task(Application.referenceSolution), 'rows -> "13", 'cols -> "80")
+        @textarea(task(Application.test), 'rows -> "13", 'cols -> "80")
 
         <div class="submit">
             <input type="submit" value="Submit"/>

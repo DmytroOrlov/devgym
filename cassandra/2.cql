@@ -12,5 +12,6 @@ CREATE TABLE devgym.task (
   task_description TEXT,
   solution_template TEXT,
   reference_solution TEXT,
+  test TEXT,
   PRIMARY KEY ((type, month), timeuuid)
 ) WITH CLUSTERING ORDER BY (timeuuid DESC);

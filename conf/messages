@@ -2,6 +2,7 @@ solution = Submit your solution
 taskDescription = Task description
 solutionTemplate = Solution template
 referenceSolution = Reference solution
+test = Test
 error.changesRequired = Change something :)
 name = Name
 password = Password
