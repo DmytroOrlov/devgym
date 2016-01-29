@@ -8,7 +8,7 @@ import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
-import service.{SbtTestRunner, ScalaTestRunner}
+import service.ScalaTestRunner
 
 import scala.concurrent._
 import scala.sys.process._
@@ -43,7 +43,11 @@ class Application @Inject()(app: play.api.Application, val messagesApi: Messages
       })
   }
 
-  def testSolution(solution: String, appAbsolutePath: String): String = {
+  def someCall(solution: String) = Action { implicit request =>
+    Ok(testSolution(solution, appPath))
+  }
+
+  private def testSolution(solution: String, appAbsolutePath: String): String = {
     ScalaTestRunner.execSuite(
       solution,
       Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
@@ -62,14 +66,14 @@ object Application {
     "which has maximum sum of its elements.\n For example, " +
     "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
     "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
-  "You can add required Scala class using regular 'import' statement"
+    "You can add required Scala class using regular 'import' statement"
 
   val blank =
     """class SubArrayWithMaxSum {
-       |  def apply(a: Array[Int]): Array[Int] = {
-       |
-       |  }
-       |}""".stripMargin
+      |  def apply(a: Array[Int]): Array[Int] = {
+      |
+      |  }
+      |}""".stripMargin
 
   def nonEmptyAndDirty(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid

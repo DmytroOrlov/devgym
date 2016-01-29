@@ -1,6 +1,10 @@
-@(task: String, defForm: Form[ProbForm])(implicit messages: Messages)
+@(task: String, defForm: Form[ProbForm])(implicit req: RequestHeader)
 
 @import helper._
+
+@helper.javascriptRouter("jsRoutes")(
+    routes.javascript.Application.someCall
+)
 
 @main("DevGym Java sleepin") {
     <div class="task">@task</div>
@@ -9,16 +13,24 @@
         @textarea(defForm(Application.prob), 'rows -> "25", 'cols -> "80")
 
         <div class="submit">
-            <input type="button" value="Submit"/>
+            <input type="button" value="Submit" id="submit"/>
         </div>
     }
     </div>
     <div id="report"></div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
     <script type="text/javascript">
-        var submitAction = #{jsAction @routes.Application.postProb() /}
-            $.post(submitAction, function(data) {
-                $('#report').html(data)
-            })
+//            myJsRoutes.controllers.Application.someCall(prob).ajax({
+//                success : function(data) {
+//                    $('#report').html(data);
+//                }
+//            });
+
+            var solution = $("#prob").val();
+            jsRoutes.controllers.Application.someCall(solution).ajax(
+                    {success: function(data){
+                    console.log(data);
+                    }}
+            );
     </script>
 }
