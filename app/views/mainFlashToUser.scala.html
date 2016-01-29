@@ -1,4 +1,4 @@
-@(title: String)(content: Html)
+@(title: String)(content: Html)(implicit flash: Flash)
 
 <!DOCTYPE html>
 
@@ -10,6 +10,7 @@
         <link rel="stylesheet" href="@routes.Assets.versioned("stylesheets/main.css")"/>
     </head>
     <body>
+        <div class="flashToUser">@flash.get(controllers.UserController.flashToUser).getOrElse("")</div>
         @content
     </body>
 </html>

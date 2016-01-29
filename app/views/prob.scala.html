@@ -2,9 +2,9 @@
 
 @import helper._
 
-@main("DevGym Java sleepin") {
+@main("DevGym - Prob") {
     <div class="task">@task</div>
-    <div class="form">
+    <div class="prob">
     @form(routes.Application.postProb()) {
         @textarea(defForm(Application.prob), 'rows -> "25", 'cols -> "80")
 
@@ -13,4 +13,5 @@
         </div>
     }
     </div>
+    <div><a href="@routes.Application.index()">Home</a></div>
 }

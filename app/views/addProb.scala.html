@@ -1,0 +1,18 @@
+@(defForm: Form[AddProbForm])(implicit messages: Messages)
+
+@import helper._
+
+@main("DevGym - Add Prob") {
+    <div class="prob">
+    @form(routes.Application.postAddProb()) {
+        @textarea(defForm(Application.task), 'rows -> "8", 'cols -> "80")
+        @textarea(defForm(Application.blank), 'rows -> "6", 'cols -> "80")
+        @textarea(defForm(Application.test), 'rows -> "25", 'cols -> "80")
+
+        <div class="submit">
+            <input type="submit" value="Submit"/>
+        </div>
+    }
+    </div>
+    <div><a href="@routes.Application.index()">Home</a></div>
+}

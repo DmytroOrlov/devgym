@@ -1,0 +1,19 @@
+@(user: Form[RegisterForm])(implicit messages: Messages, flash: Flash)
+
+@import helper._
+
+@mainFlashToUser("DevGym - Register") {
+    <h1>Register</h1>
+    <div class="register">
+    @form(routes.UserController.postRegister()) {
+        @inputText(user("name"))
+        @inputPassword(user("password"))
+        @inputPassword(user("verify"))
+
+        <div class="buttons">
+            <input type="submit" value="Register"/>
+        </div>
+    }
+    </div>
+    <div><a href="@routes.Application.index()">Home</a></div>
+}
