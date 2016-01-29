@@ -2,6 +2,7 @@ package dal
 
 import com.datastax.driver.core.{Cluster, Session}
 import com.google.inject.{Inject, Singleton}
+import com.typesafe.config.Config
 import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
 import util.FutureUtils.toFutureUnit
@@ -25,11 +26,11 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
 }
 
 @Singleton
-class CassandraConfig @Inject()(config: Configuration) {
-  val keySpace = config.getString("devgym.db.cassandra.keyspace").get
-  val port = config.getInt("devgym.db.cassandra.port").get
+class CassandraConfig @Inject()(config: Config) {
+  val keySpace = config.getString("devgym.db.cassandra.keyspace")
+  val port = config.getInt("devgym.db.cassandra.port")
   val hosts: Seq[String] = {
     import scala.collection.JavaConversions._
-    config.getStringList("devgym.db.cassandra.hosts").get
+    config.getStringList("devgym.db.cassandra.hosts")
   }
 }
