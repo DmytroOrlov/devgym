@@ -6,7 +6,7 @@
     <div class="prob">
     @form(routes.Application.postAddProb()) {
         @textarea(defForm(Application.task), 'rows -> "8", 'cols -> "80")
-        @textarea(defForm(Application.blank), 'rows -> "6", 'cols -> "80")
+        @textarea(defForm(Application.solutionTemplate), 'rows -> "6", 'cols -> "80")
         @textarea(defForm(Application.test), 'rows -> "25", 'cols -> "80")
 
         <div class="submit">

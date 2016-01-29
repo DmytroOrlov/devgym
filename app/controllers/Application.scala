@@ -24,14 +24,14 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
 
   val probForm = Form {
     mapping(
-      prob -> nonEmptyAndDirty(original = blank)
+      solutionKey -> nonEmptyAndDirty(original = solutionTemplate)
     )(ProbForm.apply)(ProbForm.unapply)
   }
 
   val addProbForm = Form {
     mapping(
       task -> nonEmptyText,
-      blank -> nonEmptyText,
+      solutionTemplate -> nonEmptyText,
       test -> nonEmptyText
     )(AddProbForm.apply)(AddProbForm.unapply)
   }
@@ -40,7 +40,7 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
     Ok(views.html.index())
   }
 
-  def getProb = Action(Ok(views.html.prob(task, probForm.fill(ProbForm(blank)))))
+  def getProb = Action(implicit request => Ok(views.html.prob(task, probForm.fill(ProbForm(solutionTemplate)))))
 
   def getAddProb = Action(Ok(views.html.addProb(addProbForm)))
 
@@ -68,10 +68,10 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
       answer => {
         if (!sbtInstalled) Future.successful {
           BadRequest(
-            views.html.prob(task, probForm.bindFromRequest().withError(prob, "Cannot test your code now"))
+            views.html.prob(task, probForm.bindFromRequest().withError(solutionKey, "Cannot test your code now"))
           )
         } else Future(blocking {
-          Ok(testSolution(answer.prob, appPath))
+          Ok(testSolution(answer.solution, appPath))
         })
       })
   }
@@ -85,8 +85,8 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
     }
   }
 
-  def someCall(solution: String) = Action { implicit request =>
-    Ok(testSolution(solution, appPath))
+  def postProbAjax(solution: String) = Action { implicit request =>
+    Ok(testSolution(solution, appPath).replaceAll("\n", "<br/>")) //temp solution to have lines in html
   }
 
   private def testSolution(solution: String, appAbsolutePath: String): String = {
@@ -99,29 +99,30 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
   }
 }
 
-case class ProbForm(prob: String)
+case class ProbForm(solution: String)
 
 case class AddProbForm(task: String, blank: String, test: String)
 
 object Application {
   val logoutDone = "Logout done"
-  val prob = "prob"
+  val solutionKey = "solution"
 
-  val task = "task" /*"Implement apply function to return  a sub-array of original array 'a', " +
+  // these stubs should be replaced with database layer
+  val task = "Implement apply function to return  a sub-array of original array 'a', " +
     "which has maximum sum of its elements.\n For example, " +
     "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
     "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
     "You can add required Scala class using regular 'import' statement"
-*/
 
-  val blank = "blank"
-  val test = "test" /*
+  val solutionTemplate =
     """class SubArrayWithMaxSum {
       |  def apply(a: Array[Int]): Array[Int] = {
       |
       |  }
       |}""".stripMargin
-  */
+
+  val test = "test"
+  // <--
 
   def nonEmptyAndDirty(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid

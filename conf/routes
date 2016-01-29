@@ -11,7 +11,7 @@ POST    /prob                       controllers.Application.postProb
 GET     /addProb                    controllers.Application.getAddProb
 POST    /addProb                    controllers.Application.postAddProb
 
-GET     /someCall/:solution         controllers.Application.someCall(solution: String)
+POST    /probAjax/:solution         controllers.Application.postProbAjax(solution: String)
 
 
 # Map static resources from the /public folder to the /assets URL path

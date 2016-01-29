@@ -1,37 +1,45 @@
-@(task: String, defForm: Form[ProbForm])(implicit req: RequestHeader)
+@(task: String, defForm: Form[ProbForm])(implicit messages: Messages, req: RequestHeader)
 
 @import helper._
 
 @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.Application.someCall
+    routes.javascript.Application.postProbAjax
 )
 
-@main("DevGym - Prob") {
+@main("DevGym - Task ") {
+    <div><a href="@routes.Application.index()">Home</a></div><br/>
+
     <div class="task">@task</div>
-    <div class="prob">
-    @form(routes.Application.postProb()) {
-        @textarea(defForm(Application.prob), 'rows -> "25", 'cols -> "80")
+    <div>
+        <div class="prob">
+        @form(routes.Application.postProb()) {
+            @textarea(defForm(Application.solutionKey), 'rows -> "25", 'cols -> "80")
 
-        <div class="submit">
-            <input type="button" value="Submit" id="submit"/>
+            <div class="submit">
+                <input type="button" value="Submit" id="submit"/>
+            </div>
+        }
         </div>
-    }
+        <br/><br/>
+        <div id="report"></div>
     </div>
-    <div><a href="@routes.Application.index()">Home</a></div>
-    <div id="report"></div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-    <script type="text/javascript">
-            //            myJsRoutes.controllers.Application.someCall(prob).ajax({
-            //                success : function(data) {
-            //                    $('#report').html(data);
-            //                }
-            //            });
 
-            var solution = $("#prob").val();
-            jsRoutes.controllers.Application.someCall(solution).ajax(
-                    {success: function(data){
-                        console.log(data);
-                    }}
-            );
+
+    <script src="@routes.Assets.versioned("javascripts/lib/jquery.min_2.2.0.js")"></script>
+    <script type="text/javascript">
+            $('.submit').click(function(e) {
+                var report = $("#report");
+                report.empty();
+                var solution = $("#solution").val();
+
+                jsRoutes.controllers.Application.postProbAjax(solution).ajax({
+                    success: function(data){
+                        report.html(data);
+                    }, error: function(data) {
+                        console.error(data);
+                    }
+                });
+                return false;
+            });
     </script>
 }

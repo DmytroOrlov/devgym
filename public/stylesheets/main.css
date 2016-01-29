@@ -18,6 +18,9 @@ dd.error {
 div.prob > form > dl > dd {
     margin: 0;
 }
+div.prob, div.report {
+    float: left;
+}
 
 div.register > form > dl > dt {
     float: left;
