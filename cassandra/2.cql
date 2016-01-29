@@ -7,9 +7,10 @@ CREATE TABLE devgym.user (
 
 CREATE TABLE devgym.solution (
   type TEXT,
-  week TIMESTAMP,
+  month TIMESTAMP,
+  uuid TIMEUUID,
   task TEXT,
   blank TEXT,
   test TEXT,
-  PRIMARY KEY ((type), week, task)
-) WITH CLUSTERING ORDER BY (week DESC);
+  PRIMARY KEY ((type, month), uuid)
+) WITH CLUSTERING ORDER BY (uuid DESC);
