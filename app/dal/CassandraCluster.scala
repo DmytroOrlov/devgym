@@ -8,6 +8,8 @@ import play.api.inject.ApplicationLifecycle
 import util.FutureUtils.toFutureUnit
 
 import scala.concurrent.ExecutionContext
+import scala.sys.process._
+import scala.util.Try
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
@@ -26,11 +28,22 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
 }
 
 @Singleton
-class CassandraConfig @Inject()(config: Config) {
+class CassandraConfig @Inject()(configuration: Configuration) {
+  val config: Config = configuration.underlying
+
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
   val hosts: Seq[String] = {
-    import scala.collection.JavaConversions._
-    config.getStringList("devgym.db.cassandra.hosts")
+    def hosts: Seq[String] = {
+      import scala.collection.JavaConversions._
+      config.getStringList("devgym.db.cassandra.hosts")
+    }
+    def docker: Option[Boolean] = configuration.getBoolean("devgym.db.cassandra.docker")
+    def ip() = docker match {
+      case Some(true) => Try(Seq("docker-machine", "ip", "default").!!.trim).toOption
+      case _ => None
+    }
+
+    ip().fold(hosts) { ip => Seq(ip) }
   }
 }
