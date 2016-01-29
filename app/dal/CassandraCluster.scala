@@ -13,7 +13,7 @@ import scala.util.Try
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
-  private val cluster = {
+  private lazy val cluster = {
     Cluster.builder()
       .addContactPoints(conf.hosts: _*)
       .withPort(conf.port)
@@ -33,7 +33,7 @@ class CassandraConfig @Inject()(configuration: Configuration) {
 
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
-  val hosts: Seq[String] = {
+  lazy val hosts: Seq[String] = {
     def hosts: Seq[String] = {
       import scala.collection.JavaConversions._
       config.getStringList("devgym.db.cassandra.hosts")
