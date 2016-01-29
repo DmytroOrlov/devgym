@@ -1,16 +1,16 @@
 CREATE TABLE devgym.user (
   name TEXT,
-  uuid TIMEUUID,
+  timeuuid TIMEUUID,
   password TEXT,
   PRIMARY KEY (name)
 );
 
-CREATE TABLE devgym.solution (
+CREATE TABLE devgym.task (
   type TEXT,
   month TIMESTAMP,
-  uuid TIMEUUID,
-  task TEXT,
-  blank TEXT,
-  test TEXT,
-  PRIMARY KEY ((type, month), uuid)
-) WITH CLUSTERING ORDER BY (uuid DESC);
+  timeuuid TIMEUUID,
+  task_description TEXT,
+  solution_template TEXT,
+  reference_solution TEXT,
+  PRIMARY KEY ((type, month), timeuuid)
+) WITH CLUSTERING ORDER BY (timeuuid DESC);

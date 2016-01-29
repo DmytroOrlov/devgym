@@ -41,11 +41,11 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
       errorForm => {
         Future.successful(BadRequest(views.html.register(withPasswordMatchError(errorForm))))
       },
-      user => {
-        val hash = passwordHash(user.password, Random.nextInt().toString)
-        repo.create(User(user.name, hash)).map { r =>
+      form => {
+        val hash = passwordHash(form.password, Random.nextInt().toString)
+        repo.create(User(form.name, hash)).map { r =>
           if (r.one().getBool("[applied]")) Redirect(routes.Application.index)
-            .withSession(username -> user.name)
+            .withSession(username -> form.name)
             .flashing(flashToUser -> userRegistered)
           else nameBusy
         }.recover {

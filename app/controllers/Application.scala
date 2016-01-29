@@ -5,8 +5,8 @@ import com.typesafe.scalalogging.StrictLogging
 import controllers.Application._
 import controllers.UserController._
 import dal.Repo
-import models.SolutionType._
-import models.Prob
+import models.Task
+import models.TaskType._
 import org.scalatest.Suite
 import play.api.data.Form
 import play.api.data.Forms._
@@ -22,57 +22,57 @@ import scala.util.Try
 class Application @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport with StrictLogging {
   val appPath = app.path.getAbsolutePath
 
-  val probForm = Form {
+  val solutionForm = Form {
     mapping(
-      prob -> nonEmptyAndDirty(original = blank)
-    )(ProbForm.apply)(ProbForm.unapply)
+      solution -> nonEmptyAndDirty(original = solutionTemplateText)
+    )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  val addProbForm = Form {
+  val addTaskForm = Form {
     mapping(
-      task -> nonEmptyText,
-      blank -> nonEmptyText,
-      test -> nonEmptyText
-    )(AddProbForm.apply)(AddProbForm.unapply)
+      taskDescription -> nonEmptyText,
+      solutionTemplate -> nonEmptyText,
+      referenceSolution -> nonEmptyText
+    )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
   def index = Action { implicit request =>
     Ok(views.html.index())
   }
 
-  def getProb = Action(Ok(views.html.prob(task, probForm.fill(ProbForm(blank)))))
+  def getTask = Action(implicit request => Ok(views.html.task(taskDescriptionText, solutionForm.fill(SolutionForm(solutionTemplateText)))))
 
-  def getAddProb = Action(Ok(views.html.addProb(addProbForm)))
+  def getAddTask = Action(Ok(views.html.addTask(addTaskForm)))
 
-  def postAddProb = Action.async { implicit request =>
-    addProbForm.bindFromRequest.fold(
+  def postAddTask = Action.async { implicit request =>
+    addTaskForm.bindFromRequest.fold(
       errorForm => {
-        Future.successful(BadRequest(views.html.addProb(errorForm)))
+        Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
-      p => {
-        repo.addSolution(Prob(scalaClass, p.task, p.blank, p.test)).map { _ =>
+      form => {
+        repo.addTask(Task(scalaClass, form.taskDescription, form.solutionTemplate, form.referenceSolution)).map { _ =>
           Redirect(routes.Application.index)
         }.recover {
           case e => logger.warn(e.getMessage, e)
-            Ok(views.html.addProb(addProbForm.bindFromRequest().withError(task, "Cannot add your solution now")))
+            BadRequest(views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, "Cannot add your task now")))
         }
       }
     )
   }
 
-  def postProb = Action.async { implicit request =>
-    probForm.bindFromRequest.fold(
+  def postSolution = Action.async { implicit request =>
+    solutionForm.bindFromRequest.fold(
       errorForm => {
-        Future.successful(BadRequest(views.html.prob(task, errorForm)))
+        Future.successful(BadRequest(views.html.task(taskDescriptionText, errorForm)))
       },
-      answer => {
-        if (!sbtInstalled) Future.successful {
+      form => {
+        if (sbtInstalled) Future {
+          blocking(Ok(testSolution(form.solution, appPath)))
+        } else Future.successful {
           BadRequest(
-            views.html.prob(task, probForm.bindFromRequest().withError(prob, "Cannot test your code now"))
+            views.html.task(taskDescriptionText, solutionForm.bindFromRequest().withError(solution, "Cannot check your solution now"))
           )
-        } else Future(blocking {
-          Ok(testSolution(answer.prob, appPath))
-        })
+        }
       })
   }
 
@@ -85,7 +85,12 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
     }
   }
 
-  def testSolution(solution: String, appAbsolutePath: String): String = {
+  def postSolutionAjax(solution: String) = Action {
+    // todo add validation for ajax-solution too
+    Ok(testSolution(solution, appPath).replaceAll("\n", "<br/>")) //temp solution to have lines in html
+  }
+
+  private def testSolution(solution: String, appAbsolutePath: String): String = {
     ScalaTestRunner.execSuite(
       solution,
       Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
@@ -95,29 +100,29 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
   }
 }
 
-case class ProbForm(prob: String)
+case class SolutionForm(solution: String)
 
-case class AddProbForm(task: String, blank: String, test: String)
+case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String)
 
 object Application {
   val logoutDone = "Logout done"
-  val prob = "prob"
+  val solution = "solution"
+  val taskDescription = "taskDescription"
+  val solutionTemplate = "solutionTemplate"
+  val referenceSolution = "referenceSolution"
 
-  val task = "task" /*"Implement apply function to return  a sub-array of original array 'a', " +
+  // these stubs should be replaced with database layer
+  val taskDescriptionText = "Implement apply function to return  a sub-array of original array 'a', " +
     "which has maximum sum of its elements.\n For example, " +
     "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
     "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
     "You can add required Scala class using regular 'import' statement"
-*/
-
-  val blank = "blank"
-  val test = "test" /*
+  val solutionTemplateText =
     """class SubArrayWithMaxSum {
       |  def apply(a: Array[Int]): Array[Int] = {
       |
       |  }
       |}""".stripMargin
-  */
 
   def nonEmptyAndDirty(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid
