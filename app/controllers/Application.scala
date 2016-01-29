@@ -5,6 +5,7 @@ import com.typesafe.scalalogging.StrictLogging
 import controllers.Application._
 import controllers.UserController._
 import dal.Repo
+import models.SolutionType._
 import models.Prob
 import org.scalatest.Suite
 import play.api.data.Form
@@ -49,7 +50,7 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
         Future.successful(BadRequest(views.html.addProb(errorForm)))
       },
       p => {
-        repo.addSolution(Prob("scala_class", p.task, p.blank, p.test)).map { _ =>
+        repo.addSolution(Prob(scalaClass, p.task, p.blank, p.test)).map { _ =>
           Redirect(routes.Application.index)
         }.recover {
           case e => logger.warn(e.getMessage, e)

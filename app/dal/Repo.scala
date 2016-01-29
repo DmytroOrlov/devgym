@@ -25,7 +25,7 @@ class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
   def create(user: User) = toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password)))
 
   def addSolution(prob: Prob) = toFutureUnit(
-    session.executeAsync(addClassSolutionStatement.bind(prob.`class`, month, prob.task, prob.blank, prob.test))
+    session.executeAsync(addClassSolutionStatement.bind(prob.`class`.toString, month, prob.task, prob.blank, prob.test))
   )
 }
 
