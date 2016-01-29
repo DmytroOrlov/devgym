@@ -32,7 +32,8 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
     mapping(
       taskDescription -> nonEmptyText,
       solutionTemplate -> nonEmptyText,
-      referenceSolution -> nonEmptyText
+      referenceSolution -> nonEmptyText,
+      test -> nonEmptyText
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
@@ -50,7 +51,7 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       form => {
-        repo.addTask(Task(scalaClass, form.taskDescription, form.solutionTemplate, form.referenceSolution)).map { _ =>
+        repo.addTask(Task(scalaClass, form.taskDescription, form.solutionTemplate, form.referenceSolution, form.test)).map { _ =>
           Redirect(routes.Application.index)
         }.recover {
           case e => logger.warn(e.getMessage, e)
@@ -102,7 +103,7 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
 
 case class SolutionForm(solution: String)
 
-case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String)
+case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String, test: String)
 
 object Application {
   val logoutDone = "Logout done"
@@ -110,6 +111,7 @@ object Application {
   val taskDescription = "taskDescription"
   val solutionTemplate = "solutionTemplate"
   val referenceSolution = "referenceSolution"
+  val test = "test"
 
   // these stubs should be replaced with database layer
   val taskDescriptionText = "Implement apply function to return  a sub-array of original array 'a', " +
