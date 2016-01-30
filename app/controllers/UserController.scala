@@ -81,11 +81,12 @@ object UserController {
 
   def validatePassword(f: RegisterForm) = f.password.equals(f.verify)
 
+  val encoder: BASE64Encoder = new BASE64Encoder
+
   def passwordHash(password: String, salt: String) = {
     val saltedAndHashed: String = password + "," + salt
     val digest: MessageDigest = MessageDigest.getInstance("MD5")
     digest.update(saltedAndHashed.getBytes)
-    val encoder: BASE64Encoder = new BASE64Encoder
     val hashedBytes = new String(digest.digest, "UTF-8").getBytes
     encoder.encode(hashedBytes) + "," + salt
   }
