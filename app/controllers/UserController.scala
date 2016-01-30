@@ -14,8 +14,8 @@ import play.api.mvc._
 import sun.misc.BASE64Encoder
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Random
 import scala.util.control.NonFatal
+import scala.util.{Failure, Random, Success, Try}
 
 class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport with StrictLogging {
 
@@ -44,7 +44,10 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
       },
       form => {
         val hash = passwordHash(form.password, Random.nextInt().toString)
-        repo.create(User(form.name, hash)).map { r =>
+        (Try(repo.create(User(form.name, hash))) match {
+          case Failure(f) => Future.failed(f)
+          case Success(s) => s
+        }).map { r =>
           if (r.one().getBool(applied)) Redirect(routes.Application.index)
             .withSession(username -> form.name)
             .flashing(flashToUser -> messagesApi(userRegistered))
