@@ -37,7 +37,7 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
           Redirect(routes.Application.index)
         }.recover {
           case NonFatal(e) => logger.warn(e.getMessage, e)
-            BadRequest(views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, "Can not add your task now")))
+            BadRequest(views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask))))
         }
       }
     )
@@ -51,4 +51,5 @@ object NewTask {
   val solutionTemplate = "solutionTemplate"
   val referenceSolution = "referenceSolution"
   val test = "test"
+  val cannotAddTask = "cannotAddTask"
 }

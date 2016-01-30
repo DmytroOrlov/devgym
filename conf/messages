@@ -8,3 +8,4 @@ name = Name
 password = Password
 verify = Verify
 logoutDone = Logout done
+cannotAddTask = Can not add your task now
