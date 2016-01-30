@@ -13,6 +13,7 @@ import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)
                        (implicit ec: ExecutionContext) extends Controller with I18nSupport with StrictLogging {
@@ -33,7 +34,10 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        repo.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.test)).map { _ =>
+        (Try(repo.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.test))) match {
+          case Failure(f) => Future.failed(f)
+          case Success(s) => s
+        }).map { _ =>
           Redirect(routes.Application.index)
         }.recover {
           case NonFatal(e) => logger.warn(e.getMessage, e)
