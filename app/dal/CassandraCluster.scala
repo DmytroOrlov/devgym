@@ -13,12 +13,11 @@ import scala.util.Try
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
-  private lazy val cluster = {
+  private lazy val cluster =
     Cluster.builder()
       .addContactPoints(conf.hosts: _*)
       .withPort(conf.port)
       .build()
-  }
 
   def session: Session = cluster.connect(conf.keySpace)
 

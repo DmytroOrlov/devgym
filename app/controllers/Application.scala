@@ -18,6 +18,7 @@ import service.ScalaTestRunner
 import scala.concurrent._
 import scala.sys.process._
 import scala.util.Try
+import scala.util.control.NonFatal
 
 class Application @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport with StrictLogging {
   val appPath = app.path.getAbsolutePath
@@ -41,20 +42,22 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
     Ok(views.html.index())
   }
 
-  def getTask = Action(implicit request => Ok(views.html.task(taskDescriptionText, solutionForm.fill(SolutionForm(solutionTemplateText)))))
+  def getTask = Action { implicit request =>
+    Ok(views.html.task(taskDescriptionText, solutionForm.fill(SolutionForm(solutionTemplateText))))
+  }
 
   def getAddTask = Action(Ok(views.html.addTask(addTaskForm)))
 
-  def postAddTask = Action.async { implicit request =>
+  def postNewTask = Action.async { implicit request =>
     addTaskForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
-      form => {
-        repo.addTask(Task(scalaClass, form.taskDescription, form.solutionTemplate, form.referenceSolution, form.test)).map { _ =>
+      f => {
+        repo.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.test)).map { _ =>
           Redirect(routes.Application.index)
         }.recover {
-          case e => logger.warn(e.getMessage, e)
+          case NonFatal(e) => logger.warn(e.getMessage, e)
             BadRequest(views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, "Cannot add your task now")))
         }
       }
@@ -62,6 +65,10 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
   }
 
   def postSolution = Action.async { implicit request =>
+    val cannotCheckSolution = BadRequest(
+      views.html.task(taskDescriptionText, solutionForm.bindFromRequest().withError(solution, "Cannot check your solution now"))
+    )
+
     solutionForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.task(taskDescriptionText, errorForm)))
@@ -69,18 +76,18 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
       form => {
         if (sbtInstalled) Future {
           blocking(Ok(testSolution(form.solution, appPath)))
+        }.recover { case NonFatal(e) =>
+          cannotCheckSolution
         } else Future.successful {
-          BadRequest(
-            views.html.task(taskDescriptionText, solutionForm.bindFromRequest().withError(solution, "Cannot check your solution now"))
-          )
+          cannotCheckSolution
         }
       })
   }
 
-  def logout = Action { implicit request =>
-    val redirectTo = Redirect(routes.Application.index)
-    request.session.get(username).fold(redirectTo.withNewSession) { _ =>
-      redirectTo
+  def logout = Action { request =>
+    val redirect = Redirect(routes.Application.index)
+    request.session.get(username).fold(redirect.withNewSession) { _ =>
+      redirect
         .withNewSession
         .flashing(flashToUser -> logoutDone)
     }

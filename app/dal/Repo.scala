@@ -13,12 +13,12 @@ import util.FutureUtils._
 import scala.concurrent.ExecutionContext
 
 class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
-  protected lazy val session: Session = cluster.session
-  protected lazy val createUserStatement = session.prepare(
+  private lazy val session: Session = cluster.session
+
+  private lazy val createUserStatement = session.prepare(
     "INSERT INTO user (name, password, timeuuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
-
-  protected lazy val addTaskStatement = session.prepare(
+  private lazy val addTaskStatement = session.prepare(
     "INSERT INTO task (type, month, timeuuid, task_description, solution_template, reference_solution, test)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?)")
 

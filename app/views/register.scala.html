@@ -7,9 +7,9 @@
     <div><a href="@routes.Application.index()">Home</a></div>
     <div class="registerFrom">
     @form(routes.UserController.postRegister()) {
-        @inputText(user("name"))
-        @inputPassword(user("password"))
-        @inputPassword(user("verify"))
+        @inputText(user(UserController.name))
+        @inputPassword(user(UserController.password))
+        @inputPassword(user(UserController.verify))
 
         <div class="buttons">
             <input type="submit" value="Register"/>

@@ -9,7 +9,7 @@ GET     /logout                     controllers.Application.logout
 GET     /task                       controllers.Application.getTask
 POST    /task                       controllers.Application.postSolution
 GET     /addTask                    controllers.Application.getAddTask
-POST    /addTask                    controllers.Application.postAddTask
+POST    /addTask                    controllers.Application.postNewTask
 
 POST    /taskAjax/:solution         controllers.Application.postSolutionAjax(solution: String)
 
