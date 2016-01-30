@@ -84,10 +84,10 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
       })
   }
 
-  def logout = Action { implicit request =>
-    val redirectTo = Redirect(routes.Application.index)
-    request.session.get(username).fold(redirectTo.withNewSession) { _ =>
-      redirectTo
+  def logout = Action { request =>
+    val redirect = Redirect(routes.Application.index)
+    request.session.get(username).fold(redirect.withNewSession) { _ =>
+      redirect
         .withNewSession
         .flashing(flashToUser -> logoutDone)
     }
