@@ -7,10 +7,7 @@ import dal.Repo
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 
-import scala.concurrent._
-
-class Application @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)(implicit ec: ExecutionContext)
-  extends Controller with I18nSupport {
+class Application @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
   def index = Action { implicit request =>
     Ok(views.html.index())
