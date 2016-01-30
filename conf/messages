@@ -7,3 +7,4 @@ error.changesRequired = Change something :)
 name = Name
 password = Password
 verify = Verify
+logoutDone = Logout done
