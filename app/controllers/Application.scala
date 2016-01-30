@@ -52,8 +52,8 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
       errorForm => {
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
-      form => {
-        repo.addTask(Task(scalaClass, form.taskDescription, form.solutionTemplate, form.referenceSolution, form.test)).map { _ =>
+      f => {
+        repo.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.test)).map { _ =>
           Redirect(routes.Application.index)
         }.recover {
           case e => logger.warn(e.getMessage, e)
