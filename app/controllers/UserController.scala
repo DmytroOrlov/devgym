@@ -15,6 +15,7 @@ import sun.misc.BASE64Encoder
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
+import scala.util.control.NonFatal
 
 class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport with StrictLogging {
 
@@ -49,7 +50,7 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
             .flashing(flashToUser -> userRegistered)
           else nameBusy
         }.recover {
-          case e => logger.warn(e.getMessage, e)
+          case NonFatal(e) => logger.warn(e.getMessage, e)
             nameBusy
         }
       }
