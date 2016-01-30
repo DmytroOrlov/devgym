@@ -10,3 +10,7 @@ verify = Verify
 logoutDone = Logout done
 cannotAddTask = Can not add your task now
 cannotCheckNow = Cannot check your solution now
+userRegistered = Thank you for your registration
+alreadyRegistered = You are already registered
+nameRegistered = Name already registered, Please choose another
+passwordsNotMatched = Passwords not matched
