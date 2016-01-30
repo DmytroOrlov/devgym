@@ -65,6 +65,10 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
   }
 
   def postSolution = Action.async { implicit request =>
+    val cannotCheckSolution = BadRequest(
+      views.html.task(taskDescriptionText, solutionForm.bindFromRequest().withError(solution, "Cannot check your solution now"))
+    )
+
     solutionForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.task(taskDescriptionText, errorForm)))
@@ -72,10 +76,10 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
       form => {
         if (sbtInstalled) Future {
           blocking(Ok(testSolution(form.solution, appPath)))
+        }.recover { case NonFatal(e) =>
+          cannotCheckSolution
         } else Future.successful {
-          BadRequest(
-            views.html.task(taskDescriptionText, solutionForm.bindFromRequest().withError(solution, "Cannot check your solution now"))
-          )
+          cannotCheckSolution
         }
       })
   }
