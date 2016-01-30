@@ -1,8 +1,8 @@
 @()(implicit flash: Flash, session: Session)
 @mainFlashToUser("DevGym - Home") {
     <h1>Server content</h1>
-    <div><a href="@routes.Application.getTask()">Task</a></div>
-    <div><a href="@routes.Application.getAddTask()">Add task</a></div>
+    <div><a href="@routes.TaskSolver.getTask()">Task</a></div>
+    <div><a href="@routes.NewTask.getAddTask()">Add task</a></div>
     @session.get(UserController.username).fold {
         <div><a href="@routes.UserController.getRegister()">Register</a></div>
     } { _ =>

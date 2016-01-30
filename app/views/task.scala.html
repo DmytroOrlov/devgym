@@ -3,7 +3,7 @@
 @import helper._
 
 @helper.javascriptRouter("jsRoutes")(
-    routes.javascript.Application.postSolutionAjax
+    routes.javascript.TaskSolver.postSolutionAjax
 )
 
 @main("DevGym - Task") {
@@ -12,8 +12,8 @@
     <div class="taskDescription">@taskDescription</div>
     <div>
         <div class="solutionForm">
-        @form(routes.Application.postSolution()) {
-            @textarea(solution(Application.solution), 'rows -> "25", 'cols -> "80")
+        @form(routes.TaskSolver.postSolution()) {
+            @textarea(solution(TaskSolver.solution), 'rows -> "25", 'cols -> "80")
 
             <div class="submit">
                 <input type="button" value="Submit" id="submit"/>
@@ -32,7 +32,7 @@
                 report.empty();
                 var solution = $("#solution").val();
 
-                jsRoutes.controllers.Application.postSolutionAjax(solution).ajax({
+                jsRoutes.controllers.TaskSolver.postSolutionAjax(solution).ajax({
                     success: function(data){
                         report.html(data);
                     }, error: function(data) {

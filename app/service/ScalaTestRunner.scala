@@ -8,7 +8,7 @@ import scala.util.{Failure, Success, Try}
 
 
 /**
-  * Runs scalatest library test suite using the 'execute' method
+  * Runs test suite of scalatest library using the 'execute' method
   */
 object ScalaTestRunner {
   val failedMarker = "FAILED"
@@ -37,8 +37,10 @@ object ScalaTestRunner {
     import scala.tools.reflect.ToolBox
     val tb = cm.mkToolBox()
 
-    val patchedSolution = solution.replaceFirst("(class [A-Za-z0-9]* )", s"class $userClass extends ${solutionTrait.getSimpleName} ")
+    val classDefPattern = "(class [A-Za-z0-9]* )" //todo add $ _ characters
+    val patchedSolution = solution.replaceFirst(classDefPattern, s"class $userClass extends ${solutionTrait.getSimpleName} ")
     val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
+
     tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
   }
 }
