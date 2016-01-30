@@ -21,9 +21,9 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
 
   val registerForm: Form[RegisterForm] = Form {
     mapping(
-      "name" -> nonEmptyText,
-      "password" -> nonEmptyText,
-      "verify" -> nonEmptyText
+      name -> nonEmptyText,
+      password -> nonEmptyText,
+      verify -> nonEmptyText
     )(RegisterForm.apply)(RegisterForm.unapply) verifying(passwordsNotMatched, validatePassword _)
   }
 
@@ -36,7 +36,7 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
 
   def postRegister() = Action.async { implicit request =>
     def nameBusy = Ok(views.html.register(registerForm.bindFromRequest
-      .withError("name", nameRegistered)))
+      .withError(name, nameRegistered)))
 
     registerForm.bindFromRequest.fold(
       errorForm => {
@@ -45,7 +45,7 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
       form => {
         val hash = passwordHash(form.password, Random.nextInt().toString)
         repo.create(User(form.name, hash)).map { r =>
-          if (r.one().getBool("[applied]")) Redirect(routes.Application.index)
+          if (r.one().getBool(applied)) Redirect(routes.Application.index)
             .withSession(username -> form.name)
             .flashing(flashToUser -> userRegistered)
           else nameBusy
@@ -59,7 +59,7 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
 
   def withPasswordMatchError(errorForm: Form[RegisterForm]) =
     if (errorForm.errors.collectFirst({ case FormError(_, List(`passwordsNotMatched`), _) => true }).nonEmpty)
-      errorForm.withError("password", passwordsNotMatched)
+      errorForm.withError(password, passwordsNotMatched)
     else errorForm
 }
 
@@ -68,6 +68,11 @@ case class RegisterForm(name: String, password: String, verify: String)
 object UserController {
   val username = "username"
   val flashToUser = "flashToUser"
+
+  val name = "name"
+  val password = "password"
+  val verify = "verify"
+  val applied = "[applied]"
 
   val userRegistered = "Thank you for your registration"
   val alreadyRegistered = "You are already registered"
