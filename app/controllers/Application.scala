@@ -41,7 +41,9 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
     Ok(views.html.index())
   }
 
-  def getTask = Action(implicit request => Ok(views.html.task(taskDescriptionText, solutionForm.fill(SolutionForm(solutionTemplateText)))))
+  def getTask = Action { implicit request =>
+    Ok(views.html.task(taskDescriptionText, solutionForm.fill(SolutionForm(solutionTemplateText))))
+  }
 
   def getAddTask = Action(Ok(views.html.addTask(addTaskForm)))
 
