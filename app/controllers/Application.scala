@@ -47,7 +47,7 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
 
   def getAddTask = Action(Ok(views.html.addTask(addTaskForm)))
 
-  def postAddTask = Action.async { implicit request =>
+  def postNewTask = Action.async { implicit request =>
     addTaskForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.addTask(errorForm)))
