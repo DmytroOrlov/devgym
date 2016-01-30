@@ -9,3 +9,4 @@ password = Password
 verify = Verify
 logoutDone = Logout done
 cannotAddTask = Can not add your task now
+cannotCheckNow = Cannot check your solution now
