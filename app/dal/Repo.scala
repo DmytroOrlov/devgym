@@ -14,10 +14,10 @@ import scala.concurrent.ExecutionContext
 
 class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
   private lazy val session: Session = cluster.session
+
   private lazy val createUserStatement = session.prepare(
     "INSERT INTO user (name, password, timeuuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
-
   private lazy val addTaskStatement = session.prepare(
     "INSERT INTO task (type, month, timeuuid, task_description, solution_template, reference_solution, test)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?)")
