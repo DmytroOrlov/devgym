@@ -18,20 +18,5 @@
     </div>
 
     <script src="@routes.Assets.versioned("lib/jquery/jquery.min.js")"></script>
-    <script type="text/javascript">
-            $('#submit').click(function(e) {
-                var report = $("#report");
-                report.empty();
-                var solution = $("#solution").val();
-
-                jsRoutes.controllers.TaskSolver.postSolutionAjax(solution).ajax({
-                    success: function(data){
-                        report.html(data);
-                    }, error: function(data) {
-                        console.error(data);
-                    }
-                });
-                return false;
-            });
-    </script>
+    @playscalajs.html.scripts("client")
 }
