@@ -5,11 +5,11 @@
 @main("DevGym - Add Task") {
     <div><a href="@routes.Application.index()">Home</a></div>
     <div class="solutionForm">
-    @form(routes.Application.postNewTask()) {
-        @textarea(task(Application.taskDescription), 'rows -> "8", 'cols -> "80")
-        @textarea(task(Application.solutionTemplate), 'rows -> "6", 'cols -> "80")
-        @textarea(task(Application.referenceSolution), 'rows -> "13", 'cols -> "80")
-        @textarea(task(Application.test), 'rows -> "13", 'cols -> "80")
+    @form(routes.NewTask.postNewTask()) {
+        @textarea(task(NewTask.taskDescription), 'rows -> "8", 'cols -> "80")
+        @textarea(task(NewTask.solutionTemplate), 'rows -> "6", 'cols -> "80")
+        @textarea(task(NewTask.referenceSolution), 'rows -> "13", 'cols -> "80")
+        @textarea(task(NewTask.test), 'rows -> "13", 'cols -> "80")
 
         <div class="submit">
             <input type="submit" value="Submit"/>

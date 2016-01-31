@@ -4,13 +4,13 @@ import java.security.MessageDigest
 
 import com.google.inject.Inject
 import com.typesafe.scalalogging.StrictLogging
+import controllers.UserController._
 import dal.Repo
 import models.User
-import play.api.data.{FormError, Form}
 import play.api.data.Forms._
+import play.api.data.{Form, FormError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
-import controllers.UserController._
 import sun.misc.BASE64Encoder
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,13 +30,13 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
   def getRegister = Action { implicit request =>
     request.session.get(username).fold(Ok(views.html.register(registerForm))) { _ =>
       Redirect(routes.Application.index)
-        .flashing(flashToUser -> alreadyRegistered)
+        .flashing(flashToUser -> messagesApi(alreadyRegistered))
     }
   }
 
   def postRegister() = Action.async { implicit request =>
     def nameBusy = Ok(views.html.register(registerForm.bindFromRequest
-      .withError(name, nameRegistered)))
+      .withError(name, messagesApi(nameRegistered))))
 
     registerForm.bindFromRequest.fold(
       errorForm => {
@@ -47,7 +47,7 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
         repo.create(User(form.name, hash)).map { r =>
           if (r.one().getBool(applied)) Redirect(routes.Application.index)
             .withSession(username -> form.name)
-            .flashing(flashToUser -> userRegistered)
+            .flashing(flashToUser -> messagesApi(userRegistered))
           else nameBusy
         }.recover {
           case NonFatal(e) => logger.warn(e.getMessage, e)
@@ -59,7 +59,7 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
 
   def withPasswordMatchError(errorForm: Form[RegisterForm]) =
     if (errorForm.errors.collectFirst({ case FormError(_, List(`passwordsNotMatched`), _) => true }).nonEmpty)
-      errorForm.withError(password, passwordsNotMatched)
+      errorForm.withError(password, messagesApi(passwordsNotMatched))
     else errorForm
 }
 
@@ -74,10 +74,10 @@ object UserController {
   val verify = "verify"
   val applied = "[applied]"
 
-  val userRegistered = "Thank you for your registration"
-  val alreadyRegistered = "You are already registered"
-  val nameRegistered = "Name already registered, Please choose another"
-  val passwordsNotMatched = "Passwords not matched"
+  val userRegistered = "userRegistered"
+  val alreadyRegistered = "alreadyRegistered"
+  val nameRegistered = "nameRegistered"
+  val passwordsNotMatched = "passwordsNotMatched"
 
   def validatePassword(f: RegisterForm) = f.password.equals(f.verify)
 
