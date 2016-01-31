@@ -2,7 +2,6 @@ package controllers
 
 import com.google.inject.Inject
 import controllers.TaskSolver._
-import dal.Repo
 import org.scalatest.Suite
 import play.api.data.Form
 import play.api.data.Forms._
@@ -16,9 +15,8 @@ import scala.sys.process._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class TaskSolver @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)(implicit ec: ExecutionContext)
-  extends Controller with I18nSupport {
-
+class TaskSolver @Inject()(app: play.api.Application, val messagesApi: MessagesApi)
+                          (implicit ec: ExecutionContext) extends Controller with I18nSupport {
   val appPath = app.path.getAbsolutePath
 
   val solutionForm = Form {
@@ -33,7 +31,7 @@ class TaskSolver @Inject()(repo: Repo, app: play.api.Application, val messagesAp
 
   def postSolution = Action.async { implicit request =>
     val cannotCheckSolution = BadRequest(
-      views.html.task(taskDescriptionText, solutionForm.bindFromRequest().withError(solution, "Can not check your solution now"))
+      views.html.task(taskDescriptionText, solutionForm.bindFromRequest().withError(solution, messagesApi(cannotCheckNow)))
     )
 
     solutionForm.bindFromRequest.fold(
@@ -41,11 +39,11 @@ class TaskSolver @Inject()(repo: Repo, app: play.api.Application, val messagesAp
         Future.successful(BadRequest(views.html.task(taskDescriptionText, errorForm)))
       },
       form => {
-        if (sbtInstalled) Future {
+        if (!sbtInstalled) Future.successful {
+          cannotCheckSolution
+        } else Future {
           blocking(Ok(testSolution(form.solution, appPath)))
         }.recover { case NonFatal(e) =>
-          cannotCheckSolution
-        } else Future.successful {
           cannotCheckSolution
         }
       })
@@ -69,6 +67,7 @@ class TaskSolver @Inject()(repo: Repo, app: play.api.Application, val messagesAp
 case class SolutionForm(solution: String)
 
 object TaskSolver {
+  val cannotCheckNow = "cannotCheckNow"
   // these stubs should be replaced with database layer
   val taskDescriptionText = "Implement apply function to return  a sub-array of original array 'a', " +
     "which has maximum sum of its elements.\n For example, " +
