@@ -1,6 +1,6 @@
 val scalaVer = "2.11.7"
 
-lazy val root = (project in file("."))
+lazy val server = (project in file("server"))
   .enablePlugins(PlayScala)
   .settings(runtimeSettings ++ testSettings)
   .settings(
@@ -32,3 +32,6 @@ lazy val testSettings = Seq(
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
   )
 )
+
+// loads the Play project at sbt startup
+onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
