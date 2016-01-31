@@ -1,18 +1,18 @@
-@(task: Form[AddTaskForm])(implicit messages: Messages)
-
+@import NewTask._
 @import helper._
 
-@main("DevGym - Add Task") {
-    <div><a href="@routes.Application.index()">Home</a></div>
+@(task: Form[AddTaskForm])(implicit msg: Messages)
+
+@main(msg("addTask")) {
+    <div><a href="@routes.Application.index()">@msg("home")</a></div>
     <div class="solutionForm">
     @form(routes.NewTask.postNewTask()) {
-        @textarea(task(NewTask.taskDescription), 'rows -> "8", 'cols -> "80")
-        @textarea(task(NewTask.solutionTemplate), 'rows -> "6", 'cols -> "80")
-        @textarea(task(NewTask.referenceSolution), 'rows -> "13", 'cols -> "80")
-        @textarea(task(NewTask.test), 'rows -> "13", 'cols -> "80")
-
+        @textarea(task(taskDescription), 'rows -> "8", 'cols -> "80")
+        @textarea(task(solutionTemplate), 'rows -> "6", 'cols -> "80")
+        @textarea(task(referenceSolution), 'rows -> "13", 'cols -> "80")
+        @textarea(task(test), 'rows -> "13", 'cols -> "80")
         <div class="submit">
-            <input type="submit" value="Submit"/>
+            <input type="submit" value="@msg("addTask")"/>
         </div>
     }
     </div>
