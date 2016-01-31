@@ -9,6 +9,7 @@ import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
 import service.ScalaTestRunner
+import shared.Shared
 
 import scala.concurrent._
 import scala.sys.process._
@@ -26,6 +27,7 @@ class TaskSolver @Inject()(app: play.api.Application, val messagesApi: MessagesA
   }
 
   def getTask = Action { implicit request =>
+    Shared("123")
     Ok(views.html.task(taskDescriptionText, solutionForm.fill(SolutionForm(solutionTemplateText))))
   }
 
