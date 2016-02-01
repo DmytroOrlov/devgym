@@ -3,10 +3,10 @@ package controllers
 import java.security.MessageDigest
 
 import com.google.inject.Inject
-import com.typesafe.scalalogging.StrictLogging
 import controllers.UserController._
 import dal.Repo
 import models.User
+import play.api.Logger
 import play.api.data.Forms._
 import play.api.data.{Form, FormError}
 import play.api.i18n.{I18nSupport, MessagesApi}
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 import scala.util.control.NonFatal
 
-class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport with StrictLogging {
+class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   val registerForm: Form[RegisterForm] = Form {
     mapping(
@@ -52,7 +52,7 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
             .flashing(flashToUser -> messagesApi(userRegistered))
           else nameBusy
         }.recover {
-          case NonFatal(e) => logger.warn(e.getMessage, e)
+          case NonFatal(e) => Logger.warn(e.getMessage, e)
             nameBusy
         }
       }
