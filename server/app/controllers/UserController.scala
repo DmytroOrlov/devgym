@@ -43,8 +43,10 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
         Future.successful(BadRequest(views.html.register(withPasswordMatchError(errorForm))))
       },
       form => {
-        val hash = passwordHash(form.password, Random.nextInt().toString)
-        repo.create(User(form.name, hash)).map { r =>
+        val hashSalt = toHashSalt(form.password, Random.nextInt().toString) match {
+          case (h, s) => combine(h, s)
+        }
+        repo.create(User(form.name, hashSalt)).map { r =>
           if (r.one().getBool(applied)) Redirect(routes.Application.index)
             .withSession(username -> form.name)
             .flashing(flashToUser -> messagesApi(userRegistered))
@@ -83,11 +85,13 @@ object UserController {
 
   val encoder: BASE64Encoder = new BASE64Encoder
 
-  def passwordHash(password: String, salt: String) = {
-    val saltedAndHashed: String = password + "," + salt
-    val digest: MessageDigest = MessageDigest.getInstance("MD5")
-    digest.update(saltedAndHashed.getBytes)
+  def toHashSalt(password: String, salt: String) = {
+    val withSalt = combine(password, salt)
+    val digest = MessageDigest.getInstance("MD5")
+    digest.update(withSalt.getBytes)
     val hashedBytes = new String(digest.digest, "UTF-8").getBytes
-    encoder.encode(hashedBytes) + "," + salt
+    encoder.encode(hashedBytes) -> salt
   }
+
+  def combine(password: String, salt: String) = password + "," + salt
 }
