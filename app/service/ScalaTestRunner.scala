@@ -14,8 +14,8 @@ object ScalaTestRunner {
   val failedMarker = "FAILED"
   val failedInRuntimeMarker = "failed in runtime"
   val userClass = "UserSolution"
-  val classDefPattern = "(class [A-Za-z0-9]* )".r //todo add $ _ characters
-  val traitDefPattern = "(trait [A-Za-z0-9]* )".r //todo add $ _ characters
+  val classDefPattern = "class\\s*(\\w*)".r
+  val traitDefPattern = "trait\\s*(\\w*)".r
   val defaultImports = "import org.scalatest._"
 
   import scala.reflect.runtime._
@@ -32,14 +32,25 @@ object ScalaTestRunner {
   }
 
   def execSuite(solution: String, suite: String): String = {
-    val traitDefPattern(solutionTrait) = suite
-    val classDefPattern(suiteName) = suite
+    //todo: solutionTrait should be taken from DB and populated during the task creation by user
+    val solutionTrait = traitDefPattern.findFirstIn(suite) match {
+      case Some(v) => v.split("\\s+")(1)
+      case None => throw new RuntimeException(s"There is no trait type defined in the Test constructor, code: $suite")
+    }
+
+    val suiteName = classDefPattern.findFirstIn(suite) match {
+      case Some(v) => v.split("\\s+")(1)
+      case None => throw new RuntimeException(s"There is no Test Suite name to instantiate, code: $suite")
+    }
 
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $solutionTrait ")
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
-    val suiteRef = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite]
 
-    tryExecSuite(execSuite(suiteRef))
+    def execution() = {
+      val suiteRef = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite]
+      execSuite(suiteRef)
+    }
+    tryExecSuite(execution())
   }
 
   def execSuite(suiteInstance: Suite): String = new ByteArrayOutputStream {stream =>
