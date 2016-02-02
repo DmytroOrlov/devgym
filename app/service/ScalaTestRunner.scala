@@ -14,8 +14,8 @@ object ScalaTestRunner {
   val failedMarker = "FAILED"
   val failedInRuntimeMarker = "failed in runtime"
   val userClass = "UserSolution"
-  val classDefPattern = "class\\s*(\\w*)".r
-  val traitDefPattern = "trait\\s*(\\w*)".r
+  val classDefPattern = "class\\s*([\\w\\$]*)".r
+  val traitDefPattern = "trait\\s*([\\w\\$]*)".r
   val defaultImports = "import org.scalatest._"
 
   import scala.reflect.runtime._
@@ -23,6 +23,9 @@ object ScalaTestRunner {
   import scala.tools.reflect.ToolBox
   val tb = cm.mkToolBox()
 
+  /**
+    * Runs suite loaded in runtime with dynamic solution
+    */
   def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String = {
     def execution() = {
       val solutionInstance = createSolutionInstance(solution, solutionTrait)
@@ -31,6 +34,9 @@ object ScalaTestRunner {
     tryExecSuite(execution())
   }
 
+  /**
+    * Runs dynamic solution and dynamic suite
+    */
   def execSuite(solution: String, suite: String): String = {
     //todo: solutionTrait should be taken from DB and populated during the task creation by user
     val solutionTrait = traitDefPattern.findFirstIn(suite) match {
@@ -53,6 +59,9 @@ object ScalaTestRunner {
     tryExecSuite(execution())
   }
 
+  /**
+    * Runs suite instance with solution instance
+    */
   def execSuite(suiteInstance: Suite): String = new ByteArrayOutputStream {stream =>
     Console.withOut(stream) {
       suiteInstance.execute(color = false)

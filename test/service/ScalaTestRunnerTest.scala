@@ -25,8 +25,8 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers {
   def getReport(solution: String) = {
     ScalaTestRunner.execSuite(
       solution,
-      Class.forName("tasktest.SleepInTest").asInstanceOf[Class[Suite]],
-      Class.forName("tasktest.SleepInSolution").asInstanceOf[Class[AnyRef]]
+      Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
+      Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
     )
   }
 }

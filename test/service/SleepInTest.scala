@@ -1,9 +1,8 @@
-package tasktest
+package service
 
 import org.scalatest.{FlatSpec, Matchers}
 
 
-//TODO: to be removed from the project
 class SleepInTest(solution: SleepInSolution) extends FlatSpec with Matchers {
   behavior of "SleepIn"
 
