@@ -1,11 +1,13 @@
-@()(implicit flash: Flash, session: Session)
-@mainFlashToUser("DevGym - Home") {
-    <h1>Server content</h1>
-    <div><a href="@routes.TaskSolver.getTask()">Task</a></div>
-    <div><a href="@routes.NewTask.getAddTask()">Add task</a></div>
-    @session.get(UserController.username).fold {
-        <div><a href="@routes.UserController.getRegister()">Register</a></div>
+@import UserController._
+
+@()(implicit flash: Flash, session: Session, msg: Messages)
+@mainFlashToUser(msg("home")) {
+    <h1>@msg("DevGym")</h1>
+    <div><a href="@routes.TaskSolver.getTask()">@msg("task")</a></div>
+    <div><a href="@routes.NewTask.getAddTask()">@msg("addTask")</a></div>
+    @session.get(username).fold {
+        <div><a href="@routes.UserController.getRegister()">@msg("register")</a></div>
     } { _ =>
-        <div><a href="@routes.Application.logout()">Logout</a></div>
+        <div><a href="@routes.Application.logout()">@msg("logout")</a></div>
     }
 }

@@ -1,10 +1,10 @@
-@(title: String)(content: Html)(implicit flash: Flash)
+@(title: String)(content: Html)(implicit flash: Flash, msg: Messages)
 
 <!DOCTYPE html>
 
 <html lang="en">
     <head>
-        <title>@title</title>
+        <title>@msg("DevGym") - @title</title>
         <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:700,400' rel='stylesheet' type='text/css'/>
         <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")"/>
         <link rel="stylesheet" href="@routes.Assets.versioned("stylesheets/main.css")"/>

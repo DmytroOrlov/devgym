@@ -14,9 +14,8 @@ import play.api.mvc.{Action, Controller}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)(implicit ec: ExecutionContext)
-  extends Controller with I18nSupport with StrictLogging {
-
+class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)
+                       (implicit ec: ExecutionContext) extends Controller with I18nSupport with StrictLogging {
   val addTaskForm = Form {
     mapping(
       taskDescription -> nonEmptyText,
@@ -38,7 +37,7 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
           Redirect(routes.Application.index)
         }.recover {
           case NonFatal(e) => logger.warn(e.getMessage, e)
-            BadRequest(views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, "Can not add your task now")))
+            BadRequest(views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask))))
         }
       }
     )
@@ -52,4 +51,5 @@ object NewTask {
   val solutionTemplate = "solutionTemplate"
   val referenceSolution = "referenceSolution"
   val test = "test"
+  val cannotAddTask = "cannotAddTask"
 }

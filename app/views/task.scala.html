@@ -1,33 +1,25 @@
-@(taskDescription: String, solution: Form[SolutionForm])(implicit messages: Messages, req: RequestHeader)
-
 @import helper._
 
+@(taskDescription: String, solution: Form[SolutionForm])(implicit msg: Messages, req: RequestHeader)
 @helper.javascriptRouter("jsRoutes")(
     routes.javascript.TaskSolver.postSolutionAjax
 )
-
-@main("DevGym - Task") {
-    <div><a href="@routes.Application.index()">Home</a></div><br/>
-
+@main(msg("task")) {
+    <div><a href="@routes.Application.index()">@msg("home")</a></div>
     <div class="taskDescription">@taskDescription</div>
     <div>
         <div class="solutionForm">
         @form(routes.TaskSolver.postSolution()) {
             @textarea(solution(TaskSolver.solution), 'rows -> "25", 'cols -> "80")
-
-            <div class="submit">
-                <input type="button" value="Submit" id="submit"/>
-            </div>
+            <input type="button" value="Submit" id="submit"/>
         }
         </div>
-        <br/><br/>
         <div id="report"></div>
     </div>
 
-
     <script src="@routes.Assets.versioned("lib/jquery/jquery.min.js")"></script>
     <script type="text/javascript">
-            $('.submit').click(function(e) {
+            $('#submit').click(function(e) {
                 var report = $("#report");
                 report.empty();
                 var solution = $("#solution").val();
