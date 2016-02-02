@@ -2,8 +2,14 @@ package service
 
 import java.io.ByteArrayOutputStream
 
+import monifu.concurrent.Scheduler
+import monifu.reactive.Observable
+import monifu.reactive.OverflowStrategy.DropOld
+import monifu.reactive.channels.PublishChannel
 import org.scalatest.Suite
+import shared.Line
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 
@@ -17,6 +23,24 @@ object ScalaTestRunner {
   val classDefPattern = """class\s*([\w\$]*)""".r
   val traitDefPattern = """trait\s*([\w\$]*)""".r
   val defaultImports = "import org.scalatest._"
+
+  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])(solution: String)(implicit s: Scheduler): Observable[Line] = {
+    val channel = PublishChannel[Line](DropOld(20))
+    Future {
+      Try {
+        val solutionInstance = createSolutionInstance(solution, solutionTrait)
+        execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
+      } match {
+        case Success(s) =>
+          channel.pushNext(Line(s))
+          channel.pushComplete()
+        case Failure(e) =>
+          channel.pushNext(Line(s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"))
+          channel.pushComplete()
+      }
+    }
+    channel
+  }
 
   import scala.reflect.runtime._
   val cm = universe.runtimeMirror(getClass.getClassLoader)

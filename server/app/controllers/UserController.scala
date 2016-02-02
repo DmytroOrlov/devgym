@@ -3,10 +3,10 @@ package controllers
 import java.security.MessageDigest
 
 import com.google.inject.Inject
-import com.typesafe.scalalogging.StrictLogging
 import controllers.UserController._
 import dal.Repo
 import models.User
+import play.api.Logger
 import play.api.data.Forms._
 import play.api.data.{Form, FormError}
 import play.api.i18n.{I18nSupport, MessagesApi}
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 import scala.util.control.NonFatal
 
-class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport with StrictLogging {
+class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   val registerForm: Form[RegisterForm] = Form {
     mapping(
@@ -43,14 +43,16 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
         Future.successful(BadRequest(views.html.register(withPasswordMatchError(errorForm))))
       },
       form => {
-        val hash = passwordHash(form.password, Random.nextInt().toString)
-        repo.create(User(form.name, hash)).map { r =>
+        val hashSalt = toHashSalt(form.password, Random.nextInt().toString) match {
+          case (h, s) => combine(h, s)
+        }
+        repo.create(User(form.name, hashSalt)).map { r =>
           if (r.one().getBool(applied)) Redirect(routes.Application.index)
             .withSession(username -> form.name)
             .flashing(flashToUser -> messagesApi(userRegistered))
           else nameBusy
         }.recover {
-          case NonFatal(e) => logger.warn(e.getMessage, e)
+          case NonFatal(e) => Logger.warn(e.getMessage, e)
             nameBusy
         }
       }
@@ -83,11 +85,13 @@ object UserController {
 
   val encoder: BASE64Encoder = new BASE64Encoder
 
-  def passwordHash(password: String, salt: String) = {
-    val saltedAndHashed: String = password + "," + salt
-    val digest: MessageDigest = MessageDigest.getInstance("MD5")
-    digest.update(saltedAndHashed.getBytes)
+  def toHashSalt(password: String, salt: String) = {
+    val withSalt = combine(password, salt)
+    val digest = MessageDigest.getInstance("MD5")
+    digest.update(withSalt.getBytes)
     val hashedBytes = new String(digest.digest, "UTF-8").getBytes
-    encoder.encode(hashedBytes) + "," + salt
+    encoder.encode(hashedBytes) -> salt
   }
+
+  def combine(password: String, salt: String) = password + "," + salt
 }

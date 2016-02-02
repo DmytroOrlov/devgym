@@ -1,0 +1,19 @@
+@import helper._
+
+@(taskDescription: String, solution: Form[SolutionForm])(implicit msg: Messages, req: RequestHeader)
+@main(msg("task")) {
+    <div><a href="@routes.Application.index()">@msg("home")</a></div>
+    <div class="taskDescription">@taskDescription</div>
+    <div>
+        <div class="solutionForm">
+        @form(routes.Application.stub()) {
+            @textarea(solution(TaskSolver.solution), 'rows -> "25", 'cols -> "80")
+            <input type="button" value="Submit" id="submit"/>
+        }
+        </div>
+        <div id="report"></div>
+    </div>
+
+    <script src="@routes.Assets.versioned("lib/jquery/jquery.min.js")"></script>
+    @playscalajs.html.scripts("client")
+}
