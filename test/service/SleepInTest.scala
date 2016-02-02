@@ -1,11 +1,10 @@
-package tasktest
+package service
 
 import org.scalatest.{FlatSpec, Matchers}
 
 
-//TODO: to be removed from the project
 class SleepInTest(solution: SleepInSolution) extends FlatSpec with Matchers {
-  behavior of "SleepIn"
+  behavior of "SleepIn: this test to be run from Runner test"
 
   it should "sleepIn when it is not a weekday and it is not a vacation" in {
     solution.sleepIn(false, false) shouldBe true

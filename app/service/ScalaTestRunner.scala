@@ -14,31 +14,71 @@ object ScalaTestRunner {
   val failedMarker = "FAILED"
   val failedInRuntimeMarker = "failed in runtime"
   val userClass = "UserSolution"
+  val classDefPattern = "class\\s*([\\w\\$]*)".r
+  val traitDefPattern = "trait\\s*([\\w\\$]*)".r
+  val defaultImports = "import org.scalatest._"
 
+  import scala.reflect.runtime._
+  val cm = universe.runtimeMirror(getClass.getClassLoader)
+  import scala.tools.reflect.ToolBox
+  val tb = cm.mkToolBox()
+
+  /**
+    * Runs suite loaded in runtime with dynamic solution
+    */
   def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String = {
-    Try {
+    def execution() = {
       val solutionInstance = createSolutionInstance(solution, solutionTrait)
       execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
+    }
+    tryExecSuite(execution())
+  }
+
+  /**
+    * Runs dynamic solution and dynamic suite
+    */
+  def execSuite(solution: String, suite: String): String = {
+    //todo: solutionTrait should be taken from DB and populated during the task creation by user
+    val solutionTrait = traitDefPattern.findFirstIn(suite) match {
+      case Some(v) => v.split("\\s+")(1)
+      case None => throw new RuntimeException(s"There is no trait type defined in the Test constructor, code: $suite")
+    }
+
+    val suiteName = classDefPattern.findFirstIn(suite) match {
+      case Some(v) => v.split("\\s+")(1)
+      case None => throw new RuntimeException(s"There is no Test Suite name to instantiate, code: $suite")
+    }
+
+    val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $solutionTrait ")
+    val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
+
+    def execution() = {
+      val suiteRef = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite]
+      execSuite(suiteRef)
+    }
+    tryExecSuite(execution())
+  }
+
+  /**
+    * Runs suite instance with solution instance
+    */
+  def execSuite(suiteInstance: Suite): String = new ByteArrayOutputStream {stream =>
+    Console.withOut(stream) {
+      suiteInstance.execute(color = false)
+    }
+  }.toString
+
+  private def tryExecSuite(execution: => String): String = {
+    Try {
+      execution
     } match {
       case Success(s) => s
       case Failure(e) => s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"
     }
   }
 
-  def execSuite(suiteInstance: Suite): String = new ByteArrayOutputStream { stream =>
-    Console.withOut(stream) {
-      suiteInstance.execute(color = false)
-    }
-  }.toString
-
   private def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
-    import scala.reflect.runtime._
-    val cm = universe.runtimeMirror(getClass.getClassLoader)
-    import scala.tools.reflect.ToolBox
-    val tb = cm.mkToolBox()
-
-    val classDefPattern = "(class [A-Za-z0-9]* )" //todo add $ _ characters
-    val patchedSolution = solution.replaceFirst(classDefPattern, s"class $userClass extends ${solutionTrait.getSimpleName} ")
+    val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
     val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
 
     tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
