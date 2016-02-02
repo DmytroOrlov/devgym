@@ -21,6 +21,8 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
         .flashing(flashToUser -> messagesApi(logoutDone))
     }
   }
+
+  def stub = Action(BadRequest("stub"))
 }
 
 object Application {
