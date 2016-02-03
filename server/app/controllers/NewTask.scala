@@ -15,7 +15,7 @@ import service.ScalaTestRunner
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)
+class NewTask @Inject()(repo: Repo, val messagesApi: MessagesApi)
                        (implicit ec: ExecutionContext) extends Controller with I18nSupport {
   val addTaskForm = Form {
     mapping(
@@ -23,7 +23,7 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
       solutionHeader -> nonEmptyText,
       solutionBody -> nonEmptyText,
       solutionFooter -> nonEmptyText,
-      test -> nonEmptyText
+      suite -> nonEmptyText
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
@@ -39,8 +39,8 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
       },
       f => {
         val futureResponse = for {
-          test <- Future(ScalaTestRunner.execSuite(f.solutionHeader + f.solutionBody + f.solutionFooter, f.test)) // todo vaidate test output
-          db <- repo.addTask(Task(scalaClass, f.taskDescription, f.solutionHeader + f.solutionFooter, f.test))
+          test <- Future(ScalaTestRunner.execSuite(f.solutionHeader + f.solutionBody + f.solutionFooter, f.suite)) // todo vaidate test output
+          db <- repo.addTask(Task(scalaClass, f.taskDescription, f.solutionHeader, f.solutionBody, f.solutionFooter, f.suite))
         } yield Redirect(routes.Application.index)
 
         futureResponse.recover {
@@ -52,13 +52,13 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
   }
 }
 
-case class AddTaskForm(taskDescription: String, solutionHeader: String, solutionBody: String, solutionFooter: String, test: String)
+case class AddTaskForm(taskDescription: String, solutionHeader: String, solutionBody: String, solutionFooter: String, suite: String)
 
 object NewTask {
   val taskDescription = "taskDescription"
   val solutionHeader = "solutionHeader"
   val solutionBody = "solutionBody"
   val solutionFooter = "solutionFooter"
-  val test = "test"
+  val suite = "suite"
   val cannotAddTask = "cannotAddTask"
 }

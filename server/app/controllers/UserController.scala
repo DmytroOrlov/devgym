@@ -50,7 +50,7 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
       form => {
         val hashSalt = toHashSalt(form.password, Random.nextInt().toString) match { case (h, s) => combine(h, s)}
         repo.create(User(form.name, hashSalt)).map { r =>
-          if (r.one().getBool(applied)) Redirect(routes.Application.index)
+          if (r) Redirect(routes.Application.index)
             .withSession(username -> form.name)
             .flashing(flashToUser -> messagesApi(userRegistered))
           else nameBusy
@@ -72,7 +72,6 @@ object UserController {
   val name = "name"
   val password = "password"
   val verify = "verify"
-  val applied = "[applied]"
 
   val userRegistered = "userRegistered"
   val alreadyRegistered = "alreadyRegistered"

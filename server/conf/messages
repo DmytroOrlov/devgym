@@ -4,6 +4,7 @@ solutionHeader = Solution header
 solutionBody = Solution body
 solutionFooter = Solution footer
 test = Test
+suite = Suite
 error.changesRequired = Change something :)
 name = Name
 password = Password

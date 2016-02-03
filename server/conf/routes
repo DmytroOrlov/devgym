@@ -6,6 +6,7 @@
 GET     /                           controllers.Application.index
 GET     /logout                     controllers.Application.logout
 
+GET     /tasks                      controllers.TaskSolver.tasks
 GET     /task                       controllers.TaskSolver.getTask
 POST    /task                       controllers.TaskSolver.postSolution
 POST    /taskAjax/:solution         controllers.TaskSolver.postSolutionAjax(solution: String)
