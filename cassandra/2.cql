@@ -1,17 +1,7 @@
-CREATE TABLE devgym.user (
-  name TEXT,
-  timeuuid TIMEUUID,
-  password TEXT,
-  PRIMARY KEY (name)
-);
-
-CREATE TABLE devgym.task (
-  type TEXT,
-  month TIMESTAMP,
-  timeuuid TIMEUUID,
-  task_description TEXT,
-  solution_template TEXT,
-  reference_solution TEXT,
-  test TEXT,
-  PRIMARY KEY ((type, month), timeuuid)
-) WITH CLUSTERING ORDER BY (timeuuid DESC);
+INSERT INTO task (year, type, timeuuid, task_description, solution_header, solution_body, solution_footer, suite)
+  VALUES ('2016-01-01', 'scalaClass', NOW(), 'Implement apply function to return a sub-array of original array a, which has maximum sum of its elements. For example, having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. You can add required Scala class using regular import statement',
+    'class SubArrayWithMaxSum { def apply(a: Array[Int]): Array[Int] = {',
+    '    var currentSum = 0; var maxSum = 0; var left, right = 0; var maxI = 0; for (i <- a.indices) { val incSum = currentSum + a(i); if (incSum > 0) { currentSum = incSum; if (currentSum > maxSum) { maxSum = currentSum; right = i; } } else { left = i + 1; right = left; currentSum = 0; if (a(i) > a(maxI)) maxI = i; } } if (left == a.length) a.slice(maxI, maxI + 1) else a.slice(left, right + 1)',
+    '} }',
+    'import org.scalatest.{FlatSpec, Matchers}; import scala.language.reflectiveCalls; class DynoSubArrayWithMaxSumTest[A <: {def apply(a : Array[Int]) : Array[Int]}](solution: A) extends FlatSpec with Matchers { behavior of "SubArrayWithMaxSum"; it should "return max sum sub array within given array" in { solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)) should be(Array(4, -1, 2, 1)); solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, 5, 4)) should be(Array(4, -1, 2, 1, 5, 4)); solution.apply(Array(2, -1, 0, 0, 0, 0, 1)) should be(Array(2)) } it should "return the whole array when given array has only positive numbers" in { solution.apply(Array(2, 1, 3, 4, 1, 2, 1, 5, 4)) should be(Array(2, 1, 3, 4, 1, 2, 1, 5, 4)) } it should "return max sum sub array when given array contains only negative numbers" in { solution.apply(Array(-2, -1, -3, -4, -1, -2, -1, -5, -4)) should be(Array(-1)); solution.apply(Array(-2, -3, -3, -4, -6, -2, -6, -5, -1)) should be(Array(-1)) } }'
+  );

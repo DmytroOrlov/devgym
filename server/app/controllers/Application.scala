@@ -3,11 +3,10 @@ package controllers
 import com.google.inject.Inject
 import controllers.Application._
 import controllers.UserController._
-import dal.Repo
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 
-class Application @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi) extends Controller with I18nSupport {
+class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
   def index = Action { implicit request =>
     Ok(views.html.index())
@@ -21,6 +20,8 @@ class Application @Inject()(repo: Repo, app: play.api.Application, val messagesA
         .flashing(flashToUser -> messagesApi(logoutDone))
     }
   }
+
+  def stub = Action(BadRequest("stub")) // todo remove
 }
 
 object Application {

@@ -5,10 +5,11 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /logout                     controllers.Application.logout
+POST    /stub                       controllers.Application.stub
 
+GET     /tasks                      controllers.TaskSolver.tasks
 GET     /task                       controllers.TaskSolver.getTask
-POST    /task                       controllers.TaskSolver.postSolution
-POST    /taskAjax/:solution         controllers.TaskSolver.postSolutionAjax(solution: String)
+GET     /task-stream                controllers.TaskSolver.taskStream
 
 GET     /addTask                    controllers.NewTask.getAddTask
 POST    /addTask                    controllers.NewTask.postNewTask

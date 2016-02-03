@@ -1,17 +1,14 @@
 @import helper._
 
 @(taskDescription: String, solution: Form[SolutionForm])(implicit msg: Messages, req: RequestHeader)
-@helper.javascriptRouter("jsRoutes")(
-    routes.javascript.TaskSolver.postSolutionAjax
-)
 @main(msg("task")) {
     <div><a href="@routes.Application.index()">@msg("home")</a></div>
     <div class="taskDescription">@taskDescription</div>
     <div>
         <div class="solutionForm">
-        @form(routes.TaskSolver.postSolution()) {
+        @form(routes.Application.stub()) {
             @textarea(solution(TaskSolver.solution), 'rows -> "25", 'cols -> "80")
-            <input type="button" value="Submit" id="submit"/>
+            <input type="button" value="@msg("submit")" id="submit"/>
         }
         </div>
         <div id="report"></div>
