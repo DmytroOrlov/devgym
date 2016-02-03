@@ -67,7 +67,7 @@ object ScalaTestRunner {
       case NonFatal(e) => s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"
     }
 
-  private def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
+  def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
     val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
 

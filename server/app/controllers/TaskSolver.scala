@@ -3,23 +3,31 @@ package controllers
 import com.google.inject.Inject
 import controllers.TaskSolver._
 import dal.Repo
+import monifu.concurrent.Scheduler
+import monifu.reactive.Observable
+import monifu.reactive.OverflowStrategy.DropOld
+import monifu.reactive.channels.PublishChannel
 import org.scalatest.Suite
 import play.api.Play.current
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.mvc.{Action, Controller}
-import service.ScalaTestRunner
+import play.api.libs.json.JsValue
+import play.api.mvc.{Action, Controller, WebSocket}
+import service.ScalaTestRunner._
+import shared.Line
+import stream.SimpleWebSocketActor
 
 import scala.concurrent._
 import scala.sys.process._
-import scala.util.Try
-import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 class TaskSolver @Inject()(repo: Repo, val messagesApi: MessagesApi)
-                          (implicit ec: ExecutionContext) extends Controller with I18nSupport {
-  val appPath = current.path.getAbsolutePath
+                          (implicit ec: ExecutionContext) extends Controller with I18nSupport with JSONFormats {
+  implicit val s = Scheduler(ec)
+
+  def appPath = current.path.getAbsolutePath
 
   val solutionForm = Form {
     mapping(
@@ -31,40 +39,31 @@ class TaskSolver @Inject()(repo: Repo, val messagesApi: MessagesApi)
     Ok(views.html.task(taskDescriptionText, solutionForm.fill(SolutionForm(solutionTemplateText))))
   }
 
-  def postSolution = Action.async { implicit request =>
-    val cannotCheckSolution = BadRequest(
-      views.html.task(taskDescriptionText, solutionForm.bindFromRequest().withError(solution, messagesApi(cannotCheckNow)))
-    )
-
-    solutionForm.bindFromRequest.fold(
-      errorForm => {
-        Future.successful(BadRequest(views.html.task(taskDescriptionText, errorForm)))
-      },
-      form => {
-        if (!sbtInstalled) Future.successful {
-          cannotCheckSolution
-        } else Future {
-          blocking(Ok(testSolution(form.solution, appPath)))
-        }.recover { case NonFatal(e) =>
-          cannotCheckSolution
-        }
-      })
-  }
-
-  def postSolutionAjax(solution: String) = Action {
-    // todo add validation for ajax-solution too
-    Ok(testSolution(solution, appPath).replaceAll("\n", "<br/>")) //temp solution to have lines in html
+  def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
+    SimpleWebSocketActor.props(out, createChannel(
+      Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
+      Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]]
+    ))
   }
 
   def tasks = Action.async(repo.getTasks().map(ts => Ok(ts.toString())))
 
-  private def testSolution(solution: String, appAbsolutePath: String): String = {
-    ScalaTestRunner.tryExecSuite(
-      solution,
-      Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
-      Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]]
-    )
-    //SbtTestRunner.createProjectAndTest(solution, appAbsolutePath)
+  def createChannel(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])(solution: String)(implicit s: Scheduler): Observable[Line] = {
+    val channel = PublishChannel[Line](DropOld(20))
+    Future {
+      Try {
+        val solutionInstance = createSolutionInstance(solution, solutionTrait)
+        execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
+      } match {
+        case Success(s) =>
+          channel.pushNext(Line(s))
+          channel.pushComplete()
+        case Failure(e) =>
+          channel.pushNext(Line(s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"))
+          channel.pushComplete()
+      }
+    }
+    channel
   }
 }
 
