@@ -40,9 +40,9 @@ object FutureUtils {
 
 }
 
-object TryToFuture {
-  def apply[A](block: => Future[A]) = Try(block) match {
-    case Failure(f) => Future.failed(f)
+object TryFuture {
+  def apply[A](block: => Future[A]): Future[A] = Try(block) match {
     case Success(s) => s
+    case Failure(f) => Future.failed(f)
   }
 }
