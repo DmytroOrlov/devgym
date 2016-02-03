@@ -38,14 +38,17 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
     def nameBusy = Ok(views.html.register(registerForm.bindFromRequest
       .withError(name, messagesApi(nameRegistered))))
 
+    def withPasswordMatchError(errorForm: Form[RegisterForm]) =
+      if (errorForm.errors.collectFirst({ case FormError(_, List(`passwordsNotMatched`), _) => true }).nonEmpty)
+        errorForm.withError(password, messagesApi(passwordsNotMatched))
+      else errorForm
+
     registerForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.register(withPasswordMatchError(errorForm))))
       },
       form => {
-        val hashSalt = toHashSalt(form.password, Random.nextInt().toString) match {
-          case (h, s) => combine(h, s)
-        }
+        val hashSalt = toHashSalt(form.password, Random.nextInt().toString) match { case (h, s) => combine(h, s)}
         repo.create(User(form.name, hashSalt)).map { r =>
           if (r.one().getBool(applied)) Redirect(routes.Application.index)
             .withSession(username -> form.name)
@@ -58,11 +61,6 @@ class UserController @Inject()(repo: Repo, val messagesApi: MessagesApi)(implici
       }
     )
   }
-
-  def withPasswordMatchError(errorForm: Form[RegisterForm]) =
-    if (errorForm.errors.collectFirst({ case FormError(_, List(`passwordsNotMatched`), _) => true }).nonEmpty)
-      errorForm.withError(password, messagesApi(passwordsNotMatched))
-    else errorForm
 }
 
 case class RegisterForm(name: String, password: String, verify: String)
