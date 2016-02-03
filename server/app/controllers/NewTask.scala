@@ -10,6 +10,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
+import service.ScalaTestRunner
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
@@ -19,8 +20,9 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
   val addTaskForm = Form {
     mapping(
       taskDescription -> nonEmptyText,
-      solutionTemplate -> nonEmptyText,
-      referenceSolution -> nonEmptyText,
+      solutionHeader -> nonEmptyText,
+      solutionBody -> nonEmptyText,
+      solutionFooter -> nonEmptyText,
       test -> nonEmptyText
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
@@ -28,28 +30,35 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
   def getAddTask = Action(Ok(views.html.addTask(addTaskForm)))
 
   def postNewTask = Action.async { implicit request =>
+    def badTask = BadRequest(
+      views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+    )
     addTaskForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        repo.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.test)).map { _ =>
-          Redirect(routes.Application.index)
-        }.recover {
+        val futureResponse = for {
+          test <- Future(ScalaTestRunner.execSuite(f.solutionHeader + f.solutionBody + f.solutionFooter, f.test)) // todo vaidate test output
+          db <- repo.addTask(Task(scalaClass, f.taskDescription, f.solutionHeader + f.solutionFooter, f.test))
+        } yield Redirect(routes.Application.index)
+
+        futureResponse.recover {
           case NonFatal(e) => Logger.warn(e.getMessage, e)
-            BadRequest(views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask))))
+            badTask
         }
       }
     )
   }
 }
 
-case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String, test: String)
+case class AddTaskForm(taskDescription: String, solutionHeader: String, solutionBody: String, solutionFooter: String, test: String)
 
 object NewTask {
   val taskDescription = "taskDescription"
-  val solutionTemplate = "solutionTemplate"
-  val referenceSolution = "referenceSolution"
+  val solutionHeader = "solutionHeader"
+  val solutionBody = "solutionBody"
+  val solutionFooter = "solutionFooter"
   val test = "test"
   val cannotAddTask = "cannotAddTask"
 }

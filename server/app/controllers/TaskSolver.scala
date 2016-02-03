@@ -55,7 +55,7 @@ class TaskSolver @Inject()(app: play.api.Application, val messagesApi: MessagesA
   }
 
   private def testSolution(solution: String, appAbsolutePath: String): String = {
-    ScalaTestRunner.execSuite(
+    ScalaTestRunner.tryExecSuite(
       solution,
       Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
       Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]]

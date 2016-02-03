@@ -20,13 +20,13 @@ class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
     "INSERT INTO user (name, password, timeuuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
   private lazy val addTaskStatement = session.prepare(
-    "INSERT INTO task (type, month, timeuuid, task_description, solution_template, reference_solution, test)" +
-      " VALUES (?, ?, NOW(), ?, ?, ?, ?)")
+    "INSERT INTO task (type, month, timeuuid, task_description, solution_template, test)" +
+      " VALUES (?, ?, NOW(), ?, ?, ?)")
 
   def create(user: User) = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password))))
 
   def addTask(task: Task) = TryFuture(toFutureUnit(
-    session.executeAsync(addTaskStatement.bind(task.`type`.toString, month, task.taskDescription, task.solutionTemplate, task.referenceSolution, task.test))
+    session.executeAsync(addTaskStatement.bind(task.`type`.toString, month, task.taskDescription, task.solutionTemplate, task.test))
   ))
 }
 
