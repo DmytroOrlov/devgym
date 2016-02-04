@@ -20,6 +20,8 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
         .flashing(flashToUser -> messagesApi(logoutDone))
     }
   }
+
+  def stub = Action(BadRequest("stub")) // todo remove
 }
 
 object Application {
