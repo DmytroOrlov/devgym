@@ -58,7 +58,7 @@ class TaskSolver @Inject()(dao: Dao, val messagesApi: MessagesApi)
     Ok(testSolution(solution, appPath).replaceAll("\n", "<br/>")) //temp solution to have lines in html
   }
 
-  def tasks = Action.async(dao.getTasks(scalaClass, 20, current).map(ts => Ok(ts.toString())))
+  def tasks = Action.async(dao.getTasks(scalaClass, 20, now).map(ts => Ok(ts.toString())))
 
   private def testSolution(solution: String, appAbsolutePath: String): String = {
     ScalaTestRunner.execSuite(
