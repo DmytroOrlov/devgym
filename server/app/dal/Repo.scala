@@ -20,17 +20,22 @@ class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
     "INSERT INTO user (name, password, timeuuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
   private lazy val addTaskStatement = session.prepare(
-    "INSERT INTO task (type, month, timeuuid, task_description, solution_template, reference_solution, test)" +
+    "INSERT INTO task (year, type, timeuuid, task_description, solution_template, reference_solution, test)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?)")
 
   def create(user: User) = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password))))
 
   def addTask(task: Task) = TryFuture(toFutureUnit(
-    session.executeAsync(addTaskStatement.bind(task.`type`.toString, month, task.taskDescription, task.solutionTemplate, task.referenceSolution, task.test))
+    session.executeAsync(addTaskStatement.bind(year(), task.`type`.toString, task.taskDescription, task.solutionTemplate, task.referenceSolution, task.test))
   ))
 }
 
 object Repo {
-  def month =
-    Date.from(ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS).withDayOfMonth(1).toInstant)
+  val current = 0
+
+  def year(ago: Int = current) =
+    Date.from(ZonedDateTime.now(ZoneOffset.UTC)
+      .truncatedTo(ChronoUnit.DAYS)
+      .withDayOfMonth(1).withMonth(1)
+      .minusYears(ago).toInstant)
 }
