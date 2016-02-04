@@ -59,7 +59,7 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
 
   it should "throw RuntimeException when suite does not have a trait type for contructor" in {
     intercept[RuntimeException] {
-      ScalaTestRunner.execSuite(correctSolution, noSuiteName)
+      ScalaTestRunner.execSuite(correctSolution, noTraitName)
     }
   }
 }
