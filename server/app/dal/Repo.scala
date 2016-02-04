@@ -11,7 +11,7 @@ import models.{Task, User}
 import util.FutureUtils._
 import util.TryFuture
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
   private lazy val session: Session = cluster.session
@@ -23,7 +23,7 @@ class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
     "INSERT INTO task (year, type, timeuuid, task_description, solution_template, reference_solution, suite)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?)")
 
-  def create(user: User) = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password))))
+  def create(user: User): Future[Boolean] = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
 
   def addTask(task: Task) = TryFuture(toFutureUnit(
     session.executeAsync(addTaskStatement.bind(year(), task.`type`.toString, task.taskDescription, task.solutionTemplate, task.referenceSolution, task.suite))
@@ -31,6 +31,8 @@ class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
 }
 
 object Repo {
+  val applied = "[applied]"
+
   val current = 0
 
   def year(ago: Int = current) =
