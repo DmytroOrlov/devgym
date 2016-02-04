@@ -3,6 +3,7 @@ taskDescription = Task description
 solutionTemplate = Solution template
 referenceSolution = Reference solution
 test = Test
+suite = Suite
 error.changesRequired = Change something :)
 name = Name
 password = Password
