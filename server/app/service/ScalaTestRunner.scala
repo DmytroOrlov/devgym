@@ -27,7 +27,14 @@ object ScalaTestRunner {
    * Runs suite loaded in runtime with dynamic solution
    */
   def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String =
-    tryExecSuite {
+    tryExec {
+      def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
+        val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
+        val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
+
+        tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
+      }
+
       val solutionInstance = createSolutionInstance(solution, solutionTrait)
       execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
     }
@@ -50,7 +57,7 @@ object ScalaTestRunner {
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $solutionTrait ")
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
-    tryExecSuite {
+    tryExec {
       execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
     }
   }
@@ -64,17 +71,10 @@ object ScalaTestRunner {
     }
   }.toString
 
-  private def tryExecSuite(execution: => String) =
-    try execution catch {
+  private def tryExec(suite: => String) =
+    try suite catch {
       case NonFatal(e) => s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"
     }
-
-  private def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
-    val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
-    val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
-
-    tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
-  }
 
   case class SolutionException(msg: String) extends RuntimeException(msg)
 
