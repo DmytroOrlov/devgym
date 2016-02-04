@@ -15,6 +15,13 @@ class ControllerTest extends PlaySpec with MockFactory {
         contentAsString(result) must (include("/task") and include("/addTask") and include("/register"))
       }
     }
+    "get request for logout" should {
+      "redirect" in withController { controller =>
+        val result = controller.logout(FakeRequest())
+        status(result) mustBe SEE_OTHER
+        redirectLocation(result) mustBe Some("/")
+      }
+    }
   }
 }
 
