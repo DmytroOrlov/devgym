@@ -27,17 +27,19 @@ object ScalaTestRunner {
    * Runs suite loaded in runtime with dynamic solution
    */
   def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String =
-    tryExec {
-      def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
-        val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
-        val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
+    tryExec(createSolutionAndExec(solution, suiteClass, solutionTrait))
 
-        tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
-      }
+  private[service] def createSolutionAndExec(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String = {
+    def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
+      val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
+      val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
 
-      val solutionInstance = createSolutionInstance(solution, solutionTrait)
-      execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
+      tb.eval(tb.parse(dynamicCode)).asInstanceOf[AnyRef]
     }
+
+    val solutionInstance = createSolutionInstance(solution, solutionTrait)
+    execSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
+  }
 
   /**
    * Runs dynamic solution and dynamic suite
