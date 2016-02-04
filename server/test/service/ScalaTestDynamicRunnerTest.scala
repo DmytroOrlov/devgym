@@ -62,4 +62,9 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
       ScalaTestRunner.execSuite(correctSolution, noTraitName)
     }
   }
+
+  it should "not return failed status when correct solution is provided" in {
+    val report = ScalaTestRunner.execSuite(correctSolution, correctSuite)
+    report shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
+  }
 }
