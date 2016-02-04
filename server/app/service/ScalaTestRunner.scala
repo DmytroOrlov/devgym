@@ -42,7 +42,7 @@ object ScalaTestRunner {
   /**
    * Runs dynamic solution and dynamic suite
    */
-  def execSuite(solution: String, suite: String): String = {
+  def execSuite(solution: String, suite: String, executor: (=> String) => String = tryExec): String = {
     //todo: solutionTrait should be taken from DB and populated during the task creation by user
     val solutionTrait = traitDefPattern.findFirstIn(suite) match {
       case Some(v) => v.split( """\s+""")(1)
@@ -57,7 +57,7 @@ object ScalaTestRunner {
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $solutionTrait ")
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
-    tryExec {
+    executor {
       execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
     }
   }
