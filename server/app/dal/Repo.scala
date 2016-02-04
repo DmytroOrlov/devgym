@@ -9,7 +9,7 @@ import com.google.inject.Inject
 import dal.Repo._
 import models.{Task, User}
 import util.FutureUtils._
-import util.TryToFuture
+import util.TryFuture
 
 import scala.concurrent.ExecutionContext
 
@@ -23,9 +23,9 @@ class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
     "INSERT INTO task (type, month, timeuuid, task_description, solution_template, reference_solution, test)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?)")
 
-  def create(user: User) = TryToFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password))))
+  def create(user: User) = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password))))
 
-  def addTask(task: Task) = TryToFuture(toFutureUnit(
+  def addTask(task: Task) = TryFuture(toFutureUnit(
     session.executeAsync(addTaskStatement.bind(task.`type`.toString, month, task.taskDescription, task.solutionTemplate, task.referenceSolution, task.test))
   ))
 }
