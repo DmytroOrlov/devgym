@@ -1,7 +1,5 @@
 import sbt.Project.projectToRef
 
-lazy val clients = Seq(client)
-
 val scalaVer = "2.11.7"
 
 lazy val commonSettings = Seq(scalaVersion := scalaVer)
@@ -14,6 +12,8 @@ lazy val testSettings = Seq(
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
   )
 )
+
+lazy val clients = Seq(client)
 
 lazy val server = (project in file("server"))
   .enablePlugins(PlayScala)
