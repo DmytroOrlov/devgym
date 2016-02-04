@@ -3,8 +3,10 @@ package controllers
 import com.google.inject.Inject
 import controllers.TaskSolver._
 import dal.Repo
+import dal.Repo.current
+import models.TaskType.scalaClass
 import org.scalatest.Suite
-import play.api.Play.current
+import play.api.Play
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
@@ -19,7 +21,7 @@ import scala.util.control.NonFatal
 
 class TaskSolver @Inject()(repo: Repo, val messagesApi: MessagesApi)
                           (implicit ec: ExecutionContext) extends Controller with I18nSupport {
-  val appPath = current.path.getAbsolutePath
+  val appPath = Play.current.path.getAbsolutePath
 
   val solutionForm = Form {
     mapping(
@@ -55,6 +57,8 @@ class TaskSolver @Inject()(repo: Repo, val messagesApi: MessagesApi)
     // todo add validation for ajax-solution too
     Ok(testSolution(solution, appPath).replaceAll("\n", "<br/>")) //temp solution to have lines in html
   }
+
+  def tasks = Action.async(repo.getTasks(scalaClass, 20, current).map(ts => Ok(ts.toString())))
 
   private def testSolution(solution: String, appAbsolutePath: String): String = {
     ScalaTestRunner.execSuite(
