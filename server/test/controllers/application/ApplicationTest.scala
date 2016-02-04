@@ -27,6 +27,7 @@ class ApplicationTest extends PlaySpec with OneAppPerSuite {
       "result with OK" in {
         val Some(result) = route(FakeRequest(GET, "/addTask"))
         status(result) mustBe OK
+        contentAsString(result) must (include("<form") and include("/addTask"))
       }
     }
     "post no form to addTask" should {
