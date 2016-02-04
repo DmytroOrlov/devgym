@@ -2,8 +2,8 @@ package controllers
 
 import com.google.inject.Inject
 import controllers.TaskSolver._
-import dal.Repo
-import dal.Repo.current
+import dal.Dao
+import dal.Dao._
 import models.TaskType.scalaClass
 import org.scalatest.Suite
 import play.api.Play
@@ -19,7 +19,7 @@ import scala.sys.process._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class TaskSolver @Inject()(repo: Repo, val messagesApi: MessagesApi)
+class TaskSolver @Inject()(dao: Dao, val messagesApi: MessagesApi)
                           (implicit ec: ExecutionContext) extends Controller with I18nSupport {
   val appPath = Play.current.path.getAbsolutePath
 
@@ -58,7 +58,7 @@ class TaskSolver @Inject()(repo: Repo, val messagesApi: MessagesApi)
     Ok(testSolution(solution, appPath).replaceAll("\n", "<br/>")) //temp solution to have lines in html
   }
 
-  def tasks = Action.async(repo.getTasks(scalaClass, 20, current).map(ts => Ok(ts.toString())))
+  def tasks = Action.async(dao.getTasks(scalaClass, 20, current).map(ts => Ok(ts.toString())))
 
   private def testSolution(solution: String, appAbsolutePath: String): String = {
     ScalaTestRunner.execSuite(
