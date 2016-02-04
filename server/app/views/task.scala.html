@@ -11,7 +11,7 @@
         <div class="solutionForm">
         @form(routes.TaskSolver.postSolution()) {
             @textarea(solution(TaskSolver.solution), 'rows -> "25", 'cols -> "80")
-            <input type="button" value="Submit" id="submit"/>
+            <input type="button" value="@msg("submit")" id="submit"/>
         }
         </div>
         <div id="report"></div>
