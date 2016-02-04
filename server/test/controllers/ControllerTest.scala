@@ -12,6 +12,7 @@ class ControllerTest extends PlaySpec with MockFactory {
       "result with OK" in withController { controller =>
         val result = controller.index(FakeRequest())
         status(result) mustBe OK
+        contentAsString(result) must (include("/task") and include("/addTask") and include("/register"))
       }
     }
   }
