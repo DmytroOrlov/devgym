@@ -7,7 +7,7 @@ lazy val commonSettings = Seq(scalaVersion := scalaVer)
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "2.2.6" % "test",
-    "org.scalacheck" %% "scalacheck" % "1.12.5" % "test",
+    "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
     "org.scalatestplus" %% "play" % "1.4.0" % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
   )
@@ -35,7 +35,7 @@ lazy val server = (project in file("server"))
       "org.webjars" % "jquery" % "2.2.0",
       "com.vmunier" %% "play-scalajs-scripts" % "0.4.0",
 
-      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0-rc1" exclude("org.xerial.snappy", "snappy-java"),
+      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0" exclude("org.xerial.snappy", "snappy-java"),
       "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0", // todo remove
 
       "org.scala-lang" % "scala-compiler" % scalaVer,
