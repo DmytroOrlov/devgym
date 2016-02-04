@@ -29,9 +29,9 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     "INSERT INTO user (name, password, timeuuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
   private lazy val addTaskStatement = session.prepare(
-    "INSERT INTO task (year, type, timeuuid, task_description, solution_template, reference_solution, suite)" +
-      " VALUES (?, ?, NOW(), ?, ?, ?, ?)")
-  private lazy val getLastTasksStatement = session.prepare("SELECT year, type, timeuuid, task_description, solution_template, reference_solution, suite FROM task WHERE" +
+    "INSERT INTO task (year, type, timeuuid, task_description, solution_header, solution_body, solution_footer, suite)" +
+      " VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)")
+  private lazy val getLastTasksStatement = session.prepare("SELECT year, type, timeuuid, task_description, solution_header, solution_body, solution_footer, suite FROM task WHERE" +
     " year = ?" +
     " and type = ?" +
     " limit ?")
@@ -39,8 +39,9 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
   private def toTask(r: Row) = Task(
     models.TaskType.withName(r.getString("type")),
     r.getString("task_description"),
-    r.getString("solution_template"),
-    r.getString("reference_solution"),
+    r.getString("solution_header"),
+    r.getString("solution_body"),
+    r.getString("solution_footer"),
     r.getString("suite")
   )
 
@@ -54,7 +55,7 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
   def create(user: User): Future[Boolean] = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
 
   def addTask(task: Task): Future[Unit] = TryFuture(toFutureUnit {
-    session.executeAsync(addTaskStatement.bind(year(), task.`type`.toString, task.taskDescription, task.solutionTemplate, task.referenceSolution, task.suite))
+    session.executeAsync(addTaskStatement.bind(year(), task.`type`.toString, task.taskDescription, task.solutionHeader, task.solutionBody, task.solutionFooter, task.suite))
   })
 
   def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]] = TryFuture(

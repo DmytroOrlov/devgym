@@ -1,7 +1,8 @@
 solution = Submit your solution
 taskDescription = Task description
-solutionTemplate = Solution template
-referenceSolution = Reference solution
+solutionHeader = Solution header
+solutionBody = Solution body
+solutionFooter = Solution footer
 test = Test
 suite = Suite
 error.changesRequired = Change something :)

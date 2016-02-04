@@ -3,17 +3,18 @@
 
 @(task: Form[AddTaskForm])(implicit msg: Messages)
 
-@main(msg("addTask")) {
-    <div><a href="@routes.Application.index()">@msg("home")</a></div>
-    <div class="solutionForm">
-    @form(routes.NewTask.postNewTask()) {
-        @textarea(task(taskDescription), 'rows -> "8", 'cols -> "80")
-        @textarea(task(solutionTemplate), 'rows -> "6", 'cols -> "80")
-        @textarea(task(referenceSolution), 'rows -> "13", 'cols -> "80")
-        @textarea(task(suite), 'rows -> "13", 'cols -> "80")
-        <div class="submit">
-            <input type="submit" value="@msg("addTask")"/>
+    @main(msg("addTask")) {
+        <div><a href="@routes.Application.index()">@msg("home")</a></div>
+        <div class="solutionForm">
+        @form(routes.NewTask.postNewTask()) {
+            @textarea(task(taskDescription), 'rows -> "8", 'cols -> "80")
+            @textarea(task(solutionHeader), 'rows -> "3", 'cols -> "80")
+            @textarea(task(solutionBody), 'rows -> "6", 'cols -> "80")
+            @textarea(task(solutionFooter), 'rows -> "2", 'cols -> "80")
+            @textarea(task(suite), 'rows -> "13", 'cols -> "80")
+            <div class="submit">
+                <input type="submit" value="@msg("addTask")"/>
+            </div>
+        }
         </div>
     }
-    </div>
-}
