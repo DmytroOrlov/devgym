@@ -1,8 +1,9 @@
 package service
 
-import org.scalatest.FlatSpecLike
+import org.scalatest._
+import service.ScalaTestRunnerTest._
 
-class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
+class ScalaTestDynamicRunnerTest extends FlatSpec with Matchers {
   behavior of "ScalaTestRunner for dynamic solution and suite code"
 
   val correctSuite =
@@ -44,13 +45,6 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
           }""".stripMargin
 
 
-  override def getReport(solution: String) = {
-    ScalaTestRunner.execSuite(
-      solution,
-      correctSuite
-    )
-  }
-
   it should "throw RuntimeException when suite does not have a class name" in {
     intercept[RuntimeException] {
       ScalaTestRunner.execSuite(correctSolution, noSuiteName)
@@ -59,7 +53,12 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
 
   it should "throw RuntimeException when suite does not have a trait type for contructor" in {
     intercept[RuntimeException] {
-      ScalaTestRunner.execSuite(correctSolution, noSuiteName)
+      ScalaTestRunner.execSuite(correctSolution, noTraitName)
     }
+  }
+
+  it should "not return failed status when correct solution is provided" in {
+    val report = ScalaTestRunner.execSuite(correctSolution, correctSuite)
+    report shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
   }
 }
