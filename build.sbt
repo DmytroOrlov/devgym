@@ -50,7 +50,6 @@ lazy val client = (project in file("client"))
   .settings(
     persistLauncher := true,
     persistLauncher in Test := false,
-    //    sourceMapsDirectories += sharedJs.base / "..",
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.8.2",
       "be.doeraene" %%% "scalajs-jquery" % "0.8.1",
@@ -61,7 +60,6 @@ lazy val client = (project in file("client"))
 lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(commonSettings: _*)
   .jsConfigure(_ enablePlugins ScalaJSPlay)
-//  .jsSettings(sourceMapsBase := baseDirectory.value / "..")
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
