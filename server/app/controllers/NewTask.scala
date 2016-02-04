@@ -21,7 +21,7 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
       taskDescription -> nonEmptyText,
       solutionTemplate -> nonEmptyText,
       referenceSolution -> nonEmptyText,
-      test -> nonEmptyText
+      suite -> nonEmptyText
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
@@ -33,7 +33,7 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        repo.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.test)).map { _ =>
+        repo.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite)).map { _ =>
           Redirect(routes.Application.index)
         }.recover {
           case NonFatal(e) => Logger.warn(e.getMessage, e)
@@ -44,12 +44,12 @@ class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: 
   }
 }
 
-case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String, test: String)
+case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String, suite: String)
 
 object NewTask {
   val taskDescription = "taskDescription"
   val solutionTemplate = "solutionTemplate"
   val referenceSolution = "referenceSolution"
-  val test = "test"
+  val suite = "suite"
   val cannotAddTask = "cannotAddTask"
 }
