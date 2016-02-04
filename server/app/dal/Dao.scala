@@ -67,9 +67,9 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
 object Dao {
   val applied = "[applied]"
 
-  val current = 0
+  val now = 0
 
-  def year(ago: Int = current) =
+  def year(ago: Int = now) =
     Date.from(ZonedDateTime.now(ZoneOffset.UTC)
       .truncatedTo(ChronoUnit.DAYS)
       .withDayOfMonth(1).withMonth(1)
