@@ -14,7 +14,7 @@ import play.api.mvc.{Action, Controller}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class NewTask @Inject()(repo: Repo, app: play.api.Application, val messagesApi: MessagesApi)
+class NewTask @Inject()(repo: Repo, val messagesApi: MessagesApi)
                        (implicit ec: ExecutionContext) extends Controller with I18nSupport {
   val addTaskForm = Form {
     mapping(
