@@ -62,6 +62,20 @@ object ScalaTestRunner {
     }
   }
 
+  def execSuiteNoTrait(solution: String, suite: String, executor: (=> String) => String = tryExec): String = {
+    val suiteName = classDefPattern.findFirstIn(suite) match {
+      case Some(v) => v.split( """\s+""")(1)
+      case None => throw new SolutionException(s"There is no Test Suite name to instantiate, code: $suite")
+    }
+
+    val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass ")
+    val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
+
+    executor {
+      execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
+    }
+  }
+
   /**
    * Runs suite instance with solution instance
    */

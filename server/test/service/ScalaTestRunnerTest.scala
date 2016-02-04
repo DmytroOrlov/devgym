@@ -2,9 +2,8 @@ package service
 
 import org.scalatest.{FlatSpec, Matchers, Suite}
 
-class ScalaTestRunnerTest extends FlatSpec with Matchers {
+class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution {
   behavior of "ScalaTestRunner"
-  val correctSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {!weekday || vacation}}"
   val incorrectSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {weekday || vacation}}"
 
   it should "not return failed status when correct solution is provided" in {
@@ -29,4 +28,8 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers {
       Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
     )
   }
+}
+
+trait ScalaTestCorrectSolution {
+  val correctSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {!weekday || vacation}}"
 }
