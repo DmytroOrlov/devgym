@@ -21,7 +21,7 @@ class TaskSolver @Inject()(app: play.api.Application, val messagesApi: MessagesA
 
   val solutionForm = Form {
     mapping(
-      solution -> nonEmptyAndDirty(original = solutionTemplateText)
+      solution -> nonEmptyAndDiffer(from = solutionTemplateText)
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
@@ -83,8 +83,8 @@ object TaskSolver {
 
   val solution = "solution"
 
-  def nonEmptyAndDirty(original: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
-    if (o.filter(_ != '\r') == original) Invalid(ValidationError("error.changesRequired")) else Valid
+  def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
+    if (o.filter(_ != '\r') == from) Invalid(ValidationError("error.changesRequired")) else Valid
   }
 
   def sbt(command: String): Try[Boolean] = Try(Seq("sbt", command).! == 0)
