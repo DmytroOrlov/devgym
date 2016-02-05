@@ -6,7 +6,7 @@ import java.util.Date
 
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.google.inject.Inject
-import dal.Repo._
+import dal.Dao._
 import models.TaskType._
 import models.{Task, User}
 import util.FutureUtils._
@@ -14,7 +14,15 @@ import util.TryFuture
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
+trait Dao {
+  def create(user: User): Future[Boolean]
+
+  def addTask(task: Task): Future[Unit]
+
+  def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]]
+}
+
+class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) extends Dao {
   private lazy val session: Session = cluster.session
 
   private lazy val createUserStatement = session.prepare(
@@ -56,12 +64,12 @@ class Repo @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) {
     }.map(allTasks))
 }
 
-object Repo {
+object Dao {
   val applied = "[applied]"
 
-  val current = 0
+  val now = 0
 
-  def year(ago: Int = current) =
+  def year(ago: Int = now) =
     Date.from(ZonedDateTime.now(ZoneOffset.UTC)
       .truncatedTo(ChronoUnit.DAYS)
       .withDayOfMonth(1).withMonth(1)
