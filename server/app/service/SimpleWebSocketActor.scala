@@ -17,7 +17,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: String => Observable[T])
+class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: String => Observable[T], timeout: FiniteDuration)
                                                (implicit s: Scheduler) extends Actor {
   private[this] val subscription =
     CompositeCancelable()
@@ -28,7 +28,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: String 
 
       subscription += producer(solution)
         .map(x => Json.toJson(x))
-        .timeout(10.seconds)
+        .timeout(timeout)
         .subscribe(
           jsValue => {
             out ! jsValue
@@ -61,9 +61,9 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: String 
 
 object SimpleWebSocketActor {
   /** Utility for quickly creating a `Props` */
-  def props[T <: Event : Writes](out: ActorRef, producer: String => Observable[T])
+  def props[T <: Event : Writes](out: ActorRef, producer: String => Observable[T], timeout: FiniteDuration = 10.seconds)
                                 (implicit s: Scheduler): Props = {
-    Props(new SimpleWebSocketActor(out, producer))
+    Props(new SimpleWebSocketActor(out, producer, timeout))
   }
 
   /**
