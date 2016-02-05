@@ -9,9 +9,11 @@ import org.scalajs.dom.{CloseEvent, ErrorEvent, Event, WebSocket}
 
 import scala.concurrent.duration._
 
-final class SimpleWebSocketClient(url: String, os: Synchronous, sendOnOpen: => Option[String] = None) extends Observable[String] {
+final class SimpleWebSocketClient(url: String,
+                                  os: Synchronous,
+                                  sendOnOpen: => Option[String] = None,
+                                  timeout: FiniteDuration = 15.seconds) extends Observable[String] {
   self =>
-
   private def createChannel(webSocket: WebSocket)(implicit s: Scheduler) = try {
     val channel = PublishChannel[String](os)
     webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(s))
@@ -45,7 +47,7 @@ final class SimpleWebSocketClient(url: String, os: Synchronous, sendOnOpen: => O
       case e: Throwable => Observable.error(e) -> None
     }
 
-    val source = channel.timeout(15.seconds)
+    val source = channel.timeout(timeout)
       .doOnCanceled(webSocket foreach closeConnection)
 
     source.onSubscribe(new Observer[String] {
