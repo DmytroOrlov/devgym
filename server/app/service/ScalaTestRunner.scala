@@ -62,7 +62,11 @@ object ScalaTestRunner {
     }
   }
 
-  def execSuiteNoTrait(solution: String, suite: String, executor: (=> String) => String = tryExec): String = {
+  /**
+    * Runs dynamic solution as well as dynamic suite using the structural type for test, instead of explicitly defined
+    * trait
+    */
+  def execSuiteNoTrait(solution: String, suite: String): String = {
     val suiteName = classDefPattern.findFirstIn(suite) match {
       case Some(v) => v.split( """\s+""")(1)
       case None => throw new SolutionException(s"There is no Test Suite name to instantiate, code: $suite")
@@ -71,7 +75,7 @@ object ScalaTestRunner {
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass ")
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
-    executor {
+    tryExec {
       execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
     }
   }
