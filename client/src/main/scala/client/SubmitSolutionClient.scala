@@ -1,5 +1,7 @@
 package client
 
+import java.util.Date
+
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.reactive.Ack.Continue
 import monifu.reactive.OverflowStrategy.DropOld
@@ -72,7 +74,8 @@ object SubmitSolutionClient extends JSApp {
         case "error" =>
           val errorType = json.`type`.asInstanceOf[String]
           val message = json.message.asInstanceOf[String]
-          throw new SimpleWebSocketClient.Exception(s"Server-side error throw - $errorType: $message")
+          val timestamp = json.timestamp.asInstanceOf[Number].longValue()
+          throw new SimpleWebSocketClient.Exception(s"Server-side error throw (${new Date(timestamp)}) - $errorType: $message")
         case _ => None
       }
     }
