@@ -32,13 +32,13 @@ final class SimpleWebSocketClient(url: String, os: Synchronous, sendOnOpen: => O
 
   def onSubscribe(subscriber: Subscriber[String]) = {
     def closeConnection(webSocket: WebSocket)(implicit s: Scheduler) =
-      if (webSocket != null && webSocket.readyState <= 1)
+      if (webSocket.readyState <= 1)
         try webSocket.close() catch {
           case _: Throwable => ()
         }
     import subscriber.scheduler
 
-    val (channel, webSocket) = try {
+    val (channel, webSocket: Option[WebSocket]) = try {
       val webSocket = new WebSocket(url)
       createChannel(webSocket) -> Some(webSocket)
     } catch {
