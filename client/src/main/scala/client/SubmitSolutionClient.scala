@@ -53,7 +53,7 @@ object SubmitSolutionClient extends JSApp {
       val source = new SimpleWebSocketClient(
         url = s"$protocol//$host/task-stream",
         DropOld(20),
-        sendOnOpen = Some(jQuery(s"#$solutionId").`val`().toString)
+        sendOnOpen = Some(jQuery(s"#$solutionId").`val`().asInstanceOf[String])
       )
       source.collect { case IsEvent(e) => e }
         .onSubscribe(subscriber)
