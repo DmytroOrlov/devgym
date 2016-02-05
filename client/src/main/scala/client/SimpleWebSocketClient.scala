@@ -9,7 +9,7 @@ import org.scalajs.dom.{CloseEvent, ErrorEvent, Event, WebSocket}
 
 import scala.concurrent.duration._
 
-final class SimpleWebSocketClient(url: String, os: Synchronous, sendOnOpen: => Option[String]) extends Observable[String] {
+final class SimpleWebSocketClient(url: String, os: Synchronous, sendOnOpen: => Option[String] = None) extends Observable[String] {
   self =>
 
   private def createChannel(webSocket: WebSocket)(implicit s: Scheduler) = try {
