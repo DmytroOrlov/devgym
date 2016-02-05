@@ -5,7 +5,6 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /logout                     controllers.Application.logout
-POST    /stub                       controllers.Application.stub
 
 GET     /tasks                      controllers.TaskSolver.tasks
 GET     /task                       controllers.TaskSolver.getTask
