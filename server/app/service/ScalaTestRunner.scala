@@ -49,10 +49,8 @@ object ScalaTestRunner {
       case None => throw new SolutionException(s"There is no trait type defined in the Test constructor, code: $suite")
     }
 
-    val suiteName = findSuitNameOrFail(suite)
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $solutionTrait ")
-
-    execDynamicSuite(suite, suiteName, patchedSolution)
+    execDynamicSuite(suite, patchedSolution)
   }
 
   /**
@@ -60,10 +58,8 @@ object ScalaTestRunner {
     * trait
     */
   def execSuiteNoTrait(solution: String, suite: String): String = {
-    val suiteName = findSuitNameOrFail(suite)
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass ")
-
-    execDynamicSuite(suite, suiteName, patchedSolution)
+    execDynamicSuite(suite, patchedSolution)
   }
 
   /**
@@ -84,7 +80,8 @@ object ScalaTestRunner {
     suiteName
   }
 
-  private def execDynamicSuite(suite: String, suiteName: String, patchedSolution: String): String = {
+  private def execDynamicSuite(suite: String, patchedSolution: String): String = {
+    val suiteName = findSuitNameOrFail(suite)
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
     tryExec {
@@ -98,5 +95,4 @@ object ScalaTestRunner {
     }
 
   case class SolutionException(msg: String) extends RuntimeException(msg)
-
 }
