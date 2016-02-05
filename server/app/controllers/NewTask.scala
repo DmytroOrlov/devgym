@@ -38,7 +38,7 @@ class NewTask @Inject()(dao: Dao, val messagesApi: MessagesApi)
       },
       f => {
         val futureResponse = for {
-          test <- Future(ScalaTestRunner.execSuite(f.referenceSolution, f.suite, r => r)) // todo vaidate test output
+          test <- Future(ScalaTestRunner.execSuite(f.referenceSolution, f.suite)) // todo vaidate test output
           db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
         } yield Redirect(routes.Application.index)
 
