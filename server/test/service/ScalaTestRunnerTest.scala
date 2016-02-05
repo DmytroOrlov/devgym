@@ -22,7 +22,7 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
   }
 
   def getReport(solution: String) = {
-    ScalaTestRunner.execSuite(
+    ScalaTestRunner.tryExecSuite(
       solution,
       Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
       Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]

@@ -1,6 +1,7 @@
 package service
 
 import org.scalatest.FlatSpecLike
+import service.ScalaTestRunner.tryExec
 
 class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
   behavior of "ScalaTestRunner for dynamic solution and suite code"
@@ -44,12 +45,11 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
           }""".stripMargin
 
 
-  override def getReport(solution: String) = {
-    ScalaTestRunner.execSuite(
-      solution,
-      correctSuite
-    )
-  }
+  override def getReport(solution: String) =
+    tryExec {
+      ScalaTestRunner.execSuite(solution, correctSuite
+      )
+    }
 
   it should "throw RuntimeException when suite does not have a class name" in {
     intercept[RuntimeException] {
