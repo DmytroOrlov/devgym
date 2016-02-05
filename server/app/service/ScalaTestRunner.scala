@@ -49,17 +49,10 @@ object ScalaTestRunner {
       case None => throw new SolutionException(s"There is no trait type defined in the Test constructor, code: $suite")
     }
 
-    val suiteName = classDefPattern.findFirstIn(suite) match {
-      case Some(v) => v.split( """\s+""")(1)
-      case None => throw new SolutionException(s"There is no Test Suite name to instantiate, code: $suite")
-    }
-
+    val suiteName = findSuitNameOrFail(suite)
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $solutionTrait ")
-    val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
-    tryExec {
-      execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
-    }
+    execDynamicSuite(suite, suiteName, patchedSolution)
   }
 
   /**
@@ -67,17 +60,10 @@ object ScalaTestRunner {
     * trait
     */
   def execSuiteNoTrait(solution: String, suite: String): String = {
-    val suiteName = classDefPattern.findFirstIn(suite) match {
-      case Some(v) => v.split( """\s+""")(1)
-      case None => throw new SolutionException(s"There is no Test Suite name to instantiate, code: $suite")
-    }
-
+    val suiteName = findSuitNameOrFail(suite)
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass ")
-    val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
-    tryExec {
-      execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
-    }
+    execDynamicSuite(suite, suiteName, patchedSolution)
   }
 
   /**
@@ -88,6 +74,23 @@ object ScalaTestRunner {
       suiteInstance.execute(color = false)
     }
   }.toString
+
+
+  private def findSuitNameOrFail(suite: String): String = {
+    val suiteName = classDefPattern.findFirstIn(suite) match {
+      case Some(v) => v.split( """\s+""")(1)
+      case None => throw new SolutionException(s"There is no Test Suite name to instantiate, code: $suite")
+    }
+    suiteName
+  }
+
+  private def execDynamicSuite(suite: String, suiteName: String, patchedSolution: String): String = {
+    val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
+
+    tryExec {
+      execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
+    }
+  }
 
   private def tryExec(suite: => String) =
     try suite catch {
