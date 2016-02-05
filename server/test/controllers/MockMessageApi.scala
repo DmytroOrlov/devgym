@@ -6,11 +6,13 @@ import play.api.mvc.Result
 import play.mvc.Http.RequestHeader
 
 class MockMessageApi extends MessagesApi {
+  val m = Messages(Lang("en"), this)
+
   override def messages: Map[String, Map[String, String]] = ???
 
-  override def preferred(candidates: Seq[Lang]): Messages = ???
+  override def preferred(candidates: Seq[Lang]): Messages = m
 
-  override def preferred(request: mvc.RequestHeader): Messages = Messages(Lang("en"), this)
+  override def preferred(request: mvc.RequestHeader): Messages = m
 
   override def preferred(request: RequestHeader): Messages = ???
 
