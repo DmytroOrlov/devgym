@@ -29,7 +29,7 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
     """.stripMargin
 
   val noSuiteName =
-      """class (solution: SleepInSolution) extends FlatSpec with Matchers {
+    """class (solution: SleepInSolution) extends FlatSpec with Matchers {
           behavior of "SleepIn"
 
           it should "sleepIn when it is not a weekday and it is not a vacation" in {
@@ -37,7 +37,7 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
           }""".stripMargin
 
   val noTraitName =
-      """class SleepInTest(solution: SleepInSolution) extends FlatSpec with Matchers {
+    """class SleepInTest(solution: SleepInSolution) extends FlatSpec with Matchers {
           behavior of "SleepIn"
 
           it should "sleepIn when it is not a weekday and it is not a vacation" in {
@@ -45,11 +45,7 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
           }""".stripMargin
 
 
-  override def getReport(solution: String) =
-    tryExec {
-      ScalaTestRunner.execSuite(solution, correctSuite
-      )
-    }
+  override def getReport(solution: String) = ScalaTestRunner.execSuite(solution, correctSuite)
 
   it should "throw RuntimeException when suite does not have a class name" in {
     intercept[RuntimeException] {

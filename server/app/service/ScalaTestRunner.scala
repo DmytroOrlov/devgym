@@ -8,8 +8,8 @@ import scala.util.control.NonFatal
 
 
 /**
- * Runs test suite of scalatest library using the 'execute' method
- */
+  * Runs test suite of scalatest library using the 'execute' method
+  */
 object ScalaTestRunner {
   val failedMarker = "FAILED"
   val failedInRuntimeMarker = "failed in runtime"
@@ -24,9 +24,9 @@ object ScalaTestRunner {
   val tb = cm.mkToolBox()
 
   /**
-   * Runs suite loaded in runtime with dynamic solution
-   */
-  def tryExecSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String =
+    * Runs suite loaded in runtime with dynamic solution
+    */
+  def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String =
     tryExec {
       def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
         val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
@@ -40,8 +40,8 @@ object ScalaTestRunner {
     }
 
   /**
-   * Runs dynamic solution and dynamic suite
-   */
+    * Runs dynamic solution and dynamic suite
+    */
   def execSuite(solution: String, suite: String): String = {
     //todo: solutionTrait should be taken from DB and populated during the task creation by user
     val solutionTrait = traitDefPattern.findFirstIn(suite) match {
@@ -63,8 +63,8 @@ object ScalaTestRunner {
   }
 
   /**
-   * Runs suite instance with solution instance
-   */
+    * Runs suite instance with solution instance
+    */
   def execSuite(suiteInstance: Suite): String = new ByteArrayOutputStream { stream =>
     Console.withOut(stream) {
       suiteInstance.execute(color = false)
@@ -84,10 +84,12 @@ object ScalaTestRunner {
     val suiteName = findSuitNameOrFail(suite)
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
-    execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
+    tryExec {
+      execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
+    }
   }
 
-  def tryExec(suite: => String) =
+  private def tryExec(suite: => String) =
     try suite catch {
       case NonFatal(e) => s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"
     }

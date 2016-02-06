@@ -74,7 +74,7 @@ object SimpleWebSocketActor {
   def createChannel(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])(solution: String)(implicit s: Scheduler): Observable[Line] = {
     val channel = PublishChannel[Line](DropOld(20))
     Future {
-      val lines = tryExecSuite(solution, suiteClass, solutionTrait).split("\n")
+      val lines = execSuite(solution, suiteClass, solutionTrait).split("\n")
       lines.foreach(s => channel.pushNext(Line(s)))
       channel.pushComplete()
     }
