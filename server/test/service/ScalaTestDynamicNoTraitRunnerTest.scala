@@ -31,14 +31,12 @@ class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with Scal
             solution.sleepIn(false, false) shouldBe true
           }""".stripMargin
 
-  it should "throw RuntimeException when suite does not have a class name" in {
-    intercept[RuntimeException] {
-      ScalaTestRunner.execSuiteNoTrait(correctSolution, noSuiteName)
-    }
+  it should "retrun failure when suite does not have a class name" in new ScalaTestRunner {
+    execSuiteNoTrait(correctSolution, noSuiteName).isFailure shouldBe true
   }
 
-  it should "not return failed status when correct solution is provided" in {
-    val report = ScalaTestRunner.execSuiteNoTrait(correctSolution, correctSuite)
-    report shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
+  it should "return success when correct solution is provided" in new ScalaTestRunner {
+    val report = execSuiteNoTrait(correctSolution, correctSuite)
+    report.isSuccess shouldBe true
   }
 }
