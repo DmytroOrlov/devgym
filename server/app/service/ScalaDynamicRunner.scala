@@ -20,13 +20,9 @@ trait ScalaDynamicRunner extends ExecDynamicSuite with ExecuteDynamic with TryBl
   /**
    * Runs dynamic solution and dynamic suite
    */
-  def apply(solution: String, suite: String, checked: Boolean): Try[String] = {
-    val result = for {
-      traitName <- findTraitName(suite)
-      patchedSolution <- tryBlock()(classDefPattern.replaceFirstIn(solution, s"class $userClass extends $traitName "))
-      result <- executeDynamic(suite, patchedSolution)
-    } yield result
-    if (checked) result.filter(!_.contains(failed))
-    result
-  }
+  def apply(solution: String, suite: String, checked: Boolean): Try[String] = for {
+    traitName <- findTraitName(suite)
+    patchedSolution <- tryBlock()(classDefPattern.replaceFirstIn(solution, s"class $userClass extends $traitName "))
+    r <- executeDynamic(suite, patchedSolution) if !checked || !r.contains(failed)
+  } yield r
 }
