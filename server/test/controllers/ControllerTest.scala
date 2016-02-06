@@ -10,13 +10,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class ControllerTest extends PlaySpec {
 
   "NewTask controller" when {
-    "get addTask" should {
-      "result with form" in withNewTaskController { controller =>
-        val result = controller.getAddTask(FakeRequest())
-        status(result) mustBe OK
-        contentAsString(result) must (include("<form") and include("/addTask"))
-      }
-    }
     "post no form to addTask" should {
       "result BadRequest with error" in withNewTaskController { controller =>
         val result = controller.postNewTask(FakeRequest())
