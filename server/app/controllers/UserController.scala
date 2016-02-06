@@ -35,7 +35,7 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
   }
 
   def postRegister() = Action.async { implicit request =>
-    def nameBusy = Ok(views.html.register(registerForm.bindFromRequest
+    def nameBusy = BadRequest(views.html.register(registerForm.bindFromRequest
       .withError(name, messagesApi(nameRegistered))))
 
     def withPasswordMatchError(errorForm: Form[RegisterForm]) =
@@ -49,8 +49,8 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
       },
       form => {
         val hashSalt = toHashSalt(form.password, Random.nextInt().toString) match { case (h, s) => combine(h, s)}
-        dao.create(User(form.name, hashSalt)).map { r =>
-          if (r) Redirect(routes.Application.index)
+        dao.create(User(form.name, hashSalt)).map { applied =>
+          if (applied) Redirect(routes.Application.index)
             .withSession(username -> form.name)
             .flashing(flashToUser -> messagesApi(userRegistered))
           else nameBusy

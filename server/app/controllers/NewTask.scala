@@ -30,9 +30,6 @@ class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val mes
   def getAddTask = Action(Ok(views.html.addTask(addTaskForm)))
 
   def postNewTask = Action.async { implicit request =>
-    def badTask = BadRequest(
-      views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
-    )
     addTaskForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.addTask(errorForm)))
@@ -49,7 +46,9 @@ class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val mes
 
         futureResponse.recover {
           case NonFatal(e) => Logger.warn(e.getMessage, e)
-            badTask
+            BadRequest {
+              views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+            }
         }
       }
     )
