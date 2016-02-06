@@ -34,7 +34,8 @@ class ApplicationTest extends PlaySpec with OneAppPerSuite {
       "result BadRequest with error" in {
         val Some(result) = route(FakeRequest(POST, "/addTask"))
         status(result) mustBe BAD_REQUEST
-        contentAsString(result) must (include("<form") and include("/addTask") and include("error") and include("This field is required"))
+        contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription") and include("solutionTemplate") and include("referenceSolution") and include("suite") and include("suite") and include("""<input type="submit""""))
+        contentAsString(result) must (include("""class="error"""") and include("This field is required"))
       }
     }
   }
