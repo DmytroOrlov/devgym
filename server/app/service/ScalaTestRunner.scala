@@ -6,11 +6,14 @@ import org.scalatest.Suite
 
 import scala.util.control.NonFatal
 
+trait ScalaTestRunnerContract {
+  def execSuite(solution: String, suite: String): String
+}
 
 /**
  * Runs test suite of scalatest library using the 'execute' method
  */
-object ScalaTestRunner {
+object ScalaTestRunner extends ScalaTestRunnerContract {
   val failedMarker = "FAILED"
   val failedInRuntimeMarker = "failed in runtime"
   val userClass = "UserSolution"
