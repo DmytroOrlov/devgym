@@ -25,9 +25,7 @@ trait ExecuteSuite {
 trait TryBlock {
   def failurePrefix(s: String): String
 
-  def tryBlock(msg: String = "")(block: => String): Try[String] = apply(msg)(block)
-
-  def apply(msg: String)(block: => String): Try[String] =
+  def tryBlock(msg: String = "")(block: => String): Try[String] =
     Try(block).transform(
       v => Success(v),
       e => Failure(new SuiteException(s"${failurePrefix(msg)}${e.getMessage}"))
@@ -50,12 +48,12 @@ trait SuiteToolbox {
 }
 
 trait ExecuteDynamic extends ExecuteSuite with SuiteToolbox {
-  private val trySuite = new TryBlock {
+  private val t = new TryBlock {
     override def failurePrefix(s: String): String = s"There is no Test Suite name to instantiate, code: $s"
   }
 
   private def findSuitName(suite: String): Try[String] =
-    trySuite(suite) {
+    t.tryBlock(suite) {
       classDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
     }
 

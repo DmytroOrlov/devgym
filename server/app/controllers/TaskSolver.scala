@@ -42,8 +42,8 @@ class TaskSolver @Inject()(execSuite: ExecRuntimeSuite, dao: Dao, val messagesAp
   def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
     SimpleWebSocketActor.props(out, createChannel(execSuite(
       Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
-      Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]]
-    )))
+      Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]])
+      (checked = false)))
   }
 }
 

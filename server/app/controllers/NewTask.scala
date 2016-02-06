@@ -38,7 +38,7 @@ class NewTask @Inject()(execSuite: ExecDynamicSuite, dao: Dao, val messagesApi: 
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        val checkNewTask = execSuite(f.referenceSolution, f.suite, checkFailed = true) match {
+        val checkNewTask = execSuite(f.referenceSolution, f.suite, checked = true) match {
           case Success(_) => Future.successful(())
           case Failure(e) => Future.failed(e)
         }

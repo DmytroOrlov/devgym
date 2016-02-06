@@ -5,15 +5,19 @@ import org.scalatest.Suite
 import scala.util.Try
 
 trait ExecRuntimeSuite {
-  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])(solution: String): Try[String]
+  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])
+           (checked: Boolean)
+           (solution: String): Try[String]
 }
 
 trait ScalaRuntimeRunner extends ExecRuntimeSuite with ExecuteSuite with TryBlock with SuiteToolbox {
   /**
    * Runs suite loaded in runtime with dynamic solution
    */
-  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])(solution: String): Try[String] =
-    tryBlock() {
+  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])
+           (checked: Boolean)
+           (solution: String): Try[String] = {
+    val result = tryBlock() {
       def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
         val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
         val dynamicCode = s"import ${solutionTrait.getName}; $patchedSolution; new $userClass"
@@ -24,4 +28,7 @@ trait ScalaRuntimeRunner extends ExecRuntimeSuite with ExecuteSuite with TryBloc
       val solutionInstance = createSolutionInstance(solution, solutionTrait)
       executionOutput(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance))
     }
+    if (checked) result.filter(!_.contains(failed))
+    else result
+  }
 }
