@@ -6,6 +6,7 @@ import play.api.mvc.{Flash, Session}
 import play.api.test.Helpers._
 
 class TemplateTest extends PlaySpec {
+/*
   implicit val f = Flash()
   implicit val s = Session()
   implicit val m = new MockMessageApi().preferred(Seq(Lang("en")))
@@ -17,4 +18,5 @@ class TemplateTest extends PlaySpec {
       }
     }
   }
+*/
 }
