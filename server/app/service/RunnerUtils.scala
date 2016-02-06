@@ -7,7 +7,7 @@ import service.ScalaTestRunner._
 
 import scala.util.{Failure, Success, Try}
 
-trait ExecuteSuite {
+trait SuiteExecution {
   /**
    * Executes tests in this <code>Suite</code>, printing output to result string.
    * Should not throw exception.
@@ -15,10 +15,7 @@ trait ExecuteSuite {
   def executionOutput(suiteInstance: Suite): String = {
     val o = new ByteArrayOutputStream
     Console.withOut(o)(suiteInstance.execute(color = false))
-    o.toString /*match {
-      case s if s.contains(failedMarker) => Failure(new SolutionException(s"contains $failedMarker"))
-      case s => Success(s)
-    }*/
+    o.toString
   }
 }
 
@@ -47,7 +44,7 @@ trait SuiteToolbox {
   }
 }
 
-trait ExecuteDynamic extends ExecuteSuite with SuiteToolbox {
+trait DynamicExecution extends SuiteExecution with SuiteToolbox {
   private val t = new TryBlock {
     override def failurePrefix(s: String): String = s"There is no Test Suite name to instantiate, code: $s"
   }

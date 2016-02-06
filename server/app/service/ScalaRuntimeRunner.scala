@@ -4,13 +4,13 @@ import org.scalatest.Suite
 
 import scala.util.Try
 
-trait ExecRuntimeSuite {
+trait RuntimeSuiteExecutor {
   def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])
            (checked: Boolean)
            (solution: String): Try[String]
 }
 
-trait ScalaRuntimeRunner extends ExecRuntimeSuite with ExecuteSuite with TryBlock with SuiteToolbox {
+trait ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with TryBlock with SuiteToolbox {
   /**
    * Runs suite loaded in runtime with dynamic solution
    */
