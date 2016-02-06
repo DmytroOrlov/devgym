@@ -8,6 +8,7 @@ import play.api.test._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ControllerTest extends PlaySpec {
+
   "Application controller" when {
     "get request to index" should {
       "result with OK" in withAppController { controller =>
@@ -26,14 +27,14 @@ class ControllerTest extends PlaySpec {
   }
   "NewTask controller" when {
     "get addTask" should {
-      "redirect" in withNewTaskController { controller =>
+      "result with form" in withNewTaskController { controller =>
         val result = controller.getAddTask(FakeRequest())
         status(result) mustBe OK
         contentAsString(result) must (include("<form") and include("/addTask"))
       }
     }
     "post no form to addTask" should {
-      "result BadRequest with form" in withNewTaskController { controller =>
+      "result BadRequest with error" in withNewTaskController { controller =>
         val result = controller.postNewTask(FakeRequest())
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("error"))
