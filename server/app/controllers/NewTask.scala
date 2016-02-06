@@ -10,12 +10,12 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
-import service.ScalaTestRunner
+import service.ExecDynamicSuite
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
-class NewTask @Inject()(dao: Dao, val messagesApi: MessagesApi)
+class NewTask @Inject()(execSuite: ExecDynamicSuite, dao: Dao, val messagesApi: MessagesApi)
                        (implicit ec: ExecutionContext) extends Controller with I18nSupport {
   val addTaskForm = Form {
     mapping(
@@ -38,7 +38,7 @@ class NewTask @Inject()(dao: Dao, val messagesApi: MessagesApi)
       },
       f => {
         val futureResponse = for {
-          result <- Future(ScalaTestRunner.execSuite(f.referenceSolution, f.suite)) if result.isSuccess
+          result <- Future(execSuite(f.referenceSolution, f.suite)) if result.isSuccess
           db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
         } yield Redirect(routes.Application.index)
 
