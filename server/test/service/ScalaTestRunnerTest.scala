@@ -6,28 +6,27 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
   behavior of "ScalaTestRunner"
   val incorrectSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {weekday || vacation}}"
 
-  it should "not return failed status when correct solution is provided" in {
+  it should "return success when correct solution is provided" in {
     val report = getReport(correctSolution)
-    report.get shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
+    report.isSuccess shouldBe true
   }
 
-  it should "return failed status when incorrect solution is provided" in {
+  it should "return success when compilable solution is provided" in {
     val report = getReport(incorrectSolution)
-    report.get should (not be empty and include regex ScalaTestRunner.failedMarker)
+    report.isSuccess shouldBe true
   }
 
-  it should "return failed status when solution is not compilable" in {
+  it should "return failure when solution is not compilable" in {
     val report = getReport("/")
-    report.failed.get.getMessage should (not be empty and include regex ScalaTestRunner.failedInRuntimeMarker)
+    report.isFailure shouldBe true
   }
 
-  def getReport(solution: String) = {
-    ScalaTestRunner.execSuite(
-      solution,
-      Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
-      Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
-    )
-  }
+  def runner() = new ScalaTestRunner().apply(
+    Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
+    Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
+  ) _
+
+  def getReport(solution: String) = runner().apply(solution)
 }
 
 trait ScalaTestCorrectSolution {

@@ -1,7 +1,8 @@
 package service
 
 import org.scalatest.FlatSpecLike
-import service.ScalaTestRunner.tryExec
+
+import scala.util.{Try, Failure}
 
 class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
   behavior of "ScalaTestRunner for dynamic solution and suite code"
@@ -45,17 +46,13 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
           }""".stripMargin
 
 
-  override def getReport(solution: String) = ScalaTestRunner.execSuite(solution, correctSuite)
+  override def getReport(solution: String): Try[String] = new ScalaTestRunner().apply(solution, correctSuite)
 
-  it should "throw RuntimeException when suite does not have a class name" in {
-    intercept[RuntimeException] {
-      ScalaTestRunner.execSuite(correctSolution, noSuiteName)
-    }
+  it should "return failure when suite does not have a class name" in new ScalaTestRunner {
+    apply(correctSolution, noSuiteName).isFailure shouldBe true
   }
 
-  it should "throw RuntimeException when suite does not have a trait type for contructor" in {
-    intercept[RuntimeException] {
-      ScalaTestRunner.execSuite(correctSolution, noTraitName)
-    }
+  it should "return failure when suite does not have a trait type for contructor" in new ScalaTestRunner {
+    apply(correctSolution, noTraitName).isFailure shouldBe true
   }
 }

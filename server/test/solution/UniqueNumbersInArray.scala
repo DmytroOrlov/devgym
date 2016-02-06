@@ -1,8 +1,9 @@
 package solution
 
+import service.PositiveOutputTest
 import tasktest.{UniqueNumbersInArraySolution, UniqueNumbersInArrayTest}
 
-class TTUniqueNumbersInArray extends BaseRunnerTest {
+class TTUniqueNumbersInArray extends PositiveOutputTest {
   behavior of "ScalaTestRunner for UniqueNumbersInArray"
 
   override val suiteInstance = new UniqueNumbersInArrayTest(new UniqueNumbersInArray)
@@ -12,7 +13,7 @@ class TTUniqueNumbersInArray extends BaseRunnerTest {
 //solution
 class UniqueNumbersInArray extends UniqueNumbersInArraySolution {
   override def uniqueNumbers(a: Array[Int]): Int = {
-    val b = Array.fill(a.length) {true}
+    val b = Array.fill(a.length)(true)
     var n = 0
 
     for (i <- a.indices) {
