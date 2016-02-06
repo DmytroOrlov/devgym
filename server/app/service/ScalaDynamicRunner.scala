@@ -3,7 +3,7 @@ package service
 import scala.util.Try
 
 trait ExecDynamicSuite {
-  def apply(solution: String, suite: String): Try[String]
+  def apply(solution: String, suite: String, checkFailed: Boolean = false): Try[String]
 }
 
 trait ScalaDynamicRunner extends ExecDynamicSuite with ExecuteDynamic with TryBlock {
@@ -20,9 +20,13 @@ trait ScalaDynamicRunner extends ExecDynamicSuite with ExecuteDynamic with TryBl
   /**
    * Runs dynamic solution and dynamic suite
    */
-  def apply(solution: String, suite: String): Try[String] = for {
-    traitName <- findTraitName(suite)
-    patchedSolution <- tryBlock()(classDefPattern.replaceFirstIn(solution, s"class $userClass extends $traitName "))
-    result <- executeDynamic(suite, patchedSolution)
-  } yield result
+  def apply(solution: String, suite: String, checkFailed: Boolean): Try[String] = {
+    val result = for {
+      traitName <- findTraitName(suite)
+      patchedSolution <- tryBlock()(classDefPattern.replaceFirstIn(solution, s"class $userClass extends $traitName "))
+      result <- executeDynamic(suite, patchedSolution)
+    } yield result
+    if (checkFailed) result.filter(_.contains(failed))
+    result
+  }
 }

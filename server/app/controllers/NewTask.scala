@@ -14,6 +14,7 @@ import service.ExecDynamicSuite
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 class NewTask @Inject()(execSuite: ExecDynamicSuite, dao: Dao, val messagesApi: MessagesApi)
                        (implicit ec: ExecutionContext) extends Controller with I18nSupport {
@@ -37,8 +38,12 @@ class NewTask @Inject()(execSuite: ExecDynamicSuite, dao: Dao, val messagesApi: 
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
+        val checkNewTask = execSuite(f.referenceSolution, f.suite, checkFailed = true) match {
+          case Success(_) => Future.successful(())
+          case Failure(e) => Future.failed(e)
+        }
         val futureResponse = for {
-          result <- Future(execSuite(f.referenceSolution, f.suite)) if result.isSuccess
+          _ <- checkNewTask
           db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
         } yield Redirect(routes.Application.index)
 
