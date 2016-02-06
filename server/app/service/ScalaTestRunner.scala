@@ -14,7 +14,7 @@ trait ScalaTestRunnerContract {
  * Runs test suite of scalatest library using the 'execute' method
  */
 object ScalaTestRunner extends ScalaTestRunnerContract {
-  val failedMarker = "FAILED"
+  val failedMarker = "*** FAILED ***"
   val failedInRuntimeMarker = "failed in runtime"
   val userClass = "UserSolution"
   val classDefPattern = """class\s*([\w\$]*)""".r
@@ -68,12 +68,15 @@ object ScalaTestRunner extends ScalaTestRunnerContract {
   /**
    * Runs suite instance with solution instance
    */
-  def execSuite(suiteInstance: Suite): String = new ByteArrayOutputStream { stream =>
-    Console.withOut(stream) {
-      suiteInstance.execute(color = false)
-    }
-  }.toString
-
+  def execSuite(suiteInstance: Suite): String = {
+    val output = new ByteArrayOutputStream { stream =>
+      Console.withOut(stream) {
+        suiteInstance.execute(color = false)
+      }
+    }.toString
+    if (output.contains(failedMarker)) throw new SolutionException(s"contains $failedMarker")
+    else output
+  }
 
   private def findSuitNameOrFail(suite: String): String = {
     val suiteName = classDefPattern.findFirstIn(suite) match {
@@ -87,7 +90,9 @@ object ScalaTestRunner extends ScalaTestRunnerContract {
     val suiteName = findSuitNameOrFail(suite)
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
-    execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
+    val res = execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
+    println(res)
+    res
   }
 
   def tryExec(suite: => String) =
