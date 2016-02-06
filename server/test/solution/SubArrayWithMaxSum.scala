@@ -35,7 +35,7 @@ class SubArrayWithMaxSum extends SubArrayWithMaxSumSolution {
       }
     }
 
-    if (left == a.length) a.slice(maxI, maxI + 1)
+    if (left == a.length) Array(a(maxI))
     else a.slice(left, right + 1)
   }
 }

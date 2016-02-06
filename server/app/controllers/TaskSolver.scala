@@ -15,13 +15,13 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, Controller, WebSocket}
 import service.SimpleWebSocketActor.createChannel
-import service.{ExecRuntimeSuite, SimpleWebSocketActor}
+import service.{RuntimeSuiteExecutor, SimpleWebSocketActor}
 
 import scala.concurrent._
 import scala.sys.process._
 import scala.util.Try
 
-class TaskSolver @Inject()(execSuite: ExecRuntimeSuite, dao: Dao, val messagesApi: MessagesApi)
+class TaskSolver @Inject()(runtimeExecutor: RuntimeSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
                           (implicit ec: ExecutionContext) extends Controller with I18nSupport with JSONFormats {
   implicit val s = Scheduler(ec)
 
@@ -40,7 +40,7 @@ class TaskSolver @Inject()(execSuite: ExecRuntimeSuite, dao: Dao, val messagesAp
   def tasks = Action.async(dao.getTasks(scalaClass, 20, now).map(ts => Ok(ts.toString())))
 
   def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, createChannel(execSuite(
+    SimpleWebSocketActor.props(out, createChannel(runtimeExecutor(
       Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
       Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]])
       (checked = false)))

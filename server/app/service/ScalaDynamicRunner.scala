@@ -2,16 +2,16 @@ package service
 
 import scala.util.Try
 
-trait ExecDynamicSuite {
+trait DynamicSuiteExecutor {
   def apply(solution: String, suite: String, checked: Boolean): Try[String]
 }
 
-trait ScalaDynamicRunner extends ExecDynamicSuite with ExecuteDynamic with TryBlock {
+trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution with TryBlock {
   private val t = new TryBlock {
     override def failurePrefix(s: String): String = s"There is no trait type defined in the Test constructor, code: $s"
   }
 
-  //todo: solutionTrait should be taken from DB and populated during the task creation by user
+  //todo: solutionTrait should be taken from DB and populated during the new task creation
   def findTraitName(suite: String): Try[String] =
     t.tryBlock(suite) {
       traitDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
