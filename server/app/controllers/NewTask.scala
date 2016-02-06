@@ -20,8 +20,9 @@ class NewTask @Inject()(dao: Dao, val messagesApi: MessagesApi)
   val addTaskForm = Form {
     mapping(
       taskDescription -> nonEmptyText,
-      solutionTemplate -> nonEmptyText,
-      referenceSolution -> nonEmptyText,
+      solutionHeader -> nonEmptyText,
+      solutionBody -> nonEmptyText,
+      solutionFooter -> nonEmptyText,
       suite -> nonEmptyText
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
@@ -38,8 +39,8 @@ class NewTask @Inject()(dao: Dao, val messagesApi: MessagesApi)
       },
       f => {
         val futureResponse = for {
-          test <- Future(ScalaTestRunner.execSuite(f.referenceSolution, f.suite, r => r)) // todo vaidate test output
-          db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
+          test <- Future(ScalaTestRunner.execSuite(f.solutionHeader + f.solutionBody + f.solutionFooter, f.suite, r => r)) // todo vaidate test output
+          db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionHeader, f.solutionBody, f.solutionFooter, f.suite))
         } yield Redirect(routes.Application.index)
 
         futureResponse.recover {
@@ -51,12 +52,13 @@ class NewTask @Inject()(dao: Dao, val messagesApi: MessagesApi)
   }
 }
 
-case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String, suite: String)
+case class AddTaskForm(taskDescription: String, solutionHeader: String, solutionBody: String, solutionFooter: String, suite: String)
 
 object NewTask {
   val taskDescription = "taskDescription"
-  val solutionTemplate = "solutionTemplate"
-  val referenceSolution = "referenceSolution"
+  val solutionHeader = "solutionHeader"
+  val solutionBody = "solutionBody"
+  val solutionFooter = "solutionFooter"
   val suite = "suite"
   val cannotAddTask = "cannotAddTask"
 }
