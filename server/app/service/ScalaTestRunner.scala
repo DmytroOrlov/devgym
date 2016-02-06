@@ -87,7 +87,7 @@ object ScalaTestRunner {
     execSuite(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
   }
 
-  def tryExec(suite: => String) =
+  private[service] def tryExec(suite: => String) =
     try suite catch {
       case NonFatal(e) => s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"
     }
