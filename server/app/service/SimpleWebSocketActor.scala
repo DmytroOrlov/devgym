@@ -15,6 +15,7 @@ import shared.{Event, Line}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: String => Observable[T], timeout: FiniteDuration)
                                                (implicit s: Scheduler) extends Actor {
@@ -74,7 +75,11 @@ object SimpleWebSocketActor {
   def createChannel(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])(solution: String)(implicit s: Scheduler): Observable[Line] = {
     val channel = PublishChannel[Line](DropOld(20))
     Future {
-      val lines = execSuite(solution, suiteClass, solutionTrait).split("\n")
+      val lines = (execSuite(solution, suiteClass, solutionTrait) match {
+        case Success(v) => v
+        case Failure(e) => e.getMessage
+      }).split("\n")
+
       lines.foreach(s => channel.pushNext(Line(s)))
       channel.pushComplete()
     }

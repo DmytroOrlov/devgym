@@ -39,6 +39,6 @@ class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with Scal
 
   it should "not return failed status when correct solution is provided" in {
     val report = ScalaTestRunner.execSuiteNoTrait(correctSolution, correctSuite)
-    report shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
+    report.get shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
   }
 }

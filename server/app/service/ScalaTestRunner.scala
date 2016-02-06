@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream
 
 import org.scalatest.Suite
 
-import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 
 /**
@@ -26,7 +26,7 @@ object ScalaTestRunner {
   /**
     * Runs suite loaded in runtime with dynamic solution
     */
-  def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): String =
+  def execSuite(solution: String, suiteClass: Class[Suite], solutionTrait: Class[AnyRef]): Try[String] =
     tryExec {
       def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {
         val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends ${solutionTrait.getSimpleName} ")
@@ -42,7 +42,7 @@ object ScalaTestRunner {
   /**
     * Runs dynamic solution and dynamic suite
     */
-  def execSuite(solution: String, suite: String): String = {
+  def execSuite(solution: String, suite: String): Try[String] = {
     //todo: solutionTrait should be taken from DB and populated during the task creation by user
     val solutionTrait = traitDefPattern.findFirstIn(suite) match {
       case Some(v) => v.split( """\s+""")(1)
@@ -57,7 +57,7 @@ object ScalaTestRunner {
     * Runs dynamic solution as well as dynamic suite using the structural type for test, instead of explicitly defined
     * trait
     */
-  def execSuiteNoTrait(solution: String, suite: String): String = {
+  def execSuiteNoTrait(solution: String, suite: String): Try[String] = {
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass ")
     execDynamicSuite(suite, patchedSolution)
   }
@@ -80,7 +80,7 @@ object ScalaTestRunner {
     suiteName
   }
 
-  private def execDynamicSuite(suite: String, patchedSolution: String): String = {
+  private def execDynamicSuite(suite: String, patchedSolution: String): Try[String] = {
     val suiteName = findSuitNameOrFail(suite)
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
 
@@ -90,8 +90,9 @@ object ScalaTestRunner {
   }
 
   private[service] def tryExec(suite: => String) =
-    try suite catch {
-      case NonFatal(e) => s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'"
+    Try(suite) match {
+      case Failure(e) => Failure(new SolutionException(s"Test $failedInRuntimeMarker with error:\n${e.getMessage}'", e))
+      case Success(v) => Success(v)
     }
 
   case class SolutionException(msg: String) extends RuntimeException(msg)

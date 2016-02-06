@@ -8,17 +8,17 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
 
   it should "not return failed status when correct solution is provided" in {
     val report = getReport(correctSolution)
-    report shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
+    report.get shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
   }
 
   it should "return failed status when incorrect solution is provided" in {
     val report = getReport(incorrectSolution)
-    report should (not be empty and include regex ScalaTestRunner.failedMarker)
+    report.get should (not be empty and include regex ScalaTestRunner.failedMarker)
   }
 
   it should "return failed status when solution is not compilable" in {
     val report = getReport("/")
-    report should (not be empty and include regex ScalaTestRunner.failedInRuntimeMarker)
+    report.failed.get.getMessage should (not be empty and include regex ScalaTestRunner.failedInRuntimeMarker)
   }
 
   def getReport(solution: String) = {
