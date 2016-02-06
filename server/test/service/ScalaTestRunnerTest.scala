@@ -6,28 +6,28 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
   behavior of "ScalaTestRunner"
   val incorrectSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {weekday || vacation}}"
 
-  it should "not return failed status when correct solution is provided" in {
-    val report = getReport(correctSolution)
-    report shouldNot (be(empty) and include regex ScalaTestRunner.failedMarker)
+  it should "return success when correct solution is provided" in {
+    getReport(correctSolution).isSuccess shouldBe true
   }
 
-  it should "return failed status when incorrect solution is provided" in {
-    val report = getReport(incorrectSolution)
-    report should (not be empty and include regex ScalaTestRunner.failedMarker)
+  it should "return success when compilable solution is provided" in {
+    getReport(incorrectSolution).isSuccess shouldBe true
   }
 
-  it should "return failed status when solution is not compilable" in {
-    val report = getReport("/")
-    report should (not be empty and include regex ScalaTestRunner.failedInRuntimeMarker)
+  it should "return failure when check compilable but wrong solution" in {
+    getReport(incorrectSolution, checked = true).isFailure shouldBe true
   }
 
-  def getReport(solution: String) = {
-    ScalaTestRunner.tryExecSuite(
-      solution,
-      Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
-      Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
-    )
+  it should "return failure when solution is not compilable" in {
+    getReport("/").isFailure shouldBe true
   }
+
+  def runner = new ScalaTestRunner().apply(
+    Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
+    Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
+  ) _
+
+  def getReport(solution: String, checked: Boolean = false) = runner(checked)(solution)
 }
 
 trait ScalaTestCorrectSolution {

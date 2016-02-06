@@ -1,7 +1,8 @@
 package service
 
 import org.scalatest.FlatSpecLike
-import service.ScalaTestRunner.tryExec
+
+import scala.util.Try
 
 class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
   behavior of "ScalaTestRunner for dynamic solution and suite code"
@@ -29,7 +30,7 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
     """.stripMargin
 
   val noSuiteName =
-      """class (solution: SleepInSolution) extends FlatSpec with Matchers {
+    """class (solution: SleepInSolution) extends FlatSpec with Matchers {
           behavior of "SleepIn"
 
           it should "sleepIn when it is not a weekday and it is not a vacation" in {
@@ -37,7 +38,7 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
           }""".stripMargin
 
   val noTraitName =
-      """class SleepInTest(solution: SleepInSolution) extends FlatSpec with Matchers {
+    """class SleepInTest(solution: SleepInSolution) extends FlatSpec with Matchers {
           behavior of "SleepIn"
 
           it should "sleepIn when it is not a weekday and it is not a vacation" in {
@@ -45,21 +46,13 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
           }""".stripMargin
 
 
-  override def getReport(solution: String) =
-    tryExec {
-      ScalaTestRunner.execSuite(solution, correctSuite
-      )
-    }
+  override def getReport(solution: String, checked: Boolean = false): Try[String] = new ScalaTestRunner().apply(solution, correctSuite, checked)
 
-  it should "throw RuntimeException when suite does not have a class name" in {
-    intercept[RuntimeException] {
-      ScalaTestRunner.execSuite(correctSolution, noSuiteName)
-    }
+  it should "return failure when suite does not have a class name" in new ScalaTestRunner {
+    apply(correctSolution, noSuiteName, checked = false).isFailure shouldBe true
   }
 
-  it should "throw RuntimeException when suite does not have a trait type for contructor" in {
-    intercept[RuntimeException] {
-      ScalaTestRunner.execSuite(correctSolution, noTraitName)
-    }
+  it should "return failure when suite does not have a trait type for contructor" in new ScalaTestRunner {
+    apply(correctSolution, noTraitName, checked = false).isFailure shouldBe true
   }
 }

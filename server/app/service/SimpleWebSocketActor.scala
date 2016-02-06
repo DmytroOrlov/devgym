@@ -7,14 +7,13 @@ import monifu.reactive.Ack.Continue
 import monifu.reactive.Observable
 import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive.channels.PublishChannel
-import org.scalatest.Suite
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json, Writes}
-import service.ScalaTestRunner._
 import shared.{Event, Line}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: String => Observable[T], timeout: FiniteDuration)
                                                (implicit s: Scheduler) extends Actor {
@@ -71,10 +70,14 @@ object SimpleWebSocketActor {
    */
   case class Next(value: JsValue)
 
-  def createChannel(suiteClass: Class[Suite], solutionTrait: Class[AnyRef])(solution: String)(implicit s: Scheduler): Observable[Line] = {
+  def createChannel(execSuite: String => Try[String])(solution: String)(implicit s: Scheduler): Observable[Line] = {
     val channel = PublishChannel[Line](DropOld(20))
     Future {
-      val lines = tryExecSuite(solution, suiteClass, solutionTrait).split("\n")
+      val lines = (execSuite(solution) match {
+        case Success(v) => v
+        case Failure(e) => e.getMessage
+      }).split("\n")
+
       lines.foreach(s => channel.pushNext(Line(s)))
       channel.pushComplete()
     }
