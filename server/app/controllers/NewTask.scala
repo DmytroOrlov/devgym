@@ -12,7 +12,7 @@ import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
 import service.DynamicSuiteExecutor
-import service.ObservableFuture._
+import service._
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal

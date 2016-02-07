@@ -74,13 +74,3 @@ trait CheckSuite {
     case (o, f) => o -> f.filter(validate)
   }
 }
-
-object ObservableFuture {
-
-  implicit class RichObservableFuture(val of: (Observable[Line], Future[String])) extends AnyVal {
-    def observable = of._1
-
-    def future = of._2
-  }
-
-}

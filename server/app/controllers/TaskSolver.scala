@@ -14,7 +14,6 @@ import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, Controller, WebSocket}
-import service.ObservableFuture._
 import service._
 import shared.Line
 
