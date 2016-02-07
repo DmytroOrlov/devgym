@@ -1,9 +1,16 @@
 package service
 
+import monifu.concurrent.Implicits.globalScheduler
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.Span._
 import org.scalatest.{FlatSpec, Matchers}
 
-class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution {
+import scala.concurrent.duration._
+
+class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution with ScalaFutures {
   behavior of "ScalaTestRunner for dynamic solution and suite code"
+
+  implicit val c = PatienceConfig(10.seconds)
 
   val correctSuite =
     """class SleepInTest[A <: {def sleepIn(weekday : Boolean, vacation : Boolean) : Boolean}](solution: A) extends FlatSpec with Matchers {
@@ -32,11 +39,10 @@ class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with Scal
           }""".stripMargin
 
   it should "retrun failure when suite does not have a class name" in new ScalaTestRunner {
-    execSuiteNoTrait(correctSolution, noSuiteName).isFailure shouldBe true
+    execSuiteNoTrait(correctSolution, noSuiteName).future.failed.futureValue
   }
 
   it should "return success when correct solution is provided" in new ScalaTestRunner {
-    val report = execSuiteNoTrait(correctSolution, correctSuite)
-    report.isSuccess shouldBe true
+    execSuiteNoTrait(correctSolution, correctSuite).future.futureValue
   }
 }

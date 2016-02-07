@@ -34,7 +34,7 @@ object SubmitSolutionClient extends JSApp {
     }
 
     override def onNext(elem: Line): Future[Ack] = {
-      report.append(s"${elem.value}\n")
+      report.append(s"${elem.value}")
       Continue
     }
 
@@ -58,7 +58,7 @@ object SubmitSolutionClient extends JSApp {
         sendOnOpen = Some(jQuery(s"#$solutionId").`val`().asInstanceOf[String])
       ).collect { case IsEvent(e) => e }
 
-      (Observable.unit(Line("Submitting...")) ++ source)
+      (Observable.unit(Line("Submitting...\n")) ++ source)
         .onSubscribe(subscriber)
     }
   }

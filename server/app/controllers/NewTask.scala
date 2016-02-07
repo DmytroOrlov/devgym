@@ -5,19 +5,20 @@ import controllers.NewTask._
 import dal.Dao
 import models.Task
 import models.TaskType._
+import monifu.concurrent.Scheduler
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
 import service.DynamicSuiteExecutor
+import service._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 import scala.util.control.NonFatal
-import scala.util.{Failure, Success}
 
-class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
-                       (implicit ec: ExecutionContext) extends Controller with I18nSupport {
+class NewTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+                       (implicit s: Scheduler) extends Controller with I18nSupport {
   val addTaskForm = Form {
     mapping(
       taskDescription -> nonEmptyText,
@@ -35,12 +36,8 @@ class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val mes
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        val checkNewTask = dynamicExecutor(f.referenceSolution, f.suite, checked = true) match {
-          case Success(_) => Future.successful(())
-          case Failure(e) => Future.failed(e)
-        }
         val futureResponse = for {
-          _ <- checkNewTask
+          _ <- executor.check(executor(f.referenceSolution, f.suite)).future
           db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
         } yield Redirect(routes.Application.index)
 
