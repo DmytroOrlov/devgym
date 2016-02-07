@@ -14,6 +14,7 @@ import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, Controller, WebSocket}
+import service.ObservableFuture._
 import service._
 import shared.Line
 
@@ -39,7 +40,7 @@ class TaskSolver @Inject()(runtimeExecutor: RuntimeSuiteExecutor, dao: Dao, val 
   def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
     SimpleWebSocketActor.props(out, (runtimeExecutor(
         Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
-        Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]]) _).andThen(_._1),
+        Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]]) _).andThen(_.observable),
       Some(Line("Compiling...\n")))
   }
 }

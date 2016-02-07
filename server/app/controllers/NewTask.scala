@@ -12,6 +12,7 @@ import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
 import service.DynamicSuiteExecutor
+import service.ObservableFuture._
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -36,7 +37,7 @@ class NewTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
       },
       f => {
         val futureResponse = for {
-          _ <- executor.check(executor(f.referenceSolution, f.suite))._2
+          _ <- executor.check(executor(f.referenceSolution, f.suite)).future
           db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
         } yield Redirect(routes.Application.index)
 
