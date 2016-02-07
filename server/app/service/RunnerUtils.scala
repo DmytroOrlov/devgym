@@ -14,7 +14,7 @@ trait SuiteExecution {
    */
   def executionOutput(suiteInstance: Suite): String = {
     val o = new ByteArrayOutputStream
-    Console.withOut(o)(suiteInstance.execute(color = false))
+    Console.withOut(o)(suiteInstance.execute())
     o.toString
   }
 }
