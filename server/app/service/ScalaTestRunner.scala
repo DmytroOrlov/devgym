@@ -1,11 +1,10 @@
 package service
 
-
 /**
-  * Runs test suite of scalatest library using the 'execute' method
-  */
+ * Runs test suite of scalatest library using the 'execute' method
+ */
 class ScalaTestRunner extends ScalaRuntimeRunner with ScalaDynamicRunner with ScalaDynamicNoTraitRunner {
-  override def failurePrefix(s: String): String = s"Test $failedInRuntime with error:\n"
+  val validate = (s: String) => !s.contains(failed)
 }
 
 object ScalaTestRunner {
