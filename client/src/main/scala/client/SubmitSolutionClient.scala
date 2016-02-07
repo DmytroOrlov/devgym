@@ -33,8 +33,16 @@ object SubmitSolutionClient extends JSApp {
       r
     }
 
+    val green = "\u001B[32m"
+    val close = "\u001B[0m"
+    val red = "\u001B[31m"
+
     override def onNext(elem: Line): Future[Ack] = {
-      report.append(s"${elem.value}\n")
+      val value = elem.value
+        .replace(close, "</span>")
+        .replace(green, """<span class="green">""")
+        .replace(red, """<span class="red">""")
+      report.append(s"""<div>$value</div>""")
       Continue
     }
 
