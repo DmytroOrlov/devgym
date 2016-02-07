@@ -14,19 +14,19 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
   implicit val c = PatienceConfig(10.seconds)
 
   it should "return value when correct solution is provided" in {
-    getReport(correctSolution)._2.futureValue
+    getReport(correctSolution).future.futureValue
   }
 
   it should "return value when compilable solution is provided" in {
-    getReport(incorrectSolution)._2.futureValue
+    getReport(incorrectSolution).future.futureValue
   }
 
   it should "return failure when check compilable but wrong solution" in {
-    getReport(incorrectSolution, checked = true)._2.failed.futureValue
+    getReport(incorrectSolution, checked = true).future.failed.futureValue
   }
 
   it should "return failure when solution is not compilable" in {
-    getReport("/")._2.failed.futureValue
+    getReport("/").future.failed.futureValue
   }
 
   private val r = new ScalaTestRunner()

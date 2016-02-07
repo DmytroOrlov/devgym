@@ -39,10 +39,10 @@ class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with Scal
           }""".stripMargin
 
   it should "retrun failure when suite does not have a class name" in new ScalaTestRunner {
-    execSuiteNoTrait(correctSolution, noSuiteName)._2.failed.futureValue
+    execSuiteNoTrait(correctSolution, noSuiteName).future.failed.futureValue
   }
 
   it should "return success when correct solution is provided" in new ScalaTestRunner {
-    execSuiteNoTrait(correctSolution, correctSuite)._2.futureValue
+    execSuiteNoTrait(correctSolution, correctSuite).future.futureValue
   }
 }

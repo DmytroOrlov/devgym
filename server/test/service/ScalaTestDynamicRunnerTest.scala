@@ -53,10 +53,10 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
   }
 
   it should "return failure when suite does not have a class name" in new ScalaTestRunner {
-    apply(correctSolution, noSuiteName)._2.failed.futureValue
+    apply(correctSolution, noSuiteName).future.failed.futureValue
   }
 
   it should "return failure when suite does not have a trait type for contructor" in new ScalaTestRunner {
-    apply(correctSolution, noTraitName)._2.failed.futureValue
+    apply(correctSolution, noTraitName).future.failed.futureValue
   }
 }
