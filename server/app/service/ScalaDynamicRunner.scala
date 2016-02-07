@@ -22,7 +22,7 @@ trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution with
    */
   def apply(solution: String, suite: String, checked: Boolean): Try[String] = for {
     traitName <- findTraitName(suite)
-    patchedSolution <- tryBlock()(classDefPattern.replaceFirstIn(solution, s"class $userClass extends $traitName "))
+    patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $traitName ")
     r <- executeDynamic(suite, patchedSolution) if !checked || !r.contains(failed)
   } yield r
 }
