@@ -58,7 +58,7 @@ object SubmitSolutionClient extends JSApp {
         sendOnOpen = Some(jQuery(s"#$solutionId").`val`().asInstanceOf[String])
       ).collect { case IsEvent(e) => e }
 
-      (Observable.unit(Line("You solution Submitted...")) ++ source)
+      (Observable.unit(Line("Submitting...")) ++ source)
         .onSubscribe(subscriber)
     }
   }

@@ -16,6 +16,7 @@ import play.api.libs.json.JsValue
 import play.api.mvc.{Action, Controller, WebSocket}
 import service.SimpleWebSocketActor.createChannel
 import service.{RuntimeSuiteExecutor, SimpleWebSocketActor}
+import shared.Line
 
 import scala.concurrent._
 import scala.sys.process._
@@ -43,7 +44,7 @@ class TaskSolver @Inject()(runtimeExecutor: RuntimeSuiteExecutor, dao: Dao, val 
     SimpleWebSocketActor.props(out, createChannel(runtimeExecutor(
       Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
       Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]])
-      (checked = false)))
+      (checked = false)), Some(Line("Compiling...")))
   }
 }
 
