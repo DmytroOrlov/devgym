@@ -27,7 +27,7 @@ object SubmitSolutionClient extends JSApp {
   }
 
   final class Report(reportId: String) extends Observer[Line] {
-    lazy val report = {
+    val report = {
       val r = jQuery(s"#$reportId")
       r.empty()
       r
@@ -56,8 +56,9 @@ object SubmitSolutionClient extends JSApp {
         url = s"$protocol//$host/task-stream",
         DropOld(20),
         sendOnOpen = Some(jQuery(s"#$solutionId").`val`().asInstanceOf[String])
-      )
-      source.collect { case IsEvent(e) => e }
+      ).collect { case IsEvent(e) => e }
+
+      (Observable.unit(Line("You solution Submitted...")) ++ source)
         .onSubscribe(subscriber)
     }
   }
