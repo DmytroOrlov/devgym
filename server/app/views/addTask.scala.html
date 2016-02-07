@@ -8,10 +8,10 @@
     <div><a href="@routes.Application.index()">@msg("home")</a></div>
     <div class="solutionForm">
     @form(routes.NewTask.postNewTask()) {
-        @textarea(task(taskDescription), 'rows -> "8", 'cols -> "80")
-        @textarea(task(solutionTemplate), 'rows -> "6", 'cols -> "80")
-        @textarea(task(referenceSolution), 'rows -> "13", 'cols -> "80")
-        @textarea(task(suite), 'rows -> "13", 'cols -> "80")
+        @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90")
+        @textarea(task(solutionTemplate), 'rows -> "13", 'cols -> "90")
+        @textarea(task(referenceSolution), 'rows -> "23", 'cols -> "90")
+        @textarea(task(suite), 'rows -> "23", 'cols -> "90")
         <div class="submit">
             <input type="submit" value="@msg("addTask")"/>
         </div>

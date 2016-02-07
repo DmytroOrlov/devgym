@@ -9,7 +9,7 @@ import play.api.mvc._
 class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
 
   def index = Action { implicit request =>
-    Ok(views.html.index())
+    Ok(views.html.index(tests))
   }
 
   def logout = Action { request =>
@@ -24,4 +24,5 @@ class Application @Inject()(val messagesApi: MessagesApi) extends Controller wit
 
 object Application {
   val logoutDone = "logoutDone"
+  val tests = List("Sub-array with max sum", "Unique numbers in array")
 }

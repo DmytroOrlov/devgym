@@ -35,19 +35,19 @@ class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val mes
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        val checkNewTask = dynamicExecutor(f.referenceSolution, f.suite, checked = true) match {
+        val testStatus= dynamicExecutor(f.referenceSolution, f.suite, checked = true) match {
           case Success(_) => Future.successful(())
           case Failure(e) => Future.failed(e)
         }
         val futureResponse = for {
-          _ <- checkNewTask
+          _ <- testStatus
           db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
-        } yield Redirect(routes.Application.index)
+        } yield Redirect(routes.NewTask.getAddTask)
 
         futureResponse.recover {
           case NonFatal(e) => Logger.warn(e.getMessage, e)
             BadRequest {
-              views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+              views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, s"${messagesApi(cannotAddTask)}: ${e.getMessage}"))
             }
         }
       }
@@ -58,6 +58,7 @@ class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val mes
 case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String, suite: String)
 
 object NewTask {
+  val status = "status"
   val taskDescription = "taskDescription"
   val solutionTemplate = "solutionTemplate"
   val referenceSolution = "referenceSolution"

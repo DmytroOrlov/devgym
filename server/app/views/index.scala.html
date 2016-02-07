@@ -1,14 +1,21 @@
 @import UserController._
 @import views.html.templates.mainFlashToUser
 
-@()(implicit flash: Flash, session: Session, msg: Messages)
+@(tests: List[String])(implicit flash: Flash, session: Session, msg: Messages)
 @mainFlashToUser(msg("home")) {
     <h1>@msg("DevGym")</h1>
-    <div><a href="@routes.TaskSolver.getTask()">@msg("task")</a></div>
+    @*<div><a href="@routes.TaskSolver.getTask()">@msg("task")</a></div>*@
     <div><a href="@routes.NewTask.getAddTask()">@msg("addTask")</a></div>
     @session.get(username).fold {
         <div><a href="@routes.UserController.getRegister()">@msg("register")</a></div>
     } { _ =>
         <div><a href="@routes.Application.logout()">@msg("logout")</a></div>
     }
+    <br/>
+    <h1>Latest Challenges</h1>
+    <ul>
+    @for(test <- tests) {
+        <li><a href="@routes.TaskSolver.getTask()">@test</li>
+    }
+    </ul>
 }
