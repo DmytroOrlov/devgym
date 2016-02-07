@@ -1,9 +1,9 @@
 package solution
 
-import service.PositiveOutputTest
+import service.PositiveOutput
 import tasktest.{SubArrayWithMaxSumSolution, SubArrayWithMaxSumTest}
 
-class TTSubArrayWithMaxSum extends PositiveOutputTest {
+class TTSubArrayWithMaxSum extends PositiveOutput {
   behavior of "ScalaTestRunner for SubArrayWithMaxSum"
 
   override val suiteInstance = new SubArrayWithMaxSumTest(new SubArrayWithMaxSum)

@@ -1,33 +1,44 @@
 package service
 
+import monifu.concurrent.Implicits.globalScheduler
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.Span._
 import org.scalatest.{FlatSpec, Matchers, Suite}
 
-class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution {
+import scala.concurrent.duration._
+
+class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution with ScalaFutures {
   behavior of "ScalaTestRunner"
   val incorrectSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {weekday || vacation}}"
 
-  it should "return success when correct solution is provided" in {
-    getReport(correctSolution).isSuccess shouldBe true
+  implicit val c = PatienceConfig(10.seconds)
+
+  it should "return value when correct solution is provided" in {
+    getReport(correctSolution)._2.futureValue
   }
 
-  it should "return success when compilable solution is provided" in {
-    getReport(incorrectSolution).isSuccess shouldBe true
+  it should "return value when compilable solution is provided" in {
+    getReport(incorrectSolution)._2.futureValue
   }
 
   it should "return failure when check compilable but wrong solution" in {
-    getReport(incorrectSolution, checked = true).isFailure shouldBe true
+    getReport(incorrectSolution, checked = true)._2.failed.futureValue
   }
 
   it should "return failure when solution is not compilable" in {
-    getReport("/").isFailure shouldBe true
+    getReport("/")._2.failed.futureValue
   }
 
-  def runner = new ScalaTestRunner().apply(
-    Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
-    Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
-  ) _
+  private val r = new ScalaTestRunner()
 
-  def getReport(solution: String, checked: Boolean = false) = runner(checked)(solution)
+  def getReport(solution: String, checked: Boolean = false) = {
+    val unchecked = r.apply(
+      Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
+      Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
+    )(solution)
+    if (checked) r.check(unchecked)
+    else unchecked
+  }
 }
 
 trait ScalaTestCorrectSolution {
