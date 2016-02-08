@@ -15,7 +15,7 @@ class Application @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit ec:
 
   def index = Action.async { implicit request =>
     val tasks = dao.getTasks(TaskType.scalaClass, 20, now)
-    tasks.map(f => Ok(views.html.index(f)))
+    tasks.map(it => Ok(views.html.index(it)))
   }
 
   def logout = Action { request =>
@@ -30,5 +30,4 @@ class Application @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit ec:
 
 object Application {
   val logoutDone = "logoutDone"
-  val tests = List("Sub-array with max sum", "Unique numbers in array")
 }

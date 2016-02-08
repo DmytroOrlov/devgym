@@ -20,6 +20,7 @@ class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val mes
                        (implicit ec: ExecutionContext) extends Controller with I18nSupport {
   val addTaskForm = Form {
     mapping(
+      taskName -> nonEmptyText,
       taskDescription -> nonEmptyText,
       solutionTemplate -> nonEmptyText,
       referenceSolution -> nonEmptyText,
@@ -41,7 +42,7 @@ class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val mes
         }
         val futureResponse = for {
           _ <- testStatus
-          db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
+          db <- dao.addTask(Task(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite))
         } yield Redirect(routes.NewTask.getAddTask)
 
         futureResponse.recover {
@@ -55,10 +56,10 @@ class NewTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: Dao, val mes
   }
 }
 
-case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String, suite: String)
+case class AddTaskForm(name: String, description: String, solutionTemplate: String, referenceSolution: String, suite: String)
 
 object NewTask {
-  val status = "status"
+  val taskName = "taskName"
   val taskDescription = "taskDescription"
   val solutionTemplate = "solutionTemplate"
   val referenceSolution = "referenceSolution"

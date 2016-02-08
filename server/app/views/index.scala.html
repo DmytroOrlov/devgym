@@ -1,7 +1,7 @@
 @import UserController._
 @import views.html.templates.mainFlashToUser
 
-@(tests: Iterable[Task])(implicit flash: Flash, session: Session, msg: Messages)
+@(tasks: Iterable[Task])(implicit flash: Flash, session: Session, msg: Messages)
 @mainFlashToUser(msg("home")) {
     <h1>@msg("DevGym")</h1>
     @*<div><a href="@routes.TaskSolver.getTask()">@msg("task")</a></div>*@
@@ -14,8 +14,8 @@
     <br/>
     <h1>Latest Challenges</h1>
     <ul>
-    @for(test <- tests) {
-        <li><a href="@routes.TaskSolver.getTask()">@test.taskDescription</li>
+    @for(task <- tasks) {
+        <li><a href="@routes.TaskSolver.getTask()">@task.name</li>
     }
     </ul>
 }

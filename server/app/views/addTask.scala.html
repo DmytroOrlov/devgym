@@ -8,6 +8,7 @@
     <div><a href="@routes.Application.index()">@msg("home")</a></div>
     <div class="solutionForm">
     @form(routes.NewTask.postNewTask()) {
+        @inputText(task(taskName), 'size -> "20", 'placeholder -> "Some Name...")
         @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90")
         @textarea(task(solutionTemplate), 'rows -> "13", 'cols -> "90")
         @textarea(task(referenceSolution), 'rows -> "23", 'cols -> "90")
