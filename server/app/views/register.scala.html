@@ -1,10 +1,10 @@
 @import UserController._
 @import helper._
-@import views.html.templates.mainFlashToUser
+@import views.html.templates.main
 
 @(user: Form[RegisterForm])(implicit flash: Flash, msg: Messages)
 
-@mainFlashToUser(msg("register")) {
+@main(msg("register")) {
     <h1>@msg("register")</h1>
     <div><a href="@routes.Application.index()">@msg("home")</a></div>
     <div class="registerFrom">
