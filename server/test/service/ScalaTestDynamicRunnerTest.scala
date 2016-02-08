@@ -1,5 +1,6 @@
 package service
 
+import monifu.concurrent.Implicits.globalScheduler
 import org.scalatest.FlatSpecLike
 
 import scala.util.Try
@@ -45,14 +46,19 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
             solution.sleepIn(false, false) shouldBe true
           }""".stripMargin
 
+  val runner = new ScalaDynamicRunner() {}
 
-  override def getReport(solution: String, checked: Boolean = false): Try[String] = new ScalaTestRunner().apply(solution, correctSuite, checked)
-
-  it should "return failure when suite does not have a class name" in new ScalaTestRunner {
-    apply(correctSolution, noSuiteName, checked = false).isFailure shouldBe true
+  override def getReport(solution: String, check: Boolean = false) = {
+    val unchecked = Try(StringBuilderRunner(runner(solution, correctSuite)))
+    if (check) unchecked.check
+    else unchecked
   }
 
-  it should "return failure when suite does not have a trait type for contructor" in new ScalaTestRunner {
-    apply(correctSolution, noTraitName, checked = false).isFailure shouldBe true
+  it should "return failure when suite does not have a class name" in {
+    Try(StringBuilderRunner(runner(correctSolution, noSuiteName))).isFailure shouldBe true
+  }
+
+  it should "return failure when suite does not have a trait type for contructor" in {
+    Try(StringBuilderRunner(runner(correctSolution, noTraitName))).isFailure shouldBe true
   }
 }

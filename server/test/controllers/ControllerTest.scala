@@ -4,16 +4,15 @@ import controllers.ControllerTest._
 import dal.Dao
 import models.TaskType._
 import models.{Task, User}
+import monifu.concurrent.Implicits.globalScheduler
+import monifu.concurrent.Scheduler
 import org.scalamock.scalatest.MockFactory
 import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import play.api.test._
-import service.ScalaTestRunner.SuiteException
 import service.{DynamicSuiteExecutor, ScalaTestRunner}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 class ControllerTest extends PlaySpec with MockFactory {
 
@@ -21,7 +20,7 @@ class ControllerTest extends PlaySpec with MockFactory {
     "post fail with scalaTestRunner when addTask" should {
       "result BadRequest with error" in {
         val scalaTestRunner = mock[DynamicSuiteExecutor]
-        scalaTestRunner.apply _ expects("3", "4", true) returns Failure(new SuiteException("ignore"))
+        (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("3", "4", *, *)
         withNewTaskController(scalaTestRunner, null)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore").withFormUrlEncodedBody("taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3", "suite" -> "4"))
           status(result) mustBe BAD_REQUEST
@@ -32,7 +31,7 @@ class ControllerTest extends PlaySpec with MockFactory {
     "post fail with dao when addTask" should {
       "result BadRequest with error" in {
         val scalaTestRunner = mock[DynamicSuiteExecutor]
-        scalaTestRunner.apply _ expects("3", "4", true) returns Success("passed")
+        (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("3", "4", *, *)
         val dao = mock[Dao]
         dao.addTask _ expects Task(scalaClass, "1", "2", "3", "4") returns Future.failed(new RuntimeException)
         withNewTaskController(scalaTestRunner, dao)({ controller =>
@@ -45,7 +44,7 @@ class ControllerTest extends PlaySpec with MockFactory {
     "post correct addTask" should {
       "persist and redirect" in {
         val scalaTestRunner = mock[DynamicSuiteExecutor]
-        scalaTestRunner.apply _ expects("3", "4", true) returns Success("passed")
+        (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("3", "4", *, *)
         val dao = mock[Dao]
         dao.addTask _ expects Task(scalaClass, "1", "2", "3", "4") returns Future.successful(())
         withNewTaskController(scalaTestRunner, dao)({ controller =>

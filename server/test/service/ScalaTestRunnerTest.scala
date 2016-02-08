@@ -1,6 +1,9 @@
 package service
 
+import monifu.concurrent.Implicits.globalScheduler
 import org.scalatest.{FlatSpec, Matchers, Suite}
+
+import scala.util.Try
 
 class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution {
   behavior of "ScalaTestRunner"
@@ -15,19 +18,23 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
   }
 
   it should "return failure when check compilable but wrong solution" in {
-    getReport(incorrectSolution, checked = true).isFailure shouldBe true
+    getReport(incorrectSolution, check = true).isFailure shouldBe true
   }
 
   it should "return failure when solution is not compilable" in {
     getReport("/").isFailure shouldBe true
   }
 
-  def runner = new ScalaTestRunner().apply(
-    Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
-    Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]]
-  ) _
+  private val runner = new ScalaRuntimeRunner() {}
 
-  def getReport(solution: String, checked: Boolean = false) = runner(checked)(solution)
+  def getReport(solution: String, check: Boolean = false) = {
+    val unchecked = Try(StringBuilderRunner(runner(
+      Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
+      Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]],
+      solution)))
+    if (check) unchecked.check
+    else unchecked
+  }
 }
 
 trait ScalaTestCorrectSolution {

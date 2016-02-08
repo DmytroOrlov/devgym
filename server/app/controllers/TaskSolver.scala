@@ -14,18 +14,14 @@ import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.mvc.{Action, Controller, WebSocket}
-import service.SimpleWebSocketActor.createChannel
-import service.{RuntimeSuiteExecutor, SimpleWebSocketActor}
+import service._
 import shared.Line
 
-import scala.concurrent._
 import scala.sys.process._
 import scala.util.Try
 
-class TaskSolver @Inject()(runtimeExecutor: RuntimeSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
-                          (implicit ec: ExecutionContext) extends Controller with I18nSupport with JSONFormats {
-  implicit val s = Scheduler(ec)
-
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+                          (implicit s: Scheduler) extends Controller with I18nSupport with JSONFormats {
   val appPath = current.path.getAbsolutePath
 
   val solutionForm = Form {
@@ -41,10 +37,10 @@ class TaskSolver @Inject()(runtimeExecutor: RuntimeSuiteExecutor, dao: Dao, val 
   def tasks = Action.async(dao.getTasks(scalaClass, 20, now).map(ts => Ok(ts.toString())))
 
   def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, createChannel(runtimeExecutor(
-      Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
-      Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]])
-      (checked = false)), Some(Line("Compiling...")))
+    SimpleWebSocketActor.props(out, (sol: String) => ObservableRunner(executor(
+        Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
+        Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]], sol)).map(Line(_)),
+      Some(Line("Compiling...")))
   }
 }
 
