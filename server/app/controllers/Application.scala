@@ -3,13 +3,19 @@ package controllers
 import com.google.inject.Inject
 import controllers.Application._
 import controllers.UserController._
+import dal.Dao
+import dal.Dao._
+import models.TaskType
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 
-class Application @Inject()(val messagesApi: MessagesApi) extends Controller with I18nSupport {
+import scala.concurrent.ExecutionContext
 
-  def index = Action { implicit request =>
-    Ok(views.html.index(tests))
+class Application @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
+
+  def index = Action.async { implicit request =>
+    val tasks = dao.getTasks(TaskType.scalaClass, 20, now)
+    tasks.map(f => Ok(views.html.index(f)))
   }
 
   def logout = Action { request =>
