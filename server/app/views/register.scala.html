@@ -5,16 +5,14 @@
 @(user: Form[RegisterForm])(implicit flash: Flash, msg: Messages)
 
 @main(msg("register")) {
-    <h1>@msg("register")</h1>
-    <div><a href="@routes.Application.index()">@msg("home")</a></div>
-    <div class="registerFrom">
-    @form(routes.UserController.postRegister()) {
-        @inputText(user(name))
-        @inputPassword(user(password))
-        @inputPassword(user(verify))
-        <div class="buttons">
+    <div class="content">
+        <h1>@msg("register")</h1>
+        <div class="header"><a href="@routes.Application.index()">@msg("home")</a></div>
+        @form(routes.UserController.postRegister()) {
+            @inputText(user(name))
+            @inputPassword(user(password))
+            @inputPassword(user(verify))
             <input type="submit" value="@msg("register")"/>
-        </div>
-    }
+        }
     </div>
 }
