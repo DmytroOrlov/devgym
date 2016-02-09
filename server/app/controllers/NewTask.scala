@@ -38,7 +38,7 @@ class NewTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
       f => {
         val futureResponse = for {
           _ <- Future(StringBuilderRunner(executor(f.referenceSolution, f.suite))).check
-          db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
+          db <- dao.addTask(Task(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite))
         } yield Redirect(routes.Application.index)
 
         futureResponse.recover {
