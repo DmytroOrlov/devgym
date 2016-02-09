@@ -1,6 +1,9 @@
 package service
 
+import monifu.concurrent.Implicits.globalScheduler
 import org.scalatest.{FlatSpec, Matchers}
+
+import scala.util.Try
 
 class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution {
   behavior of "ScalaTestRunner for dynamic solution and suite code"
@@ -32,11 +35,10 @@ class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with Scal
           }""".stripMargin
 
   it should "retrun failure when suite does not have a class name" in new ScalaTestRunner {
-    execSuiteNoTrait(correctSolution, noSuiteName).isFailure shouldBe true
+    Try(StringBuilderRunner(execSuiteNoTrait(correctSolution, noSuiteName))).isFailure shouldBe true
   }
 
   it should "return success when correct solution is provided" in new ScalaTestRunner {
-    val report = execSuiteNoTrait(correctSolution, correctSuite)
-    report.isSuccess shouldBe true
+    Try(StringBuilderRunner(execSuiteNoTrait(correctSolution, correctSuite))).isSuccess shouldBe true
   }
 }

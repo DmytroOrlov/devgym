@@ -1,32 +1,33 @@
 package service
 
-import java.io.ByteArrayOutputStream
+import java.io.OutputStream
 
 import org.scalatest.Suite
-import service.ScalaTestRunner._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.control.NonFatal
 
 trait SuiteExecution {
   /**
-   * Executes tests in this <code>Suite</code>, printing output to result string.
-   * Should not throw exception.
+   * Executes tests in this <code>Suite</code>.
+   * @param channel is meant for imperative style feeding of output events.
    */
-  def executionOutput(suiteInstance: Suite): String = {
-    val o = new ByteArrayOutputStream
-    Console.withOut(o)(suiteInstance.execute(color = false))
-    o.toString
+  def executionOutput(suiteInstance: Suite, channel: String => Unit): Unit = {
+    val s = new OutputStream() {
+      override def write(b: Array[Byte], off: Int, len: Int) =
+        if (len != 0) channel(new String(b, off, len))
+
+      override def write(b: Int): Unit = channel(b.toChar.toString)
+    }
+    Console.withOut(s)(suiteInstance.execute())
   }
 }
 
-trait TryBlock {
-  def failurePrefix(s: String): String
-
-  def tryBlock(msg: String = "")(block: => String): Try[String] =
-    Try(block).transform(
-      v => Success(v),
-      e => Failure(new SuiteException(s"${failurePrefix(msg)}${e.getMessage}"))
-    )
+object WithSuiteException {
+  def apply[B](msg: String)(block: => B): B =
+    try block catch {
+      case e: SuiteException => throw e
+      case NonFatal(e) => throw new SuiteException(msg + e.getMessage, Some(e))
+    }
 }
 
 trait SuiteToolbox {
@@ -45,18 +46,15 @@ trait SuiteToolbox {
 }
 
 trait DynamicExecution extends SuiteExecution with SuiteToolbox {
-  private val t = new TryBlock {
-    override def failurePrefix(s: String): String = s"There is no Test Suite name to instantiate, code: $s"
+  private def findSuitName(suite: String) = classDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
+
+  def executeDynamic(suite: String, patchedSolution: String, channel: String => Unit) = {
+    val suiteName = WithSuiteException("There is no Test Suite name to instantiate, code: ") {
+      findSuitName(suite)
+    }
+    val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
+    executionOutput(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite], channel)
   }
-
-  private def findSuitName(suite: String): Try[String] =
-    t.tryBlock(suite) {
-      classDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
-    }
-
-  def executeDynamic(suite: String, patchedSolution: String): Try[String] =
-    findSuitName(suite).map { suiteName =>
-      val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
-      executionOutput(suiteInstance = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite])
-    }
 }
+
+case class SuiteException(msg: String, e: Option[Throwable] = None) extends RuntimeException(msg)

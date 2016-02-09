@@ -27,14 +27,22 @@ object SubmitSolutionClient extends JSApp {
   }
 
   final class Report(reportId: String) extends Observer[Line] {
-    lazy val report = {
+    val report = {
       val r = jQuery(s"#$reportId")
       r.empty()
       r
     }
 
+    val green = "\u001B[32m"
+    val close = "\u001B[0m"
+    val red = "\u001B[31m"
+
     override def onNext(elem: Line): Future[Ack] = {
-      report.append(s"${elem.value}\n")
+      val value = elem.value
+        .replace(close, "</span>")
+        .replace(green, """<span class="green">""")
+        .replace(red, """<span class="red">""")
+      report.append(s"""<div>$value</div>""")
       Continue
     }
 
@@ -56,8 +64,9 @@ object SubmitSolutionClient extends JSApp {
         url = s"$protocol//$host/task-stream",
         DropOld(20),
         sendOnOpen = Some(jQuery(s"#$solutionId").`val`().asInstanceOf[String])
-      )
-      source.collect { case IsEvent(e) => e }
+      ).collect { case IsEvent(e) => e }
+
+      (Observable.unit(Line("Submitting...")) ++ source)
         .onSubscribe(subscriber)
     }
   }

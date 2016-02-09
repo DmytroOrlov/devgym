@@ -1,9 +1,9 @@
 package solution
 
-import service.PositiveOutputTest
+import service.PositiveOutput
 import tasktest.{UniqueNumbersInArraySolution, UniqueNumbersInArrayTest}
 
-class TTUniqueNumbersInArray extends PositiveOutputTest {
+class TTUniqueNumbersInArray extends PositiveOutput {
   behavior of "ScalaTestRunner for UniqueNumbersInArray"
 
   override val suiteInstance = new UniqueNumbersInArrayTest(new UniqueNumbersInArray)

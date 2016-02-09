@@ -1,42 +1,41 @@
-body {
-  background-color: #eee;
-}
-
-h1 {
-  color: #555555;
-  font-family: 'Roboto Condensed', sans-serif;
-}
-
-dd.info {
-  display: none;
-}
-
-dd.error {
-  color: red;
-}
-
-div.solutionForm > form > dl > dd {
-  margin: 0;
-}
-
-div.solutionForm {
-  float: left;
-}
-
-div#report {
-  float: left;
-  padding-top: 2.5em;
+.description {
   white-space: pre-line;
+  padding-bottom: 1em;
 }
 
-div.registerFrom > form > dl > dt {
+.content {
+  padding: 0 1em 0 1em;
+}
+
+dl {
+  dd.info {
+    display: none;
+  }
+
+  dd.error {
+    color: red;
+  }
+}
+
+.header {
+  padding-bottom: 1em;
+}
+
+.solution {
   float: left;
-  width: 65px;
+  padding-right: 1em;
 }
 
-div.taskDescription {
-  white-space: pre-line;
-  padding-top: 1em;
+#report {
+  padding-top: 1.5em;
+
+  .green {
+    color: #208020;
+  }
+
+  .red {
+    color: #ff5050;
+  }
 }
 
 /* Add Task */
