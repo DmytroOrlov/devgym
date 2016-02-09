@@ -48,7 +48,9 @@ INSERT INTO devgym.task (
         else a.slice(left, right + 1)
       }
     }',
-   'class SubArrayWithMaxSumTest(solution: SubArrayWithMaxSumSolution) extends FlatSpec with Matchers {
+   'import org.scalatest.{FlatSpec, Matchers}
+
+   class SubArrayWithMaxSumTest(solution: SubArrayWithMaxSumSolution) extends FlatSpec with Matchers {
       behavior of "SubArrayWithMaxSum"
 
       it should "return max sum sub array within given array" in {
