@@ -1,18 +1,16 @@
 @import helper._
-@import views.html.templates.main
+@import views.html.templates.{main, navbar}
 
-@(taskDescription: String, solution: Form[SolutionForm])(implicit msg: Messages, req: RequestHeader)
+@(taskDescription: String, solution: Form[SolutionForm])(implicit msg: Messages, session: Session)
 @main(msg("task")) {
-    <div class="content">
-        <div class="header"><a href="@routes.Application.index()">@msg("home")</a></div>
-        <div class="description">@taskDescription</div>
-        <div class="solution">
-        @form(routes.Application.index()) {
-            @textarea(solution(TaskSolver.solution), 'rows -> "25", 'cols -> "80")
-            <input type="button" value="@msg("submit")" id="submit"/>
-        }
-        </div>
-        <div id="report" class="content"></div>
-        @playscalajs.html.scripts("client")
+    @navbar()
+    <div class="description">@taskDescription</div>
+    <div class="solution">
+    @form(routes.Application.index()) {
+        @textarea(solution(TaskSolver.solution), 'rows -> "25", 'cols -> "80")
+        <input type="button" value="@msg("submit")" id="submit"/>
+    }
     </div>
+    <div id="report"></div>
+    @playscalajs.html.scripts("client")
 }
