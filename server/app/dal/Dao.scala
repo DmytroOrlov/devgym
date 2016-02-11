@@ -1,14 +1,15 @@
 package dal
 
 import java.time.temporal.ChronoUnit
-import java.time.{ZoneOffset, ZonedDateTime}
+import java.time._
 import java.util.Date
 
+import com.datastax.driver.core.utils.UUIDs
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.google.inject.Inject
 import dal.Dao._
 import models.TaskType._
-import models.{Task, User}
+import models.{TaskType, Task, User}
 import util.FutureUtils._
 import util.TryFuture
 
@@ -20,6 +21,8 @@ trait Dao {
   def addTask(task: Task): Future[Unit]
 
   def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]]
+
+  def getTask(year: LocalDate, taskType: TaskType.TaskType, id: Long): Future[Task]
 }
 
 class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) extends Dao {
@@ -35,9 +38,16 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     " year = ?" +
     " and type = ?" +
     " limit ?")
+  private lazy val getTaskStatement = session.prepare("SELECT name, description, solution_template, reference_solution, suite FROM task WHERE " +
+    " year = ?" +
+    " and type = ?" +
+    " timeuuid = ?"
+  )
 
   private def toTask(r: Row) = Task(
+    Instant.ofEpochMilli(r.getTimestamp("year").getTime).atZone(ZoneId.systemDefault()).toLocalDate,
     models.TaskType.withName(r.getString("type")),
+    r.getUUID("timeuuid"),
     r.getString("name"),
     r.getString("description"),
     r.getString("solution_template"),
@@ -63,6 +73,11 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
       val limitInt: Integer = limit
       session.executeAsync(getLastTasksStatement.bind(year(yearAgo), `type`.toString, limitInt))
     }.map(allTasks))
+
+  def getTask(year: LocalDate, taskType: TaskType.TaskType, id: Long): Future[Task] = TryFuture(
+    toFuture {
+      session.executeAsync(getTaskStatement.bind(new Date(), taskType, UUIDs.startOf(id)))
+    }.map(rs => toTask(rs.one)))
 }
 
 object Dao {
