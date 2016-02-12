@@ -1,9 +1,8 @@
 @import UserController._
-@import views.html.templates.{mainFlashToUser, navbar}
+@import views.html.templates.mainFlashToUser
 
 @()(implicit flash: Flash, session: Session, msg: Messages)
 @mainFlashToUser(msg("home")) {
-    @navbar()
     <div><a href="@routes.TaskSolver.getTask()">@msg("task")</a></div>
     <div><a href="@routes.NewTask.getAddTask()">@msg("addTask")</a></div>
     @session.get(username).fold {

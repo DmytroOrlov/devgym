@@ -1,12 +1,10 @@
 @import UserController._
 @import helper._
-@import views.html.templates.{main, navbar}
+@import views.html.templates.main
 
 @(user: Form[RegisterForm])(implicit flash: Flash, msg: Messages, session: Session)
 
 @main(msg("register")) {
-    @navbar()
-    <div class="header"><a href="@routes.Application.index()">@msg("home")</a></div>
     @form(routes.UserController.postRegister()) {
         @inputText(user(name))
         @inputPassword(user(password))

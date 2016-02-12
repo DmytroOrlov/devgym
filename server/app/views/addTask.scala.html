@@ -1,11 +1,10 @@
 @import NewTask._
 @import helper._
-@import views.html.templates.{main, navbar}
+@import views.html.templates.main
 
 @(task: Form[AddTaskForm])(implicit msg: Messages, session: Session)
 
 @main(msg("addTask")) {
-    @navbar()
     @form(routes.NewTask.postNewTask()) {
         @textarea(task(taskDescription), 'rows -> "8", 'cols -> "80")
         @textarea(task(solutionTemplate), 'rows -> "8", 'cols -> "80")
