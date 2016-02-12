@@ -1,15 +1,15 @@
 package dal
 
+import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
-import java.time._
-import java.util.Date
+import java.time.{ZoneOffset, ZonedDateTime}
+import java.util.{Date, UUID}
 
-import com.datastax.driver.core.utils.UUIDs
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.google.inject.Inject
 import dal.Dao._
 import models.TaskType._
-import models.{TaskType, Task, User}
+import models.{Task, TaskType, User}
 import util.FutureUtils._
 import util.TryFuture
 
@@ -22,7 +22,7 @@ trait Dao {
 
   def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]]
 
-  def getTask(year: LocalDate, taskType: TaskType.TaskType, id: Long): Future[Task]
+  def getTask(year: Long, taskType: TaskType.TaskType, timeuuid: UUID): Future[Task]
 }
 
 class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) extends Dao {
@@ -38,14 +38,13 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     " year = ?" +
     " and type = ?" +
     " limit ?")
-  private lazy val getTaskStatement = session.prepare("SELECT name, description, solution_template, reference_solution, suite FROM task WHERE " +
+  private lazy val getTaskStatement = session.prepare("SELECT * FROM task WHERE " +
     " year = ?" +
     " and type = ?" +
-    " timeuuid = ?"
-  )
+    " and timeuuid = ?")
 
   private def toTask(r: Row) = Task(
-    Instant.ofEpochMilli(r.getTimestamp("year").getTime).atZone(ZoneId.systemDefault()).toLocalDate,
+    r.getTimestamp("year"),
     models.TaskType.withName(r.getString("type")),
     r.getUUID("timeuuid"),
     r.getString("name"),
@@ -74,9 +73,9 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
       session.executeAsync(getLastTasksStatement.bind(year(yearAgo), `type`.toString, limitInt))
     }.map(allTasks))
 
-  def getTask(year: LocalDate, taskType: TaskType.TaskType, id: Long): Future[Task] = TryFuture(
+  def getTask(year: Long, `type`: TaskType, timeuuid: UUID): Future[Task] = TryFuture(
     toFuture {
-      session.executeAsync(getTaskStatement.bind(new Date(), taskType, UUIDs.startOf(id)))
+      session.executeAsync(getTaskStatement.bind(new Timestamp(year), `type`.toString, timeuuid))
     }.map(rs => toTask(rs.one)))
 }
 

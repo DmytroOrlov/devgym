@@ -1,7 +1,6 @@
 package controllers
 
-import java.time.LocalDate
-import java.util.Date
+import java.sql.Timestamp
 
 import com.datastax.driver.core.utils.UUIDs
 import com.google.inject.Inject
@@ -42,7 +41,10 @@ class NewTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
       f => {
         val futureResponse = for {
           _ <- Future(StringBuilderRunner(executor(f.referenceSolution, f.suite))).check
-          db <- dao.addTask(Task(LocalDate.now(), scalaClass, UUIDs.timeBased(), f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite))
+          db <- dao.addTask(
+            Task(new Timestamp(System.currentTimeMillis),
+              scalaClass, UUIDs.timeBased(), f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite)
+          )
         } yield Redirect(routes.Application.index)
 
         futureResponse.recover {

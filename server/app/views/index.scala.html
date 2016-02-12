@@ -17,7 +17,7 @@
         <h1>Latest Challenges</h1>
         <ul>
         @for(task <- tasks) {
-            <li><a href="@routes.TaskSolver.getTask(task.year.toEpochDay, task.`type`.toString, task.timeuuid.timestamp())">@task.name</li>
+            <li><a href="@routes.TaskSolver.getTask(task.year.getTime, task.`type`.toString, task.timeuuid)">@task.name</li>
         }
         </ul>
     </div>

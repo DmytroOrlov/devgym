@@ -1,14 +1,13 @@
 package controllers
 
-import java.time.LocalDate
-import java.util.Date
+import java.util.UUID
 
 import com.google.inject.Inject
 import controllers.TaskSolver._
 import dal.Dao
 import dal.Dao.now
-import models.{TaskType, Task}
-import models.TaskType.{TaskType, scalaClass}
+import models.TaskType
+import models.TaskType.scalaClass
 import monifu.concurrent.Scheduler
 import org.scalatest.Suite
 import play.api.Play.current
@@ -30,16 +29,18 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
 
   val solutionForm = Form {
     mapping(
-      solution -> nonEmptyAndDiffer(from = solutionTemplateText)
+      solution -> nonEmptyText
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  def getTask(year: Long, taskType: String, id: Long) = Action.async { implicit request =>
-    val task = dao.getTask(LocalDate.ofEpochDay(year), TaskType.withName(taskType), id)
+  def getTask(year: Long, taskType: String, timeuuid: UUID) = Action.async { implicit request =>
+    val task = dao.getTask(year, TaskType.withName(taskType), timeuuid)
     task.map(t => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate)))))
   }
 
-  def tasks = Action.async(dao.getTasks(scalaClass, 20, now).map(ts => Ok(ts.toString())))
+  def tasks = {
+    Action.async(dao.getTasks(scalaClass, lastCount, now).map(ts => Ok(ts.toString())))
+  }
 
   def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
     SimpleWebSocketActor.props(out, (solution: String) =>
@@ -55,20 +56,8 @@ case class SolutionForm(solution: String)
 
 object TaskSolver {
   val cannotCheckNow = "cannotCheckNow"
-  // these stubs should be replaced with database layer
-  val taskDescriptionText =
-    s"""Implement apply function to return  a sub-array of original array 'a', which has maximum sum of its elements.
-        | For example, having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array.
-        |
-       |You can add required Scala class using regular 'import' statement""".stripMargin
-  val solutionTemplateText =
-    """class SubArrayWithMaxSum {
-      |  def apply(a: Array[Int]): Array[Int] = {
-      |
-      |  }
-      |}""".stripMargin
-
   val solution = "solution"
+  val lastCount: Int = 20
 
   def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == from) Invalid(ValidationError("error.changesRequired")) else Valid
