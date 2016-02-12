@@ -1,9 +1,8 @@
 @import helper._
-@import views.html.templates.{main, navbar}
+@import views.html.templates.main
 
 @(taskDescription: String, solution: Form[SolutionForm])(implicit msg: Messages, session: Session)
 @main(msg("task")) {
-    @navbar()
     <div class="description">@taskDescription</div>
     <div class="solution">
     @form(routes.Application.index()) {
