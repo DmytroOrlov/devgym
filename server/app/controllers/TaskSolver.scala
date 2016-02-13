@@ -37,7 +37,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
     val task = dao.getTask(year, TaskType.withName(taskType), timeuuid)
     task.map {
       case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate))))
-      case None => Redirect(routes.Application.index).flashing("flashToUser" -> messagesApi("taskNotFound"))
+      case None => Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
     }
   }
 
@@ -58,6 +58,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
 case class SolutionForm(solution: String)
 
 object TaskSolver {
+  val flashToUser = "flashToUser"
   val cannotCheckNow = "cannotCheckNow"
   val solution = "solution"
   val lastCount: Int = 20
