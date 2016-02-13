@@ -5,7 +5,6 @@
 @mainFlashToUser(msg("home")) {
     <div class="content">
         <h1>@msg("DevGym")</h1>
-        @*<div><a href="@routes.TaskSolver.getTask()">@msg("task")</a></div>*@
         <div><a href="@routes.NewTask.getAddTask()">@msg("addTask")</a></div>
         @session.get(username).fold {
             <div><a href="@routes.UserController.getRegister()">@msg("register")</a></div>

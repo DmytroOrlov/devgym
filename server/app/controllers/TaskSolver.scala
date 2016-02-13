@@ -35,7 +35,10 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
 
   def getTask(year: Long, taskType: String, timeuuid: UUID) = Action.async { implicit request =>
     val task = dao.getTask(year, TaskType.withName(taskType), timeuuid)
-    task.map(t => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate)))))
+    task.map {
+      case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate))))
+      case None => Redirect(routes.Application.index).flashing("flashToUser" -> messagesApi("taskNotFound"))
+    }
   }
 
   def tasks = {

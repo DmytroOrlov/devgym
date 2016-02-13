@@ -22,7 +22,7 @@ trait Dao {
 
   def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]]
 
-  def getTask(year: Long, taskType: TaskType.TaskType, timeuuid: UUID): Future[Task]
+  def getTask(year: Long, taskType: TaskType.TaskType, timeuuid: UUID): Future[Option[Task]]
 }
 
 class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) extends Dao {
@@ -73,10 +73,10 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
       session.executeAsync(getLastTasksStatement.bind(year(yearAgo), `type`.toString, limitInt))
     }.map(allTasks))
 
-  def getTask(year: Long, `type`: TaskType, timeuuid: UUID): Future[Task] = TryFuture(
+  def getTask(year: Long, `type`: TaskType, timeuuid: UUID): Future[Option[Task]] = TryFuture(
     toFuture {
       session.executeAsync(getTaskStatement.bind(new Timestamp(year), `type`.toString, timeuuid))
-    }.map(rs => toTask(rs.one)))
+    }.map(rs => if (rs.iterator().hasNext) Option(toTask(rs.one)) else Option.empty))
 }
 
 object Dao {
