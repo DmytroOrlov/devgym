@@ -31,7 +31,9 @@ class NewTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
-  def getAddTask = Action(Ok(views.html.addTask(addTaskForm)))
+  def getAddTask = Action { implicit r =>
+    Ok(views.html.addTask(addTaskForm))
+  }
 
   def postNewTask = Action.async { implicit request =>
     addTaskForm.bindFromRequest.fold(

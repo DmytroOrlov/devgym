@@ -1,0 +1,26 @@
+@import UserController._
+
+@()(implicit msg: Messages, session: Session)
+<header class="navbar dg-task-nav">
+    <div class="container">
+        <div class="navbar-header">
+            <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#bs-navbar" aria-expanded="false">
+                <span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="@routes.Application.index()">@msg("DevGym")</a>
+        </div>
+        <nav id="bs-navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="@routes.TaskSolver.getTask()">@msg("task")</a></li>
+                <li><a href="@routes.NewTask.getAddTask()">@msg("addTask")</a></li>
+                <li>
+                @session.get(username).fold {
+                    <a href="@routes.UserController.getRegister()">@msg("register")</a>
+                } { _ =>
+                    <a href="@routes.Application.logout()">@msg("logout")</a>
+                }
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>

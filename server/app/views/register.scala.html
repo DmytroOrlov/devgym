@@ -2,17 +2,13 @@
 @import helper._
 @import views.html.templates.main
 
-@(user: Form[RegisterForm])(implicit flash: Flash, msg: Messages)
+@(user: Form[RegisterForm])(implicit flash: Flash, msg: Messages, session: Session)
 
 @main(msg("register")) {
-    <div class="content">
-        <h1>@msg("register")</h1>
-        <div class="header"><a href="@routes.Application.index()">@msg("home")</a></div>
-        @form(routes.UserController.postRegister()) {
-            @inputText(user(name))
-            @inputPassword(user(password))
-            @inputPassword(user(verify))
-            <input type="submit" value="@msg("register")"/>
-        }
-    </div>
+    @form(routes.UserController.postRegister()) {
+        @inputText(user(name))
+        @inputPassword(user(password))
+        @inputPassword(user(verify))
+        <input type="submit" value="@msg("register")"/>
+    }
 }

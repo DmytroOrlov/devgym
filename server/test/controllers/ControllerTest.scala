@@ -76,7 +76,7 @@ class ControllerTest extends PlaySpec with MockFactory {
 }
 
 object ControllerTest {
-  def withNewTaskController[T](suiteExecutor: DynamicSuiteExecutor, dao: Dao)(block: (NewTask) => T): Any = {
+  def withNewTaskController[T](suiteExecutor: DynamicSuiteExecutor, dao: Dao)(block: (NewTask) => T): T = {
     block(new NewTask(suiteExecutor, dao, new MockMessageApi))
   }
 }

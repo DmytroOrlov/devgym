@@ -3,21 +3,18 @@
 
 @(tasks: Iterable[Task])(implicit flash: Flash, session: Session, msg: Messages)
 @mainFlashToUser(msg("home")) {
-    <div class="content">
-        <h1>@msg("DevGym")</h1>
-        <div><a href="@routes.NewTask.getAddTask()">@msg("addTask")</a></div>
-        @session.get(username).fold {
-            <div><a href="@routes.UserController.getRegister()">@msg("register")</a></div>
-        } { _ =>
-            <div><a href="@routes.Application.logout()">@msg("logout")</a></div>
-        }
+    <div><a href="@routes.NewTask.getAddTask()">@msg("addTask")</a></div>
+    @session.get(username).fold {
+        <div><a href="@routes.UserController.getRegister()">@msg("register")</a></div>
+    } { _ =>
+        <div><a href="@routes.Application.logout()">@msg("logout")</a></div>
+    }
 
-        <br/>
-        <h1>Latest Challenges</h1>
-        <ul>
-        @for(task <- tasks) {
-            <li><a href="@routes.TaskSolver.getTask(task.year.getTime, task.`type`.toString, task.timeuuid)">@task.name</li>
-        }
-        </ul>
-    </div>
+    <br/>
+    <h1>Latest Challenges</h1>
+    <ul>
+    @for(task <- tasks) {
+        <li><a href="@routes.TaskSolver.getTask(task.year.getTime, task.`type`.toString, task.timeuuid)">@task.name</li>
+    }
+    </ul>
 }
