@@ -5,9 +5,7 @@ import java.util.UUID
 import com.google.inject.Inject
 import controllers.TaskSolver._
 import dal.Dao
-import dal.Dao.now
 import models.TaskType
-import models.TaskType.scalaClass
 import monifu.concurrent.Scheduler
 import org.scalatest.Suite
 import play.api.Play.current
@@ -43,10 +41,6 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
       case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate))))
       case None => notFound
     }.recover { case NonFatal(e) => notFound }
-  }
-
-  def tasks = {
-    Action.async(dao.getTasks(scalaClass, lastCount, now).map(ts => Ok(ts.toString())))
   }
 
   def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
