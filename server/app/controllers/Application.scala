@@ -2,6 +2,7 @@ package controllers
 
 import com.google.inject.Inject
 import controllers.Application._
+import controllers.TaskSolver._
 import controllers.UserController._
 import dal.Dao
 import dal.Dao._
@@ -14,7 +15,7 @@ import scala.concurrent.ExecutionContext
 class Application @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   def index = Action.async { implicit request =>
-    val tasks = dao.getTasks(TaskType.scalaClass, 20, now)
+    val tasks = dao.getTasks(TaskType.scalaClass, lastCount, now)
     tasks.map(it => Ok(views.html.index(it)))
   }
 
