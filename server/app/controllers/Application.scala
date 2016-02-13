@@ -11,12 +11,17 @@ import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext
+import scala.util.control.NonFatal
 
 class Application @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   def index = Action.async { implicit request =>
     val tasks = dao.getTasks(TaskType.scalaClass, lastCount, now)
-    tasks.map(it => Ok(views.html.index(it)))
+    tasks
+      .map(it => Ok(views.html.index(it)))
+      .recover {
+        case NonFatal(e) => InternalServerError(views.html.index(Seq()))
+      }
   }
 
   def logout = Action { request =>
