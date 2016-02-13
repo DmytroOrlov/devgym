@@ -22,7 +22,7 @@ class ApplicationTest extends PlaySpec with OneAppPerSuite {
       }
     }
   }
-  "NewTask" when {
+  "AddTask" when {
     "get addTask" should {
       "result with form" in {
         val Some(result) = route(FakeRequest(GET, "/addTask"))

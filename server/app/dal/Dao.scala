@@ -9,7 +9,7 @@ import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.google.inject.Inject
 import dal.Dao._
 import models.TaskType._
-import models.{Task, TaskType, User}
+import models.{NewTask, Task, TaskType, User}
 import util.FutureUtils._
 import util.TryFuture
 
@@ -18,7 +18,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait Dao {
   def create(user: User): Future[Boolean]
 
-  def addTask(task: Task): Future[Unit]
+  def addTask(task: NewTask): Future[Unit]
 
   def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]]
 
@@ -63,7 +63,7 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
 
   def create(user: User): Future[Boolean] = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
 
-  def addTask(task: Task): Future[Unit] = TryFuture(toFutureUnit {
+  def addTask(task: NewTask): Future[Unit] = TryFuture(toFutureUnit {
     session.executeAsync(addTaskStatement.bind(year(), task.`type`.toString, task.name, task.description, task.solutionTemplate, task.referenceSolution, task.suite))
   })
 

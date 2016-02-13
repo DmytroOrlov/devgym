@@ -16,7 +16,7 @@ import scala.concurrent.Future
 
 class ControllerTest extends PlaySpec with MockFactory {
 
-  "NewTask controller" when {
+  "AddTask controller" when {
     "post fail with scalaTestRunner when addTask" should {
       "result BadRequest with error" in {
         val scalaTestRunner = mock[DynamicSuiteExecutor]
@@ -76,7 +76,7 @@ class ControllerTest extends PlaySpec with MockFactory {
 }
 
 object ControllerTest {
-  def withNewTaskController[T](suiteExecutor: DynamicSuiteExecutor, dao: Dao)(block: (NewTask) => T): T = {
-    block(new NewTask(suiteExecutor, dao, new MockMessageApi))
+  def withNewTaskController[T](suiteExecutor: DynamicSuiteExecutor, dao: Dao)(block: (AddTask) => T): T = {
+    block(new AddTask(suiteExecutor, dao, new MockMessageApi))
   }
 }
