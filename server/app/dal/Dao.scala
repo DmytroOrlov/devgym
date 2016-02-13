@@ -58,7 +58,13 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     res.map(f)
   }
 
+  private def one[T](f: Row => T)(res: ResultSet): Option[T] = {
+    if (res.isExhausted) None
+    else Some(f(res.one()))
+  }
+
   private def allTasks = all(toTask) _
+  private def oneTask = one(toTask) _
 
   def create(user: User): Future[Boolean] = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
 
@@ -75,7 +81,7 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
   def getTask(year: Date, `type`: TaskType, timeuuid: UUID): Future[Option[Task]] = TryFuture(
     toFuture {
       session.executeAsync(getTaskStatement.bind(year, `type`.toString, timeuuid))
-    }.map(rs => if (rs.iterator().hasNext) Option(toTask(rs.one)) else Option.empty))
+    }.map(oneTask))
 }
 
 object Dao {
