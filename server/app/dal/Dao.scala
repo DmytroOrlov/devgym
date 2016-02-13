@@ -1,6 +1,5 @@
 package dal
 
-import java.sql.Timestamp
 import java.time.temporal.ChronoUnit
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.{Date, UUID}
@@ -22,7 +21,7 @@ trait Dao {
 
   def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]]
 
-  def getTask(year: Long, taskType: TaskType.TaskType, timeuuid: UUID): Future[Option[Task]]
+  def getTask(year: Date, taskType: TaskType.TaskType, timeuuid: UUID): Future[Option[Task]]
 }
 
 class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) extends Dao {
@@ -73,9 +72,9 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
       session.executeAsync(getLastTasksStatement.bind(year(yearAgo), `type`.toString, limitInt))
     }.map(allTasks))
 
-  def getTask(year: Long, `type`: TaskType, timeuuid: UUID): Future[Option[Task]] = TryFuture(
+  def getTask(year: Date, `type`: TaskType, timeuuid: UUID): Future[Option[Task]] = TryFuture(
     toFuture {
-      session.executeAsync(getTaskStatement.bind(new Timestamp(year), `type`.toString, timeuuid))
+      session.executeAsync(getTaskStatement.bind(year, `type`.toString, timeuuid))
     }.map(rs => if (rs.iterator().hasNext) Option(toTask(rs.one)) else Option.empty))
 }
 

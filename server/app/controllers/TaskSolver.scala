@@ -1,6 +1,6 @@
 package controllers
 
-import java.util.UUID
+import java.util.{Date, UUID}
 
 import com.google.inject.Inject
 import controllers.TaskSolver._
@@ -36,7 +36,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
   def getTask(year: Long, taskType: String, timeuuid: UUID) = Action.async { implicit request =>
     def notFound = Redirect(routes.Application.index).flashing("flashToUser" -> messagesApi("taskNotFound"))
 
-    val task = TryFuture(dao.getTask(year, TaskType.withName(taskType), timeuuid))
+    val task = TryFuture(dao.getTask(new Date(year), TaskType.withName(taskType), timeuuid))
     task.map {
       case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate))))
       case None => notFound
