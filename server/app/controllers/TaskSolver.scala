@@ -8,6 +8,7 @@ import controllers.UserController._
 import dal.Dao
 import models.TaskType
 import monifu.concurrent.Scheduler
+import org.apache.commons.lang3.StringUtils
 import org.scalatest.Suite
 import play.api.Play.current
 import play.api.data.Form
@@ -30,7 +31,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
 
   val solutionForm = Form {
     mapping(
-      solution -> nonEmptyText
+      solution -> nonEmptyAndDiffer(StringUtils.EMPTY)
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
@@ -60,7 +61,6 @@ object TaskSolver {
   val cannotCheckNow = "cannotCheckNow"
   val solution = "solution"
 
-  // TODO rethink or remove
   def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == from) Invalid(ValidationError("error.changesRequired")) else Valid
   }
