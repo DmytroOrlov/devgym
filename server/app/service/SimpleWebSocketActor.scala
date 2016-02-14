@@ -11,6 +11,7 @@ import shared.Event
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue => Future[Observable[T]], onSubscribe: => Option[T], timeout: FiniteDuration)
                                                (implicit s: Scheduler) extends Actor {
@@ -33,6 +34,8 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
             () => context.stop(self)
           )
         onSubscribe.foreach(out ! Json.toJson(_))
+      }.onFailure {
+        case NonFatal(e) => context.stop(self)
       }
   }
 

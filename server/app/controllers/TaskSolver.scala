@@ -8,7 +8,6 @@ import controllers.UserController._
 import dal.Dao
 import models.TaskType
 import monifu.concurrent.Scheduler
-import monifu.reactive.Observable
 import org.scalatest.Suite
 import play.api.Play.current
 import play.api.data.Form
@@ -50,35 +49,32 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   }
 
   def taskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
-    def error(msg: String = "") = Observable.error(new SolverException(s"Cannot run $msg"))
-
     SimpleWebSocketActor.props(out, (fromClient: JsValue) => try {
         val solution = (fromClient \ "solution").as[String]
         val year = (fromClient \ "year").as[Long]
         val taskType = (fromClient \ "taskType").as[String]
         val timeuuid = (fromClient \ "timeuuid").as[String]
-        dao.getTask(new Date(year), TaskType.withName(taskType), UUID.fromString(timeuuid)).map {
-          case Some(t) => ObservableRunner(executor(solution, t.suite)).map(Line(_))
-          case _ => error()
+        dao.getTask(new Date(year), TaskType.withName(taskType), UUID.fromString(timeuuid)).map { t =>
+          ObservableRunner(executor(solution, t.get.suite)).map(Line(_))
         }
       } catch {
-        case NonFatal(e) => Future.successful(error(e.getMessage))
+        case NonFatal(e) => Future.failed(e)
       },
       Some(Line("Compiling..."))
     )
   }
 
   def runtimeTaskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, (fromClient: JsValue) => Future.successful((try {
+    SimpleWebSocketActor.props(out, (fromClient: JsValue) => try {
         val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
         val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
         val solution = (fromClient \ "solution").as[String]
-        ObservableRunner(executor(
+        Future.successful(ObservableRunner(executor(
           Class.forName(suiteClass).asInstanceOf[Class[Suite]],
-          Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution))
+          Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution)).map(Line(_)))
       } catch {
-        case NonFatal(e) => Observable.error(new SolverException(s"Cannot run ${e.getMessage}"))
-      }).map(Line(_))),
+        case NonFatal(e) => Future.failed(e)
+      },
       Some(Line("Compiling..."))
     )
   }
@@ -102,7 +98,4 @@ object TaskSolver {
 
   // no exception, so sbt is in the PATH
   lazy val sbtInstalled = sbt("--version").isSuccess
-
-  case class SolverException(msg: String) extends RuntimeException(msg)
-
 }
