@@ -1,22 +1,23 @@
 package controllers
 
-import java.util.{UUID, Date}
+
+import java.util.{Date, UUID}
 
 import controllers.ControllerTest._
 import dal.Dao
 import models.TaskType._
-import models.{NewTask, Task, User}
+import models.{NewTask, Task, TaskType}
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.concurrent.Scheduler
 import org.scalamock.scalatest.MockFactory
-import org.scalatestplus.play.PlaySpec
+import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.test.Helpers._
 import play.api.test._
-import service.{DynamicSuiteExecutor, ScalaTestRunner}
+import service.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaTestRunner}
 
 import scala.concurrent.Future
 
-class ControllerTest extends PlaySpec with MockFactory {
+class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
 
   "AddTask controller" when {
     "post fail with scalaTestRunner when addTask" should {
@@ -78,6 +79,27 @@ class ControllerTest extends PlaySpec with MockFactory {
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include( """class="error"></dd>""")
         })
+      }
+    }
+  }
+
+  "TaskSolver controller" when {
+    "getting the task to solve" should {
+      "returns template and task description" in {
+        //given
+        val dao = mock[Dao]
+        val year = new Date()
+        val timeuuid = new UUID(1, 1)
+        val description = "some description"
+        val template = "some template"
+        val replyTask = Task(year, TaskType.scalaClass, timeuuid, "array", description, template, "ref", "test suite")
+        val taskSolver = new TaskSolver(mock[RuntimeSuiteExecutor], dao, new MockMessageApi)
+        //when
+        dao.getTask _ expects(year, TaskType.scalaClass, timeuuid) returns Future.successful(Some(replyTask))
+        val result = taskSolver.getTask(year.getTime, TaskType.scalaClass.toString, timeuuid).apply(FakeRequest(GET, "ignore"))
+        //then
+        status(result) mustBe OK
+        contentAsString(result) must (include(description) and include(template))
       }
     }
   }
