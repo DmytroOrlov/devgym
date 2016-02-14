@@ -1,10 +1,12 @@
 package controllers
 
+import java.util.{Date, UUID}
+
 import com.google.inject.Inject
 import controllers.TaskSolver._
+import controllers.UserController._
 import dal.Dao
-import dal.Dao.now
-import models.TaskType.scalaClass
+import models.TaskType
 import monifu.concurrent.Scheduler
 import monifu.reactive.Observable
 import org.scalatest.Suite
@@ -17,6 +19,7 @@ import play.api.libs.json.JsValue
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import shared.Line
+import util.TryFuture
 
 import scala.sys.process._
 import scala.util.Try
@@ -28,15 +31,19 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
 
   val solutionForm = Form {
     mapping(
-      solution -> nonEmptyAndDiffer(from = solutionTemplateText)
+      solution -> nonEmptyText
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  def getTask = Action { implicit request =>
-    Ok(views.html.task(taskDescriptionText, solutionForm.fill(SolutionForm(solutionTemplateText))))
-  }
+  def getTask(year: Long, taskType: String, timeuuid: UUID) = Action.async { implicit request =>
+    def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
-  def tasks = Action.async(dao.getTasks(scalaClass, 20, now).map(ts => Ok(ts.toString())))
+    val task = TryFuture(dao.getTask(new Date(year), TaskType.withName(taskType), timeuuid))
+    task.map {
+      case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate))))
+      case None => notFound
+    }.recover { case NonFatal(e) => notFound }
+  }
 
   def taskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
     SimpleWebSocketActor.props(out, (fromClient: JsValue) => (try {
@@ -58,21 +65,9 @@ case class SolutionForm(solution: String)
 
 object TaskSolver {
   val cannotCheckNow = "cannotCheckNow"
-  // these stubs should be replaced with database layer
-  val taskDescriptionText = "Implement apply function to return  a sub-array of original array 'a', " +
-    "which has maximum sum of its elements.\n For example, " +
-    "having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), " +
-    "then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array. \n\n" +
-    "You can add required Scala class using regular 'import' statement"
-  val solutionTemplateText =
-    """class SubArrayWithMaxSum {
-      |  def apply(a: Array[Int]): Array[Int] = {
-      |
-      |  }
-      |}""".stripMargin
-
   val solution = "solution"
 
+  // TODO rethink or remove
   def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == from) Invalid(ValidationError("error.changesRequired")) else Valid
   }
