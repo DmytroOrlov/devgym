@@ -11,16 +11,16 @@ import shared.Event
 
 import scala.concurrent.duration._
 
-class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: String => Observable[T], onSubscribe: => Option[T], timeout: FiniteDuration)
+class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue => Observable[T], onSubscribe: => Option[T], timeout: FiniteDuration)
                                                (implicit s: Scheduler) extends Actor {
   private[this] val subscription =
     CompositeCancelable()
 
   def receive: Receive = {
-    case solution: String =>
+    case json: JsValue =>
       context.become(next)
 
-      subscription += producer(solution)
+      subscription += producer(json)
         .map(x => Json.toJson(x))
         .timeout(timeout)
         .subscribe(
@@ -57,7 +57,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: String 
 
 object SimpleWebSocketActor {
   /** Utility for quickly creating a `Props` */
-  def props[T <: Event : Writes](out: ActorRef, producer: String => Observable[T], onSubscribe: => Option[T] = None, timeout: FiniteDuration = 10.seconds)
+  def props[T <: Event : Writes](out: ActorRef, producer: JsValue => Observable[T], onSubscribe: => Option[T] = None, timeout: FiniteDuration = 10.seconds)
                                 (implicit s: Scheduler): Props = {
     Props(new SimpleWebSocketActor(out, producer, onSubscribe, timeout))
   }
