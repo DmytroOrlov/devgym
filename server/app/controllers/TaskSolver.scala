@@ -8,6 +8,7 @@ import controllers.UserController._
 import dal.Dao
 import models.TaskType
 import monifu.concurrent.Scheduler
+import monifu.reactive.Observable
 import org.scalatest.Suite
 import play.api.Play.current
 import play.api.data.Form
@@ -44,13 +45,19 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
     }.recover { case NonFatal(e) => notFound }
   }
 
-  def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, (solution: String) =>
-      ObservableRunner(executor(
-        Class.forName("tasktest.SubArrayWithMaxSumTest").asInstanceOf[Class[Suite]],
-        Class.forName("tasktest.SubArrayWithMaxSumSolution").asInstanceOf[Class[AnyRef]],
-        solution)).map(Line(_)),
-      Some(Line("Compiling...")))
+  def taskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
+    SimpleWebSocketActor.props(out, (fromClient: JsValue) => (try {
+        val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
+        val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
+        val solution = (fromClient \ "solution").as[String]
+        ObservableRunner(executor(
+          Class.forName(suiteClass).asInstanceOf[Class[Suite]],
+          Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution))
+      } catch {
+        case NonFatal(e) => Observable.error(new SolverException(s"Cannot run ${e.getMessage}"))
+      }).map(Line(_)),
+      Some(Line("Compiling..."))
+    )
   }
 }
 
@@ -68,4 +75,6 @@ object TaskSolver {
   def sbt(command: String): Try[Boolean] = Try(Seq("sbt", command).! == 0)
 
   lazy val sbtInstalled = sbt("sbtVersion").isSuccess // no exception, so sbt is in the PATH
+
+  case class SolverException(msg: String) extends RuntimeException(msg)
 }
