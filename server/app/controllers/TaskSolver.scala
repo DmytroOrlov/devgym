@@ -9,6 +9,7 @@ import dal.Dao.now
 import models.TaskType
 import models.TaskType.scalaClass
 import monifu.concurrent.Scheduler
+import org.apache.commons.lang3.StringUtils
 import org.scalatest.Suite
 import play.api.Play.current
 import play.api.data.Form
@@ -29,7 +30,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
 
   val solutionForm = Form {
     mapping(
-      solution -> nonEmptyText
+      solution -> nonEmptyAndDiffer(StringUtils.EMPTY)
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
