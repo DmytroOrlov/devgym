@@ -1,9 +1,9 @@
 package controllers
 
 import com.google.inject.Inject
-import controllers.NewTask._
+import controllers.AddTask._
 import dal.Dao
-import models.Task
+import models.NewTask
 import models.TaskType._
 import monifu.concurrent.Scheduler
 import play.api.Logger
@@ -16,10 +16,11 @@ import service._
 import scala.concurrent.Future
 import scala.util.control.NonFatal
 
-class NewTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
                        (implicit s: Scheduler) extends Controller with I18nSupport {
   val addTaskForm = Form {
     mapping(
+      taskName -> nonEmptyText,
       taskDescription -> nonEmptyText,
       solutionTemplate -> nonEmptyText,
       referenceSolution -> nonEmptyText,
@@ -37,15 +38,20 @@ class NewTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        val futureResponse = for {
-          _ <- Future(StringBuilderRunner(executor(f.referenceSolution, f.suite))).check
-          db <- dao.addTask(Task(scalaClass, f.taskDescription, f.solutionTemplate, f.referenceSolution, f.suite))
-        } yield Redirect(routes.Application.index)
-
-        futureResponse.recover {
+        val check = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite))).check
+        check.flatMap { _ =>
+          dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite))
+            .map(_ => Redirect(routes.Application.index))
+            .recover {
+              case NonFatal(e) => Logger.warn(e.getMessage, e)
+                InternalServerError {
+                  views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+                }
+            }
+        }.recover {
           case NonFatal(e) => Logger.warn(e.getMessage, e)
             BadRequest {
-              views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+              views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, s"${messagesApi(cannotAddTask)}: ${e.getMessage}"))
             }
         }
       }
@@ -53,9 +59,10 @@ class NewTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
   }
 }
 
-case class AddTaskForm(taskDescription: String, solutionTemplate: String, referenceSolution: String, suite: String)
+case class AddTaskForm(name: String, description: String, solutionTemplate: String, referenceSolution: String, suite: String)
 
-object NewTask {
+object AddTask {
+  val taskName = "taskName"
   val taskDescription = "taskDescription"
   val solutionTemplate = "solutionTemplate"
   val referenceSolution = "referenceSolution"
