@@ -11,7 +11,7 @@
         </div>
         <nav id="bs-navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
-                <li><a href="@routes.NewTask.getAddTask()">@msg("addTask")</a></li>
+                <li><a href="@routes.AddTask.getAddTask()">@msg("addTask")</a></li>
                 <li>
                 @session.get(username).fold {
                     <a href="@routes.UserController.getRegister()">@msg("register")</a>

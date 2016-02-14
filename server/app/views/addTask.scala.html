@@ -1,11 +1,11 @@
-@import NewTask._
+@import AddTask._
 @import helper._
 @import views.html.templates.main
 
 @(task: Form[AddTaskForm])(implicit msg: Messages, session: Session)
 
 @main(msg("addTask")) {
-    @form(routes.NewTask.postNewTask()) {
+    @form(routes.AddTask.postNewTask()) {
         @inputText(task(taskName), 'size -> "20", 'placeholder -> "Some Name...")
         @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90")
         @textarea(task(solutionTemplate), 'rows -> "13", 'cols -> "90")

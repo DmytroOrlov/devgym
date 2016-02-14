@@ -1,13 +1,11 @@
 package controllers
 
-import java.util.UUID
+import java.util.{Date, UUID}
 
 import com.google.inject.Inject
 import controllers.TaskSolver._
 import dal.Dao
-import dal.Dao.now
 import models.TaskType
-import models.TaskType.scalaClass
 import monifu.concurrent.Scheduler
 import org.apache.commons.lang3.StringUtils
 import org.scalatest.Suite
@@ -20,9 +18,11 @@ import play.api.libs.json.JsValue
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import shared.Line
+import util.TryFuture
 
 import scala.sys.process._
 import scala.util.Try
+import scala.util.control.NonFatal
 
 class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
                           (implicit s: Scheduler) extends Controller with I18nSupport with JSONFormats {
@@ -35,11 +35,13 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
   }
 
   def getTask(year: Long, taskType: String, timeuuid: UUID) = Action.async { implicit request =>
-    val task = dao.getTask(year, TaskType.withName(taskType), timeuuid)
+    def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
+
+    val task = TryFuture(dao.getTask(new Date(year), TaskType.withName(taskType), timeuuid))
     task.map {
       case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate))))
-      case None => Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
-    }
+      case None => notFound
+    }.recover { case NonFatal(e) => notFound }
   }
 
   def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
