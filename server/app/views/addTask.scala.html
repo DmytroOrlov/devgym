@@ -1,16 +1,15 @@
-@import AddTask._
+@import NewTask._
 @import helper._
 @import views.html.templates.main
 
 @(task: Form[AddTaskForm])(implicit msg: Messages, session: Session)
 
 @main(msg("addTask")) {
-    @form(routes.AddTask.postNewTask()) {
-        @inputText(task(taskName), 'size -> "20", 'placeholder -> "Some Name...")
-        @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90")
-        @textarea(task(solutionTemplate), 'rows -> "13", 'cols -> "90")
-        @textarea(task(referenceSolution), 'rows -> "23", 'cols -> "90")
-        @textarea(task(suite), 'rows -> "23", 'cols -> "90")
+    @form(routes.NewTask.postNewTask()) {
+        @textarea(task(taskDescription), 'rows -> "8", 'cols -> "80")
+        @textarea(task(solutionTemplate), 'rows -> "8", 'cols -> "80")
+        @textarea(task(referenceSolution), 'rows -> "13", 'cols -> "80")
+        @textarea(task(suite), 'rows -> "13", 'cols -> "80")
         <input type="submit" value="@msg("addTask")"/>
     }
 }
