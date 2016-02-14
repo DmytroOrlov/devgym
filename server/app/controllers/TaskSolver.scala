@@ -32,7 +32,10 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
 
   val solutionForm = Form {
     mapping(
-      solution -> nonEmptyText
+      solution -> nonEmptyText,
+      year -> longNumber,
+      taskType -> nonEmptyText,
+      timeuuid -> nonEmptyText
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
@@ -41,7 +44,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
 
     val task = TryFuture(dao.getTask(new Date(year), TaskType.withName(taskType), timeuuid))
     task.map {
-      case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate))))
+      case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate, year, taskType, timeuuid.toString))))
       case None => notFound
     }.recover { case NonFatal(e) => notFound }
   }
@@ -81,11 +84,14 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   }
 }
 
-case class SolutionForm(solution: String)
+case class SolutionForm(solution: String, year: Long, taskType: String, timeuuid: String)
 
 object TaskSolver {
   val cannotCheckNow = "cannotCheckNow"
   val solution = "solution"
+  val year = "year"
+  val taskType = "taskType"
+  val timeuuid = "timeuuid"
 
   // TODO rethink or remove
   def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
