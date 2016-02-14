@@ -21,11 +21,12 @@ import service._
 import shared.Line
 import util.TryFuture
 
+import scala.concurrent.Future
 import scala.sys.process._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
                           (implicit s: Scheduler) extends Controller with I18nSupport with JSONFormats {
   val appPath = current.path.getAbsolutePath
 
@@ -46,7 +47,26 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
   }
 
   def taskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, (fromClient: JsValue) => (try {
+    def error(msg: String = "") = Observable.error(new SolverException(s"Cannot run $msg"))
+
+    SimpleWebSocketActor.props(out, (fromClient: JsValue) => try {
+        val solution = (fromClient \ "solution").as[String]
+        val year = (fromClient \ "year").as[Long]
+        val taskType = (fromClient \ "taskType").as[String]
+        val timeuuid = (fromClient \ "timeuuid").as[String]
+        dao.getTask(new Date(year), TaskType.withName(taskType), UUID.fromString(timeuuid)).map {
+          case Some(t) => ObservableRunner(executor(solution, t.suite)).map(Line(_))
+          case _ => error()
+        }
+      } catch {
+        case NonFatal(e) => Future.successful(error(e.getMessage))
+      },
+      Some(Line("Compiling..."))
+    )
+  }
+
+  def runtimeTaskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
+    SimpleWebSocketActor.props(out, (fromClient: JsValue) => Future.successful((try {
         val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
         val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
         val solution = (fromClient \ "solution").as[String]
@@ -55,7 +75,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
           Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution))
       } catch {
         case NonFatal(e) => Observable.error(new SolverException(s"Cannot run ${e.getMessage}"))
-      }).map(Line(_)),
+      }).map(Line(_))),
       Some(Line("Compiling..."))
     )
   }
@@ -74,7 +94,9 @@ object TaskSolver {
 
   def sbt(command: String): Try[Boolean] = Try(Seq("sbt", command).! == 0)
 
-  lazy val sbtInstalled = sbt("sbtVersion").isSuccess // no exception, so sbt is in the PATH
+  // no exception, so sbt is in the PATH
+  lazy val sbtInstalled = sbt("--version").isSuccess
 
   case class SolverException(msg: String) extends RuntimeException(msg)
+
 }
