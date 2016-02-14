@@ -4,6 +4,7 @@ import java.util.{Date, UUID}
 
 import com.google.inject.Inject
 import controllers.TaskSolver._
+import controllers.UserController._
 import dal.Dao
 import models.TaskType
 import monifu.concurrent.Scheduler
@@ -57,7 +58,6 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
 case class SolutionForm(solution: String)
 
 object TaskSolver {
-  val flashToUser = "flashToUser"
   val cannotCheckNow = "cannotCheckNow"
   val solution = "solution"
 
