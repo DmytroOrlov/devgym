@@ -4,7 +4,7 @@
 @(tasks: Iterable[Task])(implicit flash: Flash, session: Session, msg: Messages)
 @mainFlashToUser(msg("home")) {
     <br/>
-    <h1>Latest Challenges</h1>
+    <h3>Latest Challenges</h3>
     <ul>
     @for(task <- tasks) {
         <li><a href="@routes.TaskSolver.getTask(task.year.getTime, task.`type`.toString, task.timeuuid)">@task.name</li>

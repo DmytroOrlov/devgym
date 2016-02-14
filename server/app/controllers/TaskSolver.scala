@@ -42,10 +42,6 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
     }
   }
 
-  def tasks = {
-    Action.async(dao.getTasks(scalaClass, lastCount, now).map(ts => Ok(ts.toString())))
-  }
-
   def taskStream = WebSocket.acceptWithActor[String, JsValue] { req => out =>
     SimpleWebSocketActor.props(out, (solution: String) =>
       ObservableRunner(executor(
@@ -62,7 +58,6 @@ object TaskSolver {
   val flashToUser = "flashToUser"
   val cannotCheckNow = "cannotCheckNow"
   val solution = "solution"
-  val lastCount: Int = 20
 
   def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
     if (o.filter(_ != '\r') == from) Invalid(ValidationError("error.changesRequired")) else Valid
