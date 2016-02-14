@@ -47,9 +47,9 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor, dao: Dao, val message
 
   def taskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
     SimpleWebSocketActor.props(out, (fromClient: JsValue) => (try {
-      val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
-      val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
-      val solution = (fromClient \ "solution").as[String]
+        val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
+        val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
+        val solution = (fromClient \ "solution").as[String]
         ObservableRunner(executor(
           Class.forName(suiteClass).asInstanceOf[Class[Suite]],
           Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution))
