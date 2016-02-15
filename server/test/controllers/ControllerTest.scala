@@ -13,7 +13,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.test.Helpers._
 import play.api.test._
-import service.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaTestRunner}
+import service._
 
 import scala.concurrent.Future
 
@@ -93,7 +93,7 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val description = "some description"
         val template = "some template"
         val replyTask = Task(year, scalaClass, timeuuid, "array", description, template, "ref", "test suite")
-        val taskSolver = new TaskSolver(mock[RuntimeSuiteExecutor], dao, new MockMessageApi)
+        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         dao.getTask _ expects(year, scalaClass, timeuuid) returns Future.successful(Some(replyTask))
         val result = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid).apply(FakeRequest(GET, "ignore"))
@@ -106,7 +106,7 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
       "return to index page" in {
         //given
         val dao = mock[Dao]
-        val taskSolver = new TaskSolver(mock[RuntimeSuiteExecutor], dao, new MockMessageApi)
+        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         (dao.getTask _).expects(*, *, *).returning(Future.successful(None))
         val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1)).apply(FakeRequest(GET, "ignore"))
@@ -119,7 +119,7 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
       "return to index page" in {
         //given
         val dao = mock[Dao]
-        val taskSolver = new TaskSolver(mock[RuntimeSuiteExecutor], dao, new MockMessageApi)
+        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         (dao.getTask _).expects(*, *, *).throwing(new RuntimeException)
         val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1)).apply(FakeRequest(GET, "ignore"))
@@ -130,6 +130,8 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
     }
   }
 }
+
+abstract class TestExecutor extends RuntimeSuiteExecutor with DynamicSuiteExecutor {}
 
 object ControllerTest {
   def withAddTaskController[T](suiteExecutor: DynamicSuiteExecutor, dao: Dao)(block: (AddTask) => T): T = {
