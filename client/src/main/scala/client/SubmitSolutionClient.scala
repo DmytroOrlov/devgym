@@ -12,7 +12,7 @@ import shared.{Event, Line}
 
 import scala.concurrent.Future
 import scala.scalajs.js.Dynamic.{literal => obj, _}
-import scala.scalajs.js.JSApp
+import scala.scalajs.js.{JSON, JSApp}
 
 object SubmitSolutionClient extends JSApp {
   def main(): Unit = initSubmitter("submit", "solution", to = "report")
@@ -42,7 +42,7 @@ object SubmitSolutionClient extends JSApp {
         .replace(close, "</span>")
         .replace(green, """<span class="green">""")
         .replace(red, """<span class="red">""")
-      report.append(s"""<div>$value</div>""")
+      report.append( s"""<div>$value</div>""")
       Continue
     }
 
@@ -63,7 +63,12 @@ object SubmitSolutionClient extends JSApp {
       val source = new SimpleWebSocketClient(
         url = s"$protocol//$host/task-stream",
         DropOld(20),
-        sendOnOpen = Some(jQuery(s"#$solutionId").`val`().asInstanceOf[String])
+        sendOnOpen = Some(obj(
+          "solution" -> jQuery(s"#$solutionId").`val`().asInstanceOf[String],
+          "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
+          "taskType" -> jQuery("#taskType").`val`().asInstanceOf[String],
+          "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String]
+        ))
       ).collect { case IsEvent(e) => e }
 
       (Observable.unit(Line("Submitting...")) ++ source)
@@ -73,7 +78,7 @@ object SubmitSolutionClient extends JSApp {
 
   object IsEvent {
     def unapply(message: String) = {
-      val json = global.JSON.parse(message)
+      val json = JSON.parse(message)
 
       json.event.asInstanceOf[String] match {
         case "line" => Some(Line(
