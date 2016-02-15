@@ -6,7 +6,7 @@ import java.util.{Date, UUID}
 import controllers.ControllerTest._
 import dal.Dao
 import models.TaskType._
-import models.{NewTask, Task, TaskType}
+import models.{NewTask, Task}
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.concurrent.Scheduler
 import org.scalamock.scalatest.MockFactory
