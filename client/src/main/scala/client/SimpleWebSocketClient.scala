@@ -8,15 +8,16 @@ import org.scalajs.dom.raw.MessageEvent
 import org.scalajs.dom.{CloseEvent, ErrorEvent, Event, WebSocket}
 
 import scala.concurrent.duration._
+import scala.scalajs.js
 
 final class SimpleWebSocketClient(url: String,
                                   os: Synchronous,
-                                  sendOnOpen: => Option[String] = None,
+                                  sendOnOpen: => Option[js.Any] = None,
                                   timeout: FiniteDuration = 15.seconds) extends Observable[String] {
   self =>
   private def createChannel(webSocket: WebSocket)(implicit s: Scheduler) = try {
     val channel = PublishChannel[String](os)
-    webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(s))
+    webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(js.JSON.stringify(s)))
 
     webSocket.onerror = (event: ErrorEvent) =>
       channel.pushError(SimpleWebSocketClient.Exception(event.message))

@@ -1,12 +1,13 @@
 import sbt.Project.projectToRef
 
-val scalaVer = "2.11.7"
+val scalaV = "2.11.7"
+val scalatestV = "2.2.6"
 
-lazy val commonSettings = Seq(scalaVersion := scalaVer)
+lazy val commonSettings = Seq(scalaVersion := scalaV)
 
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % "2.2.6" % "test",
+    "org.scalatest" %% "scalatest" % scalatestV % "test",
     "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
     "org.scalatestplus" %% "play" % "1.4.0" % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
@@ -37,10 +38,12 @@ lazy val server = (project in file("server"))
       "com.vmunier" %% "play-scalajs-scripts" % "0.4.0",
       "org.monifu" %% "monifu" % "1.0",
 
-      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0" exclude("org.xerial.snappy", "snappy-java"),
+      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0"
+        exclude("org.xerial.snappy", "snappy-java")
+        exclude("com.google.guava", "guava"),
 
-      "org.scala-lang" % "scala-compiler" % scalaVer,
-      "org.scalatest" %% "scalatest" % "2.2.6"
+      "org.scala-lang" % "scala-compiler" % scalaV,
+      "org.scalatest" %% "scalatest" % scalatestV
     )
   )
 
