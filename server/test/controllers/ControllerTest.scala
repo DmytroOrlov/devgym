@@ -116,7 +116,7 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
       }
     }
     "getting task from unstable dao" should {
-      "return to index page message" in {
+      "return to index page" in {
         //given
         val dao = mock[Dao]
         val taskSolver = new TaskSolver(mock[RuntimeSuiteExecutor], dao, new MockMessageApi)
