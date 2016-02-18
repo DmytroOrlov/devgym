@@ -27,7 +27,6 @@ import scala.util.control.NonFatal
 
 class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
                           (implicit s: Scheduler) extends Controller with I18nSupport with JSONFormats {
-  val appPath = current.path.getAbsolutePath
 
   val solutionForm = Form {
     mapping(
