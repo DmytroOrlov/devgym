@@ -27,7 +27,9 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
         (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", "5", *, *)
         //when
         withAddTaskController(scalaTestRunner, null)({ controller =>
-          val result = controller.postNewTask(FakeRequest("POST", "ignore").withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3", "referenceSolution" -> "4", "suite" -> "5"))
+          val result = controller.postNewTask(FakeRequest("POST", "ignore")
+            .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
+              "referenceSolution" -> "4", "suite" -> "5"))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include( """class="error"></dd>""")
@@ -43,7 +45,9 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
         dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", "5") returns Future.failed(new RuntimeException)
         //when
         withAddTaskController(scalaTestRunner, dao)({ controller =>
-          val result = controller.postNewTask(FakeRequest("POST", "ignore").withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3", "referenceSolution" -> "4", "suite" -> "5"))
+          val result = controller.postNewTask(FakeRequest("POST", "ignore")
+            .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
+              "referenceSolution" -> "4", "suite" -> "5"))
           //then
           status(result) mustBe INTERNAL_SERVER_ERROR
           contentAsString(result) must include( """class="error"></dd>""")
@@ -59,7 +63,9 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
         dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", "5") returns Future.successful(())
         //when
         withAddTaskController(scalaTestRunner, dao)({ controller =>
-          val result = controller.postNewTask(FakeRequest("POST", "ignore").withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3", "referenceSolution" -> "4", "suite" -> "5"))
+          val result = controller.postNewTask(FakeRequest("POST", "ignore")
+            .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
+              "referenceSolution" -> "4", "suite" -> "5"))
           //then
           status(result) mustBe SEE_OTHER
           redirectLocation(result) mustBe Some("/")
@@ -70,14 +76,17 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
       "fall in ScalaTestRunner" in {
         //given
         val solution = "class SubArrayWithMaxSum {\n  def apply(a: Array[Int]): Array[Int] = {\n    var currentSum = 0\n    var maxSum = 0\n    var left, right = 0\n    var maxI = 0 //used when all negatives in the array\n\n    for (i <- a.indices) {\n      val incSum = currentSum + a(i)\n\n      if (incSum > 0) {\n        currentSum = incSum\n\n        if (currentSum > maxSum) {\n          maxSum = currentSum\n          right = i\n        }\n      } else {\n        left = i + 1\n        right = left\n        currentSum = 0\n        if (a(i) > a(maxI)) maxI = i\n      }\n    }\n\n    if (left == a.length) a.slice(maxI, maxI + 1)\n    else a.slice(left, right + 1)\n  }\n}"
-        val suite = "import org.scalatest.{FlatSpec, Matchers}\n\nclass SubArrayWithMaxSumTest(solution: SubArrayWithMaxSumSolution) extends FlatSpec with Matchers {\n  behavior of \"SubArrayWithMaxSum\"\n\n  it should \"return max sum sub array within given array\" in {\n    solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)) should be(Array(4, -1, 2, 1))\n    solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, 5, 4)) should be(Array(4, -1, 2, 1, 5, 4))\n    solution.apply(Array(2, -1, 0, 0, 0, 0, 1)) should be(Array(2))\n  }\n\n  it should \"return the whole array when given array has only positive numbers\" in {\n    solution.apply(Array(2, 1, 3, 4, 1, 2, 1, 5, 4)) should be(Array(2, 1, 3, 4, 1, 2, 1, 5, 4))\n  }\n\n  it should \"return max sum sub array when given array contains only negative numbers\" in {\n    solution.apply(Array(-2, -1, -3, -4, -1, -2, -1, -5, -4)) should be(Array(-1))\n    solution.apply(Array(-2, -3, -3, -4, -6, -2, -6, -5, -1)) should be(Array(-2))\n  }\n}\n\ntrait SubArrayWithMaxSumSolution {\n  def apply(a: Array[Int]): Array[Int]\n}"
-        val dao = mock[Dao]
+        val badSuite = "import org.scalatest.{FlatSpec, Matchers}\n\nclass SubArrayWithMaxSumTest(solution: SubArrayWithMaxSumSolution) extends FlatSpec with Matchers {\n  behavior of \"SubArrayWithMaxSum\"\n\n  it should \"return max sum sub array within given array\" in {\n    solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)) should be(Array(4, -1, 2, 1))\n    solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, 5, 4)) should be(Array(4, -1, 2, 1, 5, 4))\n    solution.apply(Array(2, -1, 0, 0, 0, 0, 1)) should be(Array(2))\n  }\n\n  it should \"return the whole array when given array has only positive numbers\" in {\n    solution.apply(Array(2, 1, 3, 4, 1, 2, 1, 5, 4)) should be(Array(2, 1, 3, 4, 1, 2, 1, 5, 4))\n  }\n\n  it should \"return max sum sub array when given array contains only negative numbers\" in {\n    solution.apply(Array(-2, -1, -3, -4, -1, -2, -1, -5, -4)) should be(Array(-1))\n    solution.apply(Array(-2, -3, -3, -4, -6, -2, -6, -5, -1)) should be(Array(-2))\n  }\n}\n\ntrait SubArrayWithMaxSumSolution {\n  def apply(a: Array[Int]): Array[Int]\n}"
+        val dao = stub[Dao]
         //when
         withAddTaskController(new ScalaTestRunner, dao)({ controller =>
-          val result = controller.postNewTask(FakeRequest("POST", "ignore").withFormUrlEncodedBody("taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> solution, "suite" -> suite))
+          val result = controller.postNewTask(FakeRequest("POST", "ignore")
+            .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1",
+              "solutionTemplate" -> "2", "referenceSolution" -> solution, "suite" -> badSuite))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include( """class="error"></dd>""")
+          dao.addTask _ verify NewTask(scalaClass, "0", "1", "2", solution, badSuite) never()
         })
       }
     }
@@ -96,7 +105,7 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         dao.getTask _ expects(year, scalaClass, timeuuid) returns Future.successful(Some(replyTask))
-        val result = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid).apply(FakeRequest(GET, "ignore"))
+        val result = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
         //then
         status(result) mustBe OK
         contentAsString(result) must (include(description) and include(template))
@@ -109,7 +118,7 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         (dao.getTask _).expects(*, *, *).returning(Future.successful(None))
-        val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1)).apply(FakeRequest(GET, "ignore"))
+        val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1))(FakeRequest(GET, "ignore"))
         //then
         status(result) mustBe SEE_OTHER
         redirectLocation(result) mustBe Some("/")
@@ -122,7 +131,7 @@ class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         (dao.getTask _).expects(*, *, *).throwing(new RuntimeException)
-        val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1)).apply(FakeRequest(GET, "ignore"))
+        val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1))(FakeRequest(GET, "ignore"))
         //then
         status(result) mustBe SEE_OTHER
         redirectLocation(result) mustBe Some("/")

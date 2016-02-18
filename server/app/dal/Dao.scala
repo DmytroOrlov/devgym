@@ -32,7 +32,7 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
   private lazy val addTaskStatement = session.prepare(
     "INSERT INTO task (year, type, timeuuid, name, description, solution_template, reference_solution, suite)" +
-      " VALUES (?, ?, NOW(), ?, ?, ?, ?)")
+      " VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)")
   private lazy val getLastTasksStatement = session.prepare("SELECT year, type, timeuuid, name, description, solution_template, reference_solution, suite FROM task WHERE" +
     " year = ?" +
     " and type = ?" +
