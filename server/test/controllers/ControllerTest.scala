@@ -10,14 +10,14 @@ import models.{NewTask, Task}
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.concurrent.Scheduler
 import org.scalamock.scalatest.MockFactory
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
+import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import play.api.test._
 import service._
 
 import scala.concurrent.Future
 
-class ControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
+class ControllerTest extends PlaySpec with MockFactory {
 
   "AddTask controller" when {
     "post fail with scalaTestRunner when addTask" should {
