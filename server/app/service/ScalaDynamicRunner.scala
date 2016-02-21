@@ -18,9 +18,10 @@ trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
   def apply(solution: String, suite: String)
            (channel: String => Unit)
            (implicit s: Scheduler): Unit = {
-    val traitName = WithSuiteException("There is no trait type defined in the Test constructor, code: ") {
+    val traitName = WithSuiteException(s"There is no solution trait type defined in suite, code: $suite") {
       findTraitName(suite)
     }
+    classDefPattern.findFirstIn(solution).orElse(throw new SuiteException(s"There is no class definition in solution code: $solution"))
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $traitName ")
     executeDynamic(suite, patchedSolution, channel)
   }

@@ -11,6 +11,7 @@ password = Password
 verify = Verify
 logoutDone = Logout done
 cannotAddTask = Can not add your task
+taskAdded = Task has been added.
 cannotCheckNow = Can not check your solution now
 userRegistered = Thank you for your registration
 alreadyRegistered = You are already registered

@@ -2,6 +2,7 @@ package controllers
 
 import com.google.inject.Inject
 import controllers.AddTask._
+import controllers.UserController._
 import dal.Dao
 import models.NewTask
 import models.TaskType._
@@ -41,7 +42,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
         val check = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite))).check
         check.flatMap { _ =>
           dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite))
-            .map(_ => Redirect(routes.Application.index))
+            .map(_ => Ok(views.html.addTask(addTaskForm)).flashing(flashToUser -> messagesApi(taskAdded)))
             .recover {
               case NonFatal(e) => Logger.warn(e.getMessage, e)
                 InternalServerError {
@@ -68,4 +69,5 @@ object AddTask {
   val referenceSolution = "referenceSolution"
   val suite = "suite"
   val cannotAddTask = "cannotAddTask"
+  val taskAdded = "taskAdded"
 }
