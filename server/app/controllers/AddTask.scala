@@ -42,7 +42,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
         val check = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite))).check
         check.flatMap { _ =>
           dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite))
-            .map(_ => Ok(views.html.addTask(addTaskForm)).flashing(flashToUser -> messagesApi(taskAdded)))
+            .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
             .recover {
               case NonFatal(e) => Logger.warn(e.getMessage, e)
                 InternalServerError {
