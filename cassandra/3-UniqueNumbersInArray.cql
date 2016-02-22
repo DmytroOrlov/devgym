@@ -10,7 +10,7 @@ INSERT INTO devgym.task (
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
   'scalaClass',
-  now(),
+  915b6150-d90f-11e5-aa5b-091830ac5256,
   'Unique numbers in Array',
   'Find number of unique elements in array of integers',
   'class UniqueNumbersInArray {
