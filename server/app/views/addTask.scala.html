@@ -1,4 +1,5 @@
 @import AddTask._
+@import shared.view.SuiteReportUtil
 @import helper._
 @import views.html.templates.mainFlashToUser
 
@@ -6,7 +7,7 @@
 
 @mainFlashToUser(msg("addTask")) {
     @form(routes.AddTask.postNewTask()) {
-        @Html(enhanceReport(testReport))
+        @Html(SuiteReportUtil.enhanceReport(testReport))
         @inputText(task(taskName), 'size -> "20", 'placeholder -> "Some Name...")
         @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90")
         @textarea(task(solutionTemplate), 'rows -> "13", 'cols -> "90")
@@ -14,18 +15,4 @@
         @textarea(task(suite), 'rows -> "23", 'cols -> "90")
         <input type="submit" value="@msg("addTask")"/>
     }
-}
-@enhanceReport(report: Option[String]) = @{
-    val green = "\u001B[32m"
-    val close = "\u001B[0m"
-    val red = "\u001B[31m"
-
-    report.map { r =>
-        s"<p id='errorReport'>${
-            r.replace(close, "</span><br/>")
-                    .replace(green, """<span class="green">""")
-                    .replace(red, """<span class="red">""")
-                    .replaceAll( """__wrapper([\w\$]*)""", "")
-        }</p>"
-    }.getOrElse("")
 }
