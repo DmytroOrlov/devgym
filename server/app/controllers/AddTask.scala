@@ -52,7 +52,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
         }.recover {
           case NonFatal(e) => Logger.warn(e.getMessage, e)
             BadRequest {
-              views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, s"${messagesApi(cannotAddTask)}: ${e.getMessage}"))
+              views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(cannotAddTaskOnCheck)} ${e.getMessage}"))
             }
         }
       }
@@ -69,5 +69,6 @@ object AddTask {
   val referenceSolution = "referenceSolution"
   val suite = "suite"
   val cannotAddTask = "cannotAddTask"
+  val cannotAddTaskOnCheck = "cannotAddTaskOnCheck"
   val taskAdded = "taskAdded"
 }

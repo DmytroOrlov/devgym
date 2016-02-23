@@ -32,7 +32,7 @@ class ControllerTest extends PlaySpec with MockFactory {
               "referenceSolution" -> "4", "suite" -> "5"))
           //then
           status(result) mustBe BAD_REQUEST
-          contentAsString(result) must include( """class="error"></dd>""")
+          contentAsString(result) must include("id='errorReport'>")
         })
       }
     }
@@ -85,7 +85,7 @@ class ControllerTest extends PlaySpec with MockFactory {
               "solutionTemplate" -> "2", "referenceSolution" -> solution, "suite" -> badSuite))
           //then
           status(result) mustBe BAD_REQUEST
-          contentAsString(result) must include( """class="error"></dd>""")
+          contentAsString(result) must include("id='errorReport'>")
           dao.addTask _ verify NewTask(scalaClass, "0", "1", "2", solution, badSuite) never()
         })
       }
