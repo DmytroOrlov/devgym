@@ -8,18 +8,21 @@ import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive.{Ack, Observable, Observer, Subscriber}
 import org.scalajs.dom
 import org.scalajs.jquery.jQuery
-import shared.view.SuiteReportUtil
+import shared.view.SuiteReportUtil._
 import shared.{Event, Line}
 
 import scala.concurrent.Future
-import scala.scalajs.js.Dynamic.{literal => obj, _}
-import scala.scalajs.js.{JSON, JSApp}
+import scala.scalajs.js.Dynamic.{literal => obj}
+import scala.scalajs.js.{JSApp, JSON}
 
 object SubmitSolutionClient extends JSApp {
+  val loadingIcon = jQuery("#icon")
+
   def main(): Unit = initSubmitter("submit", "solution", to = "report")
 
   def initSubmitter(buttonId: String, solutionId: String, to: String) = {
     def submit() = {
+      loadingIcon.show()
       val lines = new DataConsumer(solutionId).collect { case e: Line => e }
       lines.subscribe(new Report(to))
     }
@@ -35,8 +38,12 @@ object SubmitSolutionClient extends JSApp {
     }
 
     override def onNext(elem: Line): Future[Ack] = {
-      val value = SuiteReportUtil.replaceMarkers(elem.value)
-      report.append( s"""<div>$value</div>""")
+      elem.value match {
+        case Line.reportComplete => loadingIcon.hide()
+        case v =>
+          val line = removeDynamicClassName(replaceMarkers(v))
+          report.append( s"""<div>$line</div>""")
+      }
       Continue
     }
 

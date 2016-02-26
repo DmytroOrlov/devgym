@@ -6,19 +6,22 @@ object SuiteReportUtil {
   val close = "\u001B[0m"
   val red = "\u001B[31m"
 
-  val reflectionWrapperPattern = """__wrapper([\w\$]*)"""
+  val reflectionWrapperPattern = """__wrapper([\w:\n\$]*)"""
 
   def enhanceReport(report: Option[String]) = {
     report.map { r =>
       s"<p id='errorReport'>${
-        replaceMarkers(r, "</span><br/>").replaceAll(reflectionWrapperPattern, "")
+        removeDynamicClassName(replaceMarkers(r, "</span><br/>"))
       }</p>"
     }.getOrElse("")
   }
 
   def replaceMarkers(report: String, lineEnd: String = "</span>") = {
-    report.replace(close, lineEnd)
+    report
+      .replace(close, lineEnd)
       .replace(green, """<span class="green">""")
       .replace(red, """<span class="red">""")
   }
+
+  def removeDynamicClassName(s: String) = s.replaceAll(reflectionWrapperPattern, "")
 }
