@@ -7,11 +7,12 @@ object SuiteReportUtil {
   val red = "\u001B[31m"
 
   val reflectionWrapperPattern = """__wrapper([\w:\n\$]*)"""
+  val compilationFailed = "reflective compilation has failed:"
 
   def enhanceReport(report: Option[String]) = {
     report.map { r =>
       s"<p id='errorReport'>${
-        removeDynamicClassName(replaceMarkers(r, "</span><br/>"))
+        removeToolboxText(replaceMarkers(r, "</span><br/>"))
       }</p>"
     }.getOrElse("")
   }
@@ -23,5 +24,7 @@ object SuiteReportUtil {
       .replace(red, """<span class="red">""")
   }
 
-  def removeDynamicClassName(s: String) = s.replaceAll(reflectionWrapperPattern, "")
+  def removeToolboxText(s: String) = {
+    s.replaceFirst(reflectionWrapperPattern, "").replaceFirst(compilationFailed, "")
+  }
 }

@@ -41,7 +41,7 @@ object SubmitSolutionClient extends JSApp {
       elem.value match {
         case Line.reportComplete => loadingIcon.hide()
         case v =>
-          val line = removeDynamicClassName(replaceMarkers(v))
+          val line = removeToolboxText(replaceMarkers(v))
           report.append( s"""<div>$line</div>""")
       }
       Continue
