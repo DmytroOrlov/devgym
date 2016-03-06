@@ -10,50 +10,44 @@ INSERT INTO devgym.task (
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
   'scalaClass',
-  915b6150-d90f-11e5-aa5b-091830ac5256,
-  'Unique numbers in Array',
-  'Find number of unique elements in array of integers',
-  'class UniqueNumbersInArray {
-     def uniqueNumbers(a: Array[Int]): Int = {
+  467530b0-e3b1-11e5-aa86-091830ac5256,
+  'Min difference in array',
+  'Find minimum difference in the given array. Numbers can be also negative. Minimum length of array is 2.
+  For example, having such input Array(1, 4, 10, 22, 43, -12), then result should be 3.',
+  'class MinDifferenceInArray {
+     def minDifference(a: Array[Int]): Int = {
 
      }
-   }',
-   'class UniqueNumbersInArray {
-      override def uniqueNumbers(a: Array[Int]): Int = {
-        val b = Array.fill(a.length)(true)
-        var n = 0
+  }',
+   'class MinDifferenceInArray {
+      def minDifference(a: Array[Int]): Int = {
+        val sa = a.sorted
+        var diff = Math.abs(sa(0) - sa(1))
 
-        for (i <- a.indices) {
-          if (b(i)) {
-            n += 1
-            for (j <- i until a.length) {
-              b(j) = (a(j) != a(i)) && b(j)
-            }
-          }
+        for (i <- sa.init.indices) {
+            val temp = Math.abs(sa(i) - sa(i + 1))
+            if (temp < diff)
+              diff = temp
         }
-
-        n
+        diff
       }
     }',
-   'import org.scalatest.{FlatSpec, Matchers}
+   'class MinDifferenceInArrayTest(solution: MinDifferenceInArraySolution) extends FlatSpec with Matchers {
 
-    class UniqueNumbersInArrayTest(solution: UniqueNumbersInArraySolution) extends FlatSpec with Matchers {
-      behavior of "UniqueNumbersInArray"
-
-      it should "return count of unique numbers in array " in {
-        solution.uniqueNumbers(Array(4, 2, 2, 32, 3, 32, 2)) should be(4)
+      it should "return 0 as min difference in array with non-unique numbers" in {
+        solution.minDifference(Array(1, 2, 2, 2, 3, 12)) should be(0)
       }
 
-      it should "return count of unique numbers in array of equal numbers " in {
-        solution.uniqueNumbers(Array(2, 2, 2, 2, 2)) should be(1)
+      it should "return non 0 as min difference in array with unique numbers" in {
+        solution.minDifference(Array(1, 4, 10, 22, 43, 12)) should be(2)
       }
 
-      it should "return count equals array length when all numbers are unique " in {
-        solution.uniqueNumbers(Array(2, 1, 3, 4, -4)) should be(5)
+      it should "return min difference in array with negative numbers" in {
+        solution.minDifference(Array(1, 4, 10, 22, 43, -12)) should be(3)
       }
     }
 
-    trait UniqueNumbersInArraySolution {
-      def uniqueNumbers(a: Array[Int]): Int
+    trait MinDifferenceInArraySolution {
+      def minDifference(a: Array[Int]): Int
     }'
 );
