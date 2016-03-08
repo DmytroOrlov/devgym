@@ -32,12 +32,15 @@ class CassandraConfig @Inject()(configuration: Configuration) {
 
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
+
   lazy val hosts: Seq[String] = {
     def hosts: Seq[String] = {
       import scala.collection.JavaConversions._
       config.getStringList("devgym.db.cassandra.hosts")
     }
+
     def docker: Option[Boolean] = configuration.getBoolean("devgym.db.cassandra.docker")
+
     def ip() = docker match {
       case Some(true) => Try(Seq("docker-machine", "ip", "default").!!.trim).toOption
       case _ => None
