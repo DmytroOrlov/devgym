@@ -1,10 +1,10 @@
 @import AddTask._
 @import helper._
-@import views.html.templates.main
+@import views.html.templates.mainFlashToUser
 
-@(task: Form[AddTaskForm])(implicit msg: Messages, session: Session)
+@(task: Form[AddTaskForm])(implicit flash: Flash, msg: Messages, session: Session)
 
-@main(msg("addTask")) {
+@mainFlashToUser(msg("addTask")) {
     @form(routes.AddTask.postNewTask()) {
         @inputText(task(taskName), 'size -> "20", 'placeholder -> "Some Name...")
         @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90")

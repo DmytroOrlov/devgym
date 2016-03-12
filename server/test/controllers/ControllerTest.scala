@@ -68,7 +68,7 @@ class ControllerTest extends PlaySpec with MockFactory {
               "referenceSolution" -> "4", "suite" -> "5"))
           //then
           status(result) mustBe SEE_OTHER
-          redirectLocation(result) mustBe Some("/")
+          redirectLocation(result) mustBe Some("/addTask")
         })
       }
     }

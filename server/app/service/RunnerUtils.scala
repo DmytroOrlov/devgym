@@ -26,7 +26,7 @@ object WithSuiteException {
   def apply[B](msg: String)(block: => B): B =
     try block catch {
       case e: SuiteException => throw e
-      case NonFatal(e) => throw new SuiteException(msg + e.getMessage, Some(e))
+      case NonFatal(e) => throw new SuiteException(msg, Some(e))
     }
 }
 
@@ -49,7 +49,7 @@ trait DynamicExecution extends SuiteExecution with SuiteToolbox {
   private def findSuitName(suite: String) = classDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
 
   def executeDynamic(suite: String, patchedSolution: String, channel: String => Unit) = {
-    val suiteName = WithSuiteException("There is no Test Suite name to instantiate, code: ") {
+    val suiteName = WithSuiteException(s"There is no Test Suite name to instantiate, code: $suite") {
       findSuitName(suite)
     }
     val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"

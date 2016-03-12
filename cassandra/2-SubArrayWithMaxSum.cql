@@ -10,7 +10,7 @@ INSERT INTO devgym.task (
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
   'scalaClass',
-  now(),
+  9894cd10-ce12-11e5-8ee9-091830ac5256,
   'Array of max sum',
   'Implement apply function to return  a sub-array of original array ''a'', which has maximum sum of its elements.
    For example, having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array.',

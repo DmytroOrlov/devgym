@@ -69,13 +69,13 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
   def create(user: User): Future[Boolean] = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
 
   def addTask(task: NewTask): Future[Unit] = TryFuture(toFutureUnit {
-    session.executeAsync(addTaskStatement.bind(year(), task.`type`.toString, task.name, task.description, task.solutionTemplate, task.referenceSolution, task.suite))
+    session.executeAsync(addTaskStatement.bind(yearAsOfJan1(), task.`type`.toString, task.name, task.description, task.solutionTemplate, task.referenceSolution, task.suite))
   })
 
   def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]] = TryFuture(
     toFuture {
       val limitInt: Integer = limit
-      session.executeAsync(getLastTasksStatement.bind(year(yearAgo), `type`.toString, limitInt))
+      session.executeAsync(getLastTasksStatement.bind(yearAsOfJan1(yearAgo), `type`.toString, limitInt))
     }.map(allTasks))
 
   def getTask(year: Date, `type`: TaskType, timeuuid: UUID): Future[Option[Task]] = TryFuture(
@@ -89,7 +89,7 @@ object Dao {
 
   val now = 0
 
-  def year(ago: Int = now) =
+  def yearAsOfJan1(ago: Int = now) =
     Date.from(ZonedDateTime.now(ZoneOffset.UTC)
       .truncatedTo(ChronoUnit.DAYS)
       .withDayOfMonth(1).withMonth(1)
