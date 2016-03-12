@@ -13,7 +13,8 @@ object ObservableRunner {
     val f = Future(block(s => channel.pushNext(s)))
     f.onComplete {
       case Success(_) => channel.pushComplete()
-      case Failure(e) => channel.pushNext(e.getMessage)
+      case Failure(e) =>
+        channel.pushNext(e.getMessage)
         channel.pushComplete()
     }
     channel

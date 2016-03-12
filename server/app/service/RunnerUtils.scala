@@ -18,7 +18,9 @@ trait SuiteExecution {
 
       override def write(b: Int): Unit = channel(b.toChar.toString)
     }
-    Console.withOut(s)(suiteInstance.execute())
+    try {
+      Console.withOut(s)(suiteInstance.execute())
+    } finally s.close()
   }
 }
 
