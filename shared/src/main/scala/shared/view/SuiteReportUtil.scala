@@ -8,12 +8,12 @@ object SuiteReportUtil {
 
   val reflectionWrapperPattern = """__wrapper([\w\$]*)"""
 
-  def enhanceReport(report: Option[String]) = {
-    report.map { r =>
+  def enhanceReport(report: Option[String]): String = report match {
+    case Some(r) =>
       s"<p id='errorReport'>${
         replaceMarkers(r, "</span><br/>").replaceAll(reflectionWrapperPattern, "")
       }</p>"
-    }.getOrElse("")
+    case _ => ""
   }
 
   def replaceMarkers(report: String, lineEnd: String = "</span>") = {
