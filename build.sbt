@@ -1,6 +1,6 @@
 import sbt.Project.projectToRef
 
-val scalaV = "2.11.7"
+val scalaV = "2.11.8"
 val scalatestV = "2.2.6"
 
 lazy val commonSettings = Seq(scalaVersion := scalaV)
