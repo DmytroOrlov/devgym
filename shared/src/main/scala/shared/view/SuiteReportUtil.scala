@@ -9,12 +9,12 @@ object SuiteReportUtil {
   val reflectionWrapperPattern = """__wrapper([\w:\n\$]*)"""
   val compilationFailed = "reflective compilation has failed:"
 
-  def enhanceReport(report: Option[String]) = {
-    report.map { r =>
+  def enhanceReport(report: Option[String]): String = report match {
+    case Some(r) =>
       s"<p id='errorReport'>${
         removeToolboxText(replaceMarkers(r, "</span><br/>"))
       }</p>"
-    }.getOrElse("")
+    case _ => ""
   }
 
   def replaceMarkers(report: String, lineEnd: String = "</span>") = {
