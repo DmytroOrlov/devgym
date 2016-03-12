@@ -38,7 +38,7 @@ object SubmitSolutionClient extends JSApp {
     }
 
     override def onNext(elem: Line): Future[Ack] = {
-      val line = removeDynamicClassName(replaceMarkers(elem.value))
+      val line = removeToolboxText(replaceMarkers(elem.value))
       report.append( s"""<div>$line</div>""")
       Continue
     }

@@ -34,7 +34,6 @@ object WithSuiteException {
 
 trait SuiteToolbox {
   val failed = "FAILED"
-  val failedInRuntime = "failed in runtime"
   val userClass = "UserSolution"
   val classDefPattern = """class\s*([\w\$]*)""".r
   val traitDefPattern = """trait\s*([\w\$]*)""".r
