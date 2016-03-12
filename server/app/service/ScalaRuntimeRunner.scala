@@ -4,8 +4,7 @@ import monifu.concurrent.Scheduler
 import org.scalatest.Suite
 
 trait RuntimeSuiteExecutor {
-  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef],
-            solution: String)
+  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef], solution: String)
            (channel: String => Unit)
            (implicit s: Scheduler): Unit
 }
@@ -14,8 +13,7 @@ trait ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with S
   /**
    * Runs suite loaded in runtime with dynamic solution
    */
-  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef],
-            solution: String)
+  def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef], solution: String)
            (channel: String => Unit)
            (implicit s: Scheduler): Unit = {
     val solutionInstance = createSolutionInstance(solution, solutionTrait)
