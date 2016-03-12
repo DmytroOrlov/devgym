@@ -84,7 +84,7 @@ class ApplicationTest extends PlaySpec with OneAppPerSuite {
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")
           and include("solutionTemplate") and include("referenceSolution") and include("suite") and include("suite")
           and include( """<input type="submit""""))
-        contentAsString(result) must (include( """class="error"""") and include("Can not add your task"))
+        contentAsString(result) must (include("id='errorReport'") and include("Can not add your task"))
       }
     }
   }

@@ -1,5 +1,6 @@
 taskNotFound = Task does not exist
 solution = Submit your solution
+taskName = Task name
 taskDescription = Task description
 solutionTemplate = Solution template
 referenceSolution = Reference solution
@@ -11,6 +12,7 @@ password = Password
 verify = Verify
 logoutDone = Logout done
 cannotAddTask = Can not add your task
+cannotAddTaskOnCheck = Can not add your task, reference solution fails on tests
 taskAdded = Task has been added.
 cannotCheckNow = Can not check your solution now
 userRegistered = Thank you for your registration
