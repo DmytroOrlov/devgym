@@ -8,12 +8,12 @@ object SuiteReportUtil {
 
   val reflectionWrapperPattern = """__wrapper([\w:\n\$]*)"""
 
-  def enhanceReport(report: Option[String]) = {
-    report.map { r =>
+  def enhanceReport(report: Option[String]): String = report match {
+    case Some(r) =>
       s"<p id='errorReport'>${
         removeDynamicClassName(replaceMarkers(r, "</span><br/>"))
       }</p>"
-    }.getOrElse("")
+    case _ => ""
   }
 
   def replaceMarkers(report: String, lineEnd: String = "</span>") = {
