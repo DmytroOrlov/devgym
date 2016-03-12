@@ -3,7 +3,6 @@ package service
 import monifu.concurrent.Scheduler
 import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive.channels.PublishChannel
-import shared.Line
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -13,12 +12,9 @@ object ObservableRunner {
     val channel = PublishChannel[String](DropOld(20))
     val f = Future(block(s => channel.pushNext(s)))
     f.onComplete {
-      case Success(_) =>
-        channel.pushNext(Line.reportComplete)
-        channel.pushComplete()
+      case Success(_) => channel.pushComplete()
       case Failure(e) =>
         channel.pushNext(e.getMessage)
-        channel.pushNext(Line.reportComplete)
         channel.pushComplete()
     }
     channel

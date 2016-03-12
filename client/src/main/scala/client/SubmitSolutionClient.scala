@@ -38,16 +38,12 @@ object SubmitSolutionClient extends JSApp {
     }
 
     override def onNext(elem: Line): Future[Ack] = {
-      elem.value match {
-        case Line.reportComplete => loadingIcon.hide()
-        case v =>
-          val line = removeDynamicClassName(replaceMarkers(v))
-          report.append( s"""<div>$line</div>""")
-      }
+      val line = removeDynamicClassName(replaceMarkers(elem.value))
+      report.append( s"""<div>$line</div>""")
       Continue
     }
 
-    def onComplete() = ()
+    def onComplete() = loadingIcon.hide()
 
     def onError(ex: Throwable) = {
       val m = s"${this.getClass.getName} $ex"
