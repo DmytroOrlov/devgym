@@ -9,7 +9,7 @@ lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % scalatestV % "test",
     "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
-    "org.scalatestplus" %% "play" % "1.4.0" % "test",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
   )
 )
