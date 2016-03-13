@@ -6,12 +6,13 @@ import java.util.{Date, UUID}
 import org.scalatestplus.play._
 import play.api.test.Helpers._
 import play.api.test._
+import tag.RequireDB
 
 class ApplicationTest extends PlaySpec with OneAppPerSuite {
 
   "Application" when {
     "get root" should {
-      "result with index" in {
+      "result with index" taggedAs RequireDB in {
         val Some(result) = route(app, FakeRequest(GET, "/"))
         status(result) mustBe OK
         contentAsString(result) must (include("/task") and include("/addTask") and include("/register")
@@ -91,7 +92,7 @@ class ApplicationTest extends PlaySpec with OneAppPerSuite {
 
   "TaskSolver" when {
     "get the available task" should {
-      "result with form" in {
+      "result with form" taggedAs RequireDB in {
         val year = LocalDate.of(2016, 1, 1)
         val instant = year.atStartOfDay().atZone(ZoneOffset.UTC).toInstant
 
