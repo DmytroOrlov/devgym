@@ -33,10 +33,10 @@ lazy val server = (project in file("server"))
         (x => x -> ("test/tests/" + x.getName)),
 
     libraryDependencies ++= Seq(
-      "org.webjars" % "jquery" % "2.2.0",
+      "org.webjars" % "jquery" % "2.2.1",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
       "com.vmunier" %% "play-scalajs-scripts" % "0.4.0",
-      "org.monifu" %% "monifu" % "1.0",
+      "org.monifu" %% "monifu" % "1.1",
 
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0"
         exclude("org.xerial.snappy", "snappy-java")
@@ -55,9 +55,9 @@ lazy val client = (project in file("client"))
     persistLauncher := true,
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.8.2",
-      "be.doeraene" %%% "scalajs-jquery" % "0.8.1",
-      "org.monifu" %%% "monifu" % "1.0"
+      "org.scala-js" %%% "scalajs-dom" % "0.9.0",
+      "be.doeraene" %%% "scalajs-jquery" % "0.9.0",
+      "org.monifu" %%% "monifu" % "1.1"
     )
   )
 
