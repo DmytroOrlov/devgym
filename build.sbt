@@ -16,7 +16,11 @@ lazy val testSettings = Seq(
 
 lazy val clients = Seq(client)
 
+lazy val UnitTest = config("unit") extend Test
+
 lazy val server = (project in file("server"))
+  .configs(UnitTest)
+  .settings(inConfig(UnitTest)(Defaults.testTasks): _*)
   .enablePlugins(PlayScala)
   .aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJvm)
@@ -24,6 +28,7 @@ lazy val server = (project in file("server"))
   .settings(
     name := "devgym",
     version := "1.0-SNAPSHOT",
+    testOptions in UnitTest += Tests.Argument("-l",  "RequireDB"),
     scalaJSProjects := clients,
     pipelineStages := Seq(scalaJSProd, gzip),
 
