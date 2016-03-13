@@ -2,20 +2,24 @@ package controllers
 
 import java.util.{Date, UUID}
 
-import com.google.inject.Provider
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import dal.Dao
 import models.Task
 import models.TaskType._
+import monifu.concurrent.Implicits.globalScheduler
 import org.scalamock.scalatest.MockFactory
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import service.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import monifu.concurrent.Implicits.globalScheduler
 
 import scala.concurrent.Future
 
 class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
+  implicit val system = ActorSystem()
+  implicit val mat = ActorMaterializer()
+
   "TaskSolver controller" when {
     "getting available task to solve" should {
       "return template and task description" in {
@@ -26,7 +30,7 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val description = "some description"
         val template = "some template"
         val replyTask = Task(year, scalaClass, timeuuid, "array", description, template, "ref", "test suite")
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, new Provider[play.api.Application] { def get() = app})
+        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         dao.getTask _ expects(year, scalaClass, timeuuid) returns Future.successful(Some(replyTask))
         val result = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
@@ -39,7 +43,7 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
       "return to index page" in {
         //given
         val dao = mock[Dao]
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, new Provider[play.api.Application] { def get() = app})
+        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         (dao.getTask _).expects(*, *, *).returning(Future.successful(None))
         val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1))(FakeRequest(GET, "ignore"))
@@ -52,7 +56,7 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
       "return to index page" in {
         //given
         val dao = mock[Dao]
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, new Provider[play.api.Application] { def get() = app})
+        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
         (dao.getTask _).expects(*, *, *).throwing(new RuntimeException)
         val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1))(FakeRequest(GET, "ignore"))
