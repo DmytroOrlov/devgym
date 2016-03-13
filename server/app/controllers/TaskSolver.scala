@@ -2,14 +2,14 @@ package controllers
 
 import java.util.{Date, UUID}
 
-import com.google.inject.Inject
+import com.google.inject.{Provider, Inject}
 import controllers.TaskSolver._
 import controllers.UserController._
 import dal.Dao
 import models.TaskType
 import monifu.concurrent.Scheduler
 import org.scalatest.Suite
-import play.api.Play.current
+import play.api.Play.materializer
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
@@ -25,8 +25,10 @@ import scala.sys.process._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, appProvider: Provider[play.api.Application])
                           (implicit s: Scheduler) extends Controller with I18nSupport with JSONFormats {
+
+  implicit lazy val app = appProvider.get()
 
   val solutionForm = Form {
     mapping(
