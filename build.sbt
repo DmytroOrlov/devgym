@@ -24,7 +24,6 @@ lazy val server = (project in file("server"))
   .settings(
     name := "devgym",
     version := "1.0-SNAPSHOT",
-    routesGenerator := InjectedRoutesGenerator,
     scalaJSProjects := clients,
     pipelineStages := Seq(scalaJSProd, gzip),
 
