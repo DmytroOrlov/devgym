@@ -33,6 +33,8 @@ lazy val server = (project in file("server"))
         (x => x -> ("test/tests/" + x.getName)),
 
     libraryDependencies ++= Seq(
+      cache,
+
       "org.webjars" % "jquery" % "2.2.0",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
       "com.vmunier" %% "play-scalajs-scripts" % "0.4.0",
