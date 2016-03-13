@@ -2,19 +2,21 @@ package controllers
 
 import java.util.{Date, UUID}
 
-import com.google.inject.{Provider, Inject}
+import akka.actor.ActorSystem
+import akka.stream.Materializer
+import com.google.inject.Inject
 import controllers.TaskSolver._
 import controllers.UserController._
 import dal.Dao
 import models.TaskType
 import monifu.concurrent.Scheduler
 import org.scalatest.Suite
-import play.api.Play.materializer
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
+import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import shared.Line
@@ -25,10 +27,8 @@ import scala.sys.process._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, appProvider: Provider[play.api.Application])
-                          (implicit s: Scheduler) extends Controller with I18nSupport with JSONFormats {
-
-  implicit lazy val app = appProvider.get()
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+                          (implicit system: ActorSystem, s: Scheduler, mat: Materializer) extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
     mapping(
@@ -49,35 +49,41 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }.recover { case NonFatal(e) => notFound }
   }
 
-  def taskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, (fromClient: JsValue) => try {
-        val solution = (fromClient \ "solution").as[String]
-        val year = (fromClient \ "year").as[Long]
-        val taskType = (fromClient \ "taskType").as[String]
-        val timeuuid = (fromClient \ "timeuuid").as[String]
-        dao.getTask(new Date(year), TaskType.withName(taskType), UUID.fromString(timeuuid)).map { t =>
-          ObservableRunner(executor(solution, t.get.suite)).map(Line(_))
-        }
-      } catch {
-        case NonFatal(e) => Future.failed(e)
-      },
-      Some(Line("Compiling..."))
-    )
+  def taskStream = WebSocket.accept { req =>
+    ActorFlow.actorRef[JsValue, JsValue] { out =>
+      SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
+        try {
+          val solution = (fromClient \ "solution").as[String]
+          val year = (fromClient \ "year").as[Long]
+          val taskType = (fromClient \ "taskType").as[String]
+          val timeuuid = (fromClient \ "timeuuid").as[String]
+          dao.getTask(new Date(year), TaskType.withName(taskType), UUID.fromString(timeuuid)).map { t =>
+            ObservableRunner(executor(solution, t.get.suite)).map(Line(_))
+          }
+        } catch {
+          case NonFatal(e) => Future.failed(e)
+        },
+        Some(Line("Compiling..."))
+      )
+    }
   }
 
-  def runtimeTaskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, (fromClient: JsValue) => try {
-        val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
-        val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
-        val solution = (fromClient \ "solution").as[String]
-        Future.successful(ObservableRunner(executor(
-          Class.forName(suiteClass).asInstanceOf[Class[Suite]],
-          Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution)).map(Line(_)))
-      } catch {
-        case NonFatal(e) => Future.failed(e)
-      },
-      Some(Line("Compiling..."))
-    )
+  def runtimeTaskStream = WebSocket.accept { req =>
+    ActorFlow.actorRef[JsValue, JsValue] { out =>
+      SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
+        try {
+          val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
+          val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
+          val solution = (fromClient \ "solution").as[String]
+          Future.successful(ObservableRunner(executor(
+            Class.forName(suiteClass).asInstanceOf[Class[Suite]],
+            Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution)).map(Line(_)))
+        } catch {
+          case NonFatal(e) => Future.failed(e)
+        },
+        Some(Line("Compiling..."))
+      )
+    }
   }
 }
 
