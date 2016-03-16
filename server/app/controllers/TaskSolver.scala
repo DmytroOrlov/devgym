@@ -16,7 +16,8 @@ import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
-import play.api.mvc.{Action, Controller, WebSocket}
+import play.api.mvc.{AnyContent, Action, Controller, WebSocket}
+import play.api.Logger
 import service._
 import shared.Line
 import util.TryFuture
@@ -39,10 +40,10 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  def getTask(year: Long, taskType: String, timeuuid: UUID) = Action.async { implicit request =>
+  def getTask(year: Long, taskType: String, timeuuid: UUID): Action[AnyContent] = Action.async { implicit request =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
-    val task = TryFuture(dao.getTask(new Date(year), TaskType.withName(taskType), timeuuid))
+    val task = TryFuture(getTask(year, taskType, timeuuid.toString))
     task.map {
       case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate, year, taskType, timeuuid.toString))))
       case None => notFound
@@ -73,7 +74,10 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
       Cache.getOrElse[Task](suiteKey, expiration)(throw new RuntimeException("Cache is empty"))
     }
 
-    def getFromDb: Future[Option[Task]] = dao.getTask(new Date(year), TaskType.withName(taskType), UUID.fromString(timeuuid))
+    def getFromDb: Future[Option[Task]] = {
+      Logger.debug(s"getting task from db: $year, $taskType, $timeuuid")
+      dao.getTask(new Date(year), TaskType.withName(taskType), UUID.fromString(timeuuid))
+    }
 
     def saveInCache: PartialFunction[Try[Option[Task]], Unit] = {
       case Success(o) => o.foreach(t => Cache.set(suiteKey, t))
