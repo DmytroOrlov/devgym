@@ -2,6 +2,8 @@ package controllers
 
 import java.util.{Date, UUID}
 
+import akka.actor.ActorSystem
+import akka.stream.Materializer
 import com.google.inject.Inject
 import controllers.TaskSolver._
 import controllers.UserController._
@@ -16,6 +18,7 @@ import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
+import play.api.libs.streams.ActorFlow
 import play.api.mvc.{AnyContent, Action, Controller, WebSocket}
 import play.api.Logger
 import service._
@@ -29,7 +32,7 @@ import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
 class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
-                          (implicit s: Scheduler) extends Controller with I18nSupport with JSONFormats {
+                          (implicit system: ActorSystem, s: Scheduler, mat: Materializer) extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
     mapping(
@@ -50,21 +53,23 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }.recover { case NonFatal(e) => notFound }
   }
 
-  def taskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, (fromClient: JsValue) => try {
-      val solution = (fromClient \ "solution").as[String]
-      val year = (fromClient \ "year").as[Long]
-      val taskType = (fromClient \ "taskType").as[String]
-      val timeuuid = (fromClient \ "timeuuid").as[String]
-      //TODO: if getTask returns None, then client should get an error message
-      getTask(year, taskType, timeuuid).map { t =>
-        ObservableRunner(executor(solution, t.get.suite)).map(Line(_))
-      }
-    } catch {
-      case NonFatal(e) => Future.failed(e)
-    },
-      Some(Line("Compiling..."))
-    )
+  def taskStream = WebSocket.accept { req =>
+    ActorFlow.actorRef[JsValue, JsValue] { out =>
+      SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
+        try {
+          val solution = (fromClient \ "solution").as[String]
+          val year = (fromClient \ "year").as[Long]
+          val taskType = (fromClient \ "taskType").as[String]
+          val timeuuid = (fromClient \ "timeuuid").as[String]
+          getTask(year, taskType, timeuuid).map { t =>
+            ObservableRunner(executor(solution, t.get.suite)).map(Line(_))
+          }
+        } catch {
+          case NonFatal(e) => Future.failed(e)
+        },
+        Some(Line("Compiling..."))
+      )
+    }
   }
 
   private def getTask(year: Long, taskType: String, timeuuid: String): Future[Option[Task]] = {
@@ -89,19 +94,22 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }
   }
 
-  def runtimeTaskStream = WebSocket.acceptWithActor[JsValue, JsValue] { req => out =>
-    SimpleWebSocketActor.props(out, (fromClient: JsValue) => try {
-      val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
-      val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
-      val solution = (fromClient \ "solution").as[String]
-      Future.successful(ObservableRunner(executor(
-        Class.forName(suiteClass).asInstanceOf[Class[Suite]],
-        Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution)).map(Line(_)))
-    } catch {
-      case NonFatal(e) => Future.failed(e)
-    },
-      Some(Line("Compiling..."))
-    )
+  def runtimeTaskStream = WebSocket.accept { req =>
+    ActorFlow.actorRef[JsValue, JsValue] { out =>
+      SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
+        try {
+          val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
+          val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
+          val solution = (fromClient \ "solution").as[String]
+          Future.successful(ObservableRunner(executor(
+            Class.forName(suiteClass).asInstanceOf[Class[Suite]],
+            Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution)).map(Line(_)))
+        } catch {
+          case NonFatal(e) => Future.failed(e)
+        },
+        Some(Line("Compiling..."))
+      )
+    }
   }
 }
 

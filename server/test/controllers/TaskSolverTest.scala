@@ -2,19 +2,24 @@ package controllers
 
 import java.util.{Date, UUID}
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import dal.Dao
 import models.Task
 import models.TaskType._
+import monifu.concurrent.Implicits.globalScheduler
 import org.scalamock.scalatest.MockFactory
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import service.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import monifu.concurrent.Implicits.globalScheduler
 
 import scala.concurrent.Future
 
 class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
+  implicit val system = ActorSystem()
+  implicit val mat = ActorMaterializer()
+
   "TaskSolver controller" when {
     "getting available task to solve" should {
       "return template and task description" in {

@@ -57,6 +57,7 @@ final class SimpleWebSocketClient(url: String,
       def onError(ex: Throwable) = {
         webSocket.foreach(closeConnection)
         scheduler.reportFailure(ex)
+        subscriber.onComplete()
       }
 
       def onComplete() = {

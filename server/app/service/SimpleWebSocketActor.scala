@@ -1,5 +1,6 @@
 package service
 
+import akka.actor.Status.Success
 import akka.actor.{Actor, ActorRef, Props}
 import monifu.concurrent.Scheduler
 import monifu.concurrent.cancelables.CompositeCancelable
@@ -13,10 +14,11 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue => Future[Observable[T]], onSubscribe: => Option[T], timeout: FiniteDuration)
+class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue => Future[Observable[T]],
+                                                onSubscribe: => Option[T], timeout: FiniteDuration)
                                                (implicit s: Scheduler) extends Actor {
-  private[this] val subscription =
-    CompositeCancelable()
+
+  private[this] val subscription = CompositeCancelable()
 
   def receive: Receive = {
     case json: JsValue =>
@@ -45,6 +47,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
 
   override def postStop(): Unit = {
     subscription.cancel()
+    out ! Success
     super.postStop()
   }
 
@@ -62,7 +65,8 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
 
 object SimpleWebSocketActor {
   /** Utility for quickly creating a `Props` */
-  def props[T <: Event : Writes](out: ActorRef, producer: JsValue => Future[Observable[T]], onSubscribe: => Option[T] = None, timeout: FiniteDuration = 10.seconds)
+  def props[T <: Event : Writes](out: ActorRef, producer: JsValue => Future[Observable[T]],
+                                 onSubscribe: => Option[T] = None, timeout: FiniteDuration = 10.seconds)
                                 (implicit s: Scheduler): Props = {
     Props(new SimpleWebSocketActor(out, producer, onSubscribe, timeout))
   }

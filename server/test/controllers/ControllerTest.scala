@@ -1,12 +1,8 @@
 package controllers
 
-
-import java.util.{Date, UUID}
-
-import controllers.ControllerTest._
 import dal.Dao
+import models.NewTask
 import models.TaskType._
-import models.{NewTask, Task}
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.concurrent.Scheduler
 import org.scalamock.scalatest.MockFactory
@@ -26,7 +22,7 @@ class ControllerTest extends PlaySpec with MockFactory {
         val scalaTestRunner = mock[DynamicSuiteExecutor]
         (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", "5", *, *)
         //when
-        withAddTaskController(scalaTestRunner, null)({ controller =>
+        withAddTaskController(scalaTestRunner)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
               "referenceSolution" -> "4", "suite" -> "5"))
@@ -91,10 +87,8 @@ class ControllerTest extends PlaySpec with MockFactory {
       }
     }
   }
-}
 
-object ControllerTest {
-  def withAddTaskController[T](suiteExecutor: DynamicSuiteExecutor, dao: Dao)(block: (AddTask) => T): T = {
+  def withAddTaskController[T](suiteExecutor: DynamicSuiteExecutor, dao: Dao = stub[Dao])(block: (AddTask) => T): T = {
     block(new AddTask(suiteExecutor, dao, new MockMessageApi))
   }
 }

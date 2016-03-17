@@ -1,6 +1,6 @@
 import sbt.Project.projectToRef
 
-val scalaV = "2.11.7"
+val scalaV = "2.11.8"
 val scalatestV = "2.2.6"
 
 lazy val commonSettings = Seq(scalaVersion := scalaV)
@@ -9,14 +9,18 @@ lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % scalatestV % "test",
     "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
-    "org.scalatestplus" %% "play" % "1.4.0" % "test",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
   )
 )
 
 lazy val clients = Seq(client)
 
+lazy val UnitTest = config("unit") extend Test
+
 lazy val server = (project in file("server"))
+  .configs(UnitTest)
+  .settings(inConfig(UnitTest)(Defaults.testTasks): _*)
   .enablePlugins(PlayScala)
   .aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJvm)
@@ -24,7 +28,7 @@ lazy val server = (project in file("server"))
   .settings(
     name := "devgym",
     version := "1.0-SNAPSHOT",
-    routesGenerator := InjectedRoutesGenerator,
+    testOptions in UnitTest += Tests.Argument("-l",  "RequireDB"),
     scalaJSProjects := clients,
     pipelineStages := Seq(scalaJSProd, gzip),
 
@@ -35,10 +39,10 @@ lazy val server = (project in file("server"))
     libraryDependencies ++= Seq(
       cache,
 
-      "org.webjars" % "jquery" % "2.2.0",
+      "org.webjars" % "jquery" % "2.2.1",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
       "com.vmunier" %% "play-scalajs-scripts" % "0.4.0",
-      "org.monifu" %% "monifu" % "1.0",
+      "org.monifu" %% "monifu" % "1.1",
 
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0"
         exclude("org.xerial.snappy", "snappy-java")
@@ -57,9 +61,9 @@ lazy val client = (project in file("client"))
     persistLauncher := true,
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.8.2",
-      "be.doeraene" %%% "scalajs-jquery" % "0.8.1",
-      "org.monifu" %%% "monifu" % "1.0"
+      "org.scala-js" %%% "scalajs-dom" % "0.9.0",
+      "be.doeraene" %%% "scalajs-jquery" % "0.9.0",
+      "org.monifu" %%% "monifu" % "1.1"
     )
   )
 
