@@ -15,9 +15,6 @@ import monifu.concurrent.Implicits.globalScheduler
 import scala.concurrent.Future
 
 class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
-  val year = new Date()
-  val timeuuid = new UUID(1, 1)
-
   "TaskSolver controller" when {
     "getting available task to solve" should {
       "return template and task description" in {
@@ -25,6 +22,8 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val dao = mock[Dao]
         val description = "some description"
         val template = "some template"
+        val year = new Date()
+        val timeuuid = new UUID(1, 1)
         val replyTask = Task(year, scalaClass, timeuuid, "array", description, template, "ref", "test suite")
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         //when
@@ -66,6 +65,8 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         //given
         val dao = stub[Dao]
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
+        val year = new Date()
+        val timeuuid = new UUID(1, 1)
         val task = Task(year, scalaClass, timeuuid, "name", "descr", "template", "reference", "suite")
 
         //when
@@ -80,18 +81,20 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
           //then
           status(result2) mustBe OK
         }
-        dao.getTask _ verify (*, *, *) once()
+        dao.getTask _ verify(*, *, *) once()
       }
     }
     "getting task from unstable db" should {
-      "not update cache" in {
+      "not update cache unless db is stable again" in {
         //given
-        val dao = stub[Dao]
+        val dao = mock[Dao]
+        val year = new Date()
+        val timeuuid = new UUID(1, 1)
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi)
         val task = Task(year, scalaClass, timeuuid, "name", "descr", "template", "reference", "suite")
 
         //when
-        (dao.getTask _).when(*, *, *).returns(Future.failed(new RuntimeException("unstable db")))
+        (dao.getTask _).expects(*, *, *).returning(Future.failed(new RuntimeException("unstable db"))).once()
         val badResult = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
         //then
         status(badResult) mustBe SEE_OTHER
@@ -99,13 +102,12 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         //given
         val anotherYear = new Date(1000000)
         //when
-        (dao.getTask _).when(anotherYear, *, *).returns(Future.successful(Some(task)))
+        (dao.getTask _).expects(anotherYear, *, *).returning(Future.successful(Some(task))).once()
         0 until 2 foreach { i =>
           val goodResult = taskSolver.getTask(anotherYear.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
           //then
           status(goodResult) mustBe OK
         }
-        dao.getTask _ verify (*, *, *) once()
       }
     }
   }
