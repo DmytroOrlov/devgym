@@ -11,8 +11,7 @@ import dal.Dao
 import models.{Task, TaskType}
 import monifu.concurrent.Scheduler
 import org.scalatest.Suite
-import play.api.Play.current
-import play.api.cache.Cache
+import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
@@ -31,7 +30,7 @@ import scala.sys.process._
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, val cache: CacheApi)
                           (implicit system: ActorSystem, s: Scheduler, mat: Materializer) extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
@@ -76,7 +75,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     val suiteKey = (year, taskType, timeuuid).toString
 
     def getFromCache: Option[Task] = Option {
-      Cache.getOrElse[Task](suiteKey, expiration)(throw new RuntimeException("Cache is empty"))
+      cache.getOrElse[Task](suiteKey, expiration)(throw new RuntimeException("Cache is empty"))
     }
 
     def getFromDb: Future[Option[Task]] = {
@@ -85,7 +84,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }
 
     def saveInCache: PartialFunction[Try[Option[Task]], Unit] = {
-      case Success(o) => o.foreach(t => Cache.set(suiteKey, t))
+      case Success(o) => o.foreach(t => cache.set(suiteKey, t))
       case _ =>
     }
 
