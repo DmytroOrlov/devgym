@@ -45,7 +45,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   def getTask(year: Long, taskType: String, timeuuid: UUID): Action[AnyContent] = Action.async { implicit request =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
-    val task = TryFuture(getTask(year, taskType, timeuuid.toString))
+    val task = TryFuture(getCachedTask(year, taskType, timeuuid.toString))
     task.map {
       case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate, year, taskType, timeuuid.toString))))
       case None => notFound
@@ -60,7 +60,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
           val year = (fromClient \ "year").as[Long]
           val taskType = (fromClient \ "taskType").as[String]
           val timeuuid = (fromClient \ "timeuuid").as[String]
-          getTask(year, taskType, timeuuid).map { t =>
+          getCachedTask(year, taskType, timeuuid).map { t =>
             ObservableRunner(executor(solution, t.get.suite)).map(Line(_))
           }
         } catch {
@@ -71,7 +71,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }
   }
 
-  private def getTask(year: Long, taskType: String, timeuuid: String): Future[Option[Task]] = {
+  private def getCachedTask(year: Long, taskType: String, timeuuid: String): Future[Option[Task]] = {
     val suiteKey = (year, taskType, timeuuid).toString
 
     def getFromCache: Option[Task] = Option {
