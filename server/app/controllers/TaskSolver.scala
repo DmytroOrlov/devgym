@@ -72,7 +72,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   }
 
   private def getCachedTask(year: Long, taskType: String, timeuuid: UUID): Future[Option[Task]] = {
-    val suiteKey = (year, taskType, timeuuid).toString
+    val suiteKey = (year, taskType, timeuuid).toString()
 
     def getFromCache: Option[Task] = Option {
       cache.getOrElse[Task](suiteKey, expiration)(throw new RuntimeException("Cache is empty"))
@@ -121,7 +121,7 @@ object TaskSolver {
   val taskType = "taskType"
   val timeuuid = "timeuuid"
 
-  val expiration = 15 seconds
+  val expiration = 15.seconds
 
   // TODO rethink or remove
   def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
