@@ -3,9 +3,21 @@
 @(tasks: Iterable[Task])(implicit flash: Flash, session: Session, msg: Messages)
 @mainFlashToUser(msg("home")) {
     <h3>Latest Challenges</h3>
-    <ul>
-    @for(task <- tasks) {
-        <li><a href="@routes.TaskSolver.getTask(task.year.getTime, task.`type`.toString, task.timeuuid)">@task.name</li>
+
+    <div class="row">
+    @for( task <- tasks) {
+        <div class="col-sm-6 col-md-4">
+            <div class="thumbnail">
+                <div class="caption">
+                    <h4>
+                        <a href="@routes.TaskSolver.getTask(task.year.getTime, task.`type`.toString, task.timeuuid)">@task.name</a>
+                    </h4>
+                    <p>@task.description.substring(0, 300)
+                        ...
+                    </p>
+                </div>
+            </div>
+        </div>
     }
-    </ul>
+    </div>
 }
