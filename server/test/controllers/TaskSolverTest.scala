@@ -113,9 +113,8 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val task = Task(year, scalaClass, timeuuid, "name", "descr", "template", "reference", "suite")
 
         //when
+        (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         (dao.getTask _).expects(*, *, *).returning(Future.failed(new RuntimeException("unstable db"))).once()
-        (cache.getOrElse(_: String, _: FiniteDuration)(_: Any)(_: ClassTag[Any])).expects(*, *, *, *)
-          .throwing(new RuntimeException("Cache is empty")).twice()
         val badResult = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
         //then
         status(badResult) mustBe SEE_OTHER
@@ -123,6 +122,7 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         //given
         val anotherYear = new Date(1000000)
         //when
+        (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         (dao.getTask _).expects(*, *, *).returning(Future.successful(Some(task))).once()
         (cache.set(_: String, _: Any, _: FiniteDuration)).expects(*, *, *).once()
         val goodResult = taskSolver.getTask(anotherYear.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
@@ -130,7 +130,7 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         status(goodResult) mustBe OK
 
         //when
-        (cache.getOrElse(_: String, _: FiniteDuration)(_: Any)(_: ClassTag[Any])).expects(*, *, *, *).returning(task).once()
+        (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns Some(task)
         val goodResult2 = taskSolver.getTask(anotherYear.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
         //then
         status(goodResult2) mustBe OK
