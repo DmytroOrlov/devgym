@@ -30,7 +30,7 @@ import scala.sys.process._
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, val cache: CacheApi)
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, cache: CacheApi)
                           (implicit system: ActorSystem, s: Scheduler, mat: Materializer) extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
