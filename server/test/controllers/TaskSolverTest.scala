@@ -85,7 +85,7 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val task = Task(year, scalaClass, timeuuid, "name", "descr", "template", "reference", "suite")
 
         //when
-        (cache.getOrElse(_: String, _: FiniteDuration)(_: Any)(_: ClassTag[Any])).expects(*, *, *, *).throwing(new RuntimeException).once()
+        (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         (dao.getTask _).when(*, *, *).returns(Future.successful(Some(task))).once()
         (cache.set(_: String, _: Any, _: FiniteDuration)).expects(*, *, *).once()
         val result = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
@@ -93,7 +93,7 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         status(result) mustBe OK
 
         //when
-        (cache.getOrElse(_: String, _: FiniteDuration)(_: Any)(_: ClassTag[Any])).expects(*, *, *, *).returning(task).repeat(5)
+        (cache.get(_: String)(_: ClassTag[Task])) expects (*, *) returning Some(task) repeat 5
         0 until 5 foreach { i =>
           val result2 = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
           //then
