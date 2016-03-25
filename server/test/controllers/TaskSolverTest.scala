@@ -33,8 +33,10 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         val year = new Date()
         val timeuuid = new UUID(1, 1)
         val replyTask = Task(year, scalaClass, timeuuid, "array", description, template, "ref", "test suite")
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, mock[CacheApi])
+        val cache = mock[CacheApi]
+        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
         //when
+        (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         dao.getTask _ expects(year, scalaClass, timeuuid) returns Future.successful(Some(replyTask))
         val result = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
         //then
