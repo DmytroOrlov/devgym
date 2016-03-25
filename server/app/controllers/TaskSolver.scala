@@ -8,26 +8,29 @@ import com.google.inject.Inject
 import controllers.TaskSolver._
 import controllers.UserController._
 import dal.Dao
-import models.TaskType
+import models.{Task, TaskType}
 import monifu.concurrent.Scheduler
 import org.scalatest.Suite
+import play.api.Logger
+import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.libs.streams.ActorFlow
-import play.api.mvc.{Action, Controller, WebSocket}
+import play.api.mvc.{Action, AnyContent, Controller, WebSocket}
 import service._
 import shared.Line
 import util.TryFuture
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.sys.process._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, cache: CacheApi)
                           (implicit system: ActorSystem, s: Scheduler, mat: Materializer) extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
@@ -42,7 +45,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   def getTask(year: Long, taskType: String, timeuuid: UUID) = Action.async { implicit request =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
-    val task = TryFuture(dao.getTask(new Date(year), TaskType.withName(taskType), timeuuid))
+    val task = TryFuture(getCachedTask(year, taskType, timeuuid))
     task.map {
       case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate, year, taskType, timeuuid.toString))))
       case None => notFound
@@ -51,20 +54,38 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
 
   def taskStream = WebSocket.accept { req =>
     ActorFlow.actorRef[JsValue, JsValue] { out =>
-      SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
-        try {
+      SimpleWebSocketActor.props(out, (fromClient: JsValue) => {
           val solution = (fromClient \ "solution").as[String]
           val year = (fromClient \ "year").as[Long]
           val taskType = (fromClient \ "taskType").as[String]
           val timeuuid = (fromClient \ "timeuuid").as[String]
-          dao.getTask(new Date(year), TaskType.withName(taskType), UUID.fromString(timeuuid)).map { t =>
+          getCachedTask(year, taskType, UUID.fromString(timeuuid)).map { t =>
             ObservableRunner(executor(solution, t.get.suite)).map(Line(_))
           }
-        } catch {
-          case NonFatal(e) => Future.failed(e)
         },
         Some(Line("Compiling..."))
       )
+    }
+  }
+
+  private def getCachedTask(year: Long, taskType: String, timeuuid: UUID): Future[Option[Task]] = {
+    def getFromDb: Future[Option[Task]] = {
+      Logger.debug(s"getting task from db: $year, $taskType, $timeuuid")
+      TryFuture(dao.getTask(new Date(year), TaskType.withName(taskType), timeuuid))
+    }
+
+    val suiteKey = (year, taskType, timeuuid).toString()
+
+    val task = cache.get[Task](suiteKey)
+    task match {
+      case Some(_) => Future.successful(task)
+      case None =>
+        val f = getFromDb
+        f.foreach {
+          case Some(t) => cache.set(suiteKey, t, expiration)
+          case None =>
+        }
+        f
     }
   }
 
@@ -95,6 +116,8 @@ object TaskSolver {
   val year = "year"
   val taskType = "taskType"
   val timeuuid = "timeuuid"
+
+  val expiration = 15.seconds
 
   // TODO rethink or remove
   def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
