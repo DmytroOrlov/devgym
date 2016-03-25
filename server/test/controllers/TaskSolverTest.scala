@@ -63,8 +63,10 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
       "return to index page" in {
         //given
         val dao = mock[Dao]
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, mock[CacheApi])
+        val cache = mock[CacheApi]
+        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
         //when
+        (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         (dao.getTask _).expects(*, *, *).throwing(new RuntimeException)
         val result = taskSolver.getTask(1, scalaClass.toString, new UUID(1, 1))(FakeRequest(GET, "ignore"))
         //then
