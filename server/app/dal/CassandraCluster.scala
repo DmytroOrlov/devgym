@@ -3,8 +3,8 @@ package dal
 import com.datastax.driver.core.{Cluster, Session}
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.Config
-import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
+import play.api.{Configuration, Environment, Logger, Mode}
 import util.FutureUtils.toFutureUnit
 
 import scala.concurrent.ExecutionContext
@@ -27,25 +27,34 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
 }
 
 @Singleton
-class CassandraConfig @Inject()(configuration: Configuration) {
+class CassandraConfig @Inject()(configuration: Configuration, environment: Environment) {
   val config: Config = configuration.underlying
 
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
 
   lazy val hosts: Seq[String] = {
+    val hostsConf = "devgym.db.cassandra.hosts"
+    val dockerConf = "devgym.db.cassandra.docker"
+
     def hosts: Seq[String] = {
       import scala.collection.JavaConversions._
-      config.getStringList("devgym.db.cassandra.hosts")
+      config.getStringList(hostsConf)
     }
 
-    def docker: Option[Boolean] = configuration.getBoolean("devgym.db.cassandra.docker")
+    def docker: Option[Boolean] = configuration.getBoolean(dockerConf)
 
-    def ip() = docker match {
-      case Some(true) => Try(Seq("docker-machine", "ip", "default").!!.trim).toOption
+    def dockerIp() = docker match {
+      case Some(true) =>
+        if (environment.mode == Mode.Prod)
+          Logger.error(s"$dockerConf = true, and we are in prod mode")
+        Try(Seq("docker-machine", "ip", "default").!!.trim).toOption
       case _ => None
     }
 
-    ip().fold(hosts) { ip => Seq(ip) }
+    dockerIp().fold(hosts) { ip =>
+      Logger.warn(s"$hostsConf overridden with docker $ip")
+      Seq(ip)
+    }
   }
 }
