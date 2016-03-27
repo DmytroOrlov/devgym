@@ -17,7 +17,8 @@ object DataLoader extends App {
   val scriptsPath = "cassandra"
   val configPath = "server/conf/application.conf"
 
-  val cassandraConfig = new CassandraConfig(Configuration.load(Environment.simple(new File(configPath))))
+  val simple = Environment.simple(new File(configPath))
+  val cassandraConfig = new CassandraConfig(Configuration.load(simple), simple)
 
   getCluster match {
     case Success(cluster) =>
