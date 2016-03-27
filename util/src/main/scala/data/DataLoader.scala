@@ -24,8 +24,8 @@ object DataLoader extends App {
     case Success(cluster) =>
       val session = cluster.noKeySpaceSession
       try {
-        println("CQL scripts import start...")
         dropKeySpace(cassandraConfig.keySpace, session)
+        println("CQL scripts import start...")
         executeScripts(block => session.execute(block))
         println("CQL scripts import completed")
       } finally {
@@ -41,7 +41,11 @@ object DataLoader extends App {
     })
   )
 
-  private def dropKeySpace(keySpace: String, session: Session) = session.execute(s"drop schema $keySpace")
+  private def dropKeySpace(keySpace: String, session: Session) =
+    Try(session.execute(s"drop schema $keySpace")) match {
+      case Success(AnyRef) => println("key space has been dropped")
+      case Failure(e) => println(s"drop of key space has been failed, error: ${e.getMessage}")
+    }
 
   private def executeScripts(executor: String => Any) = {
     Paths.get(scriptsPath).toFile.listFiles().foreach { f =>
