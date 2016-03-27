@@ -19,9 +19,10 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
       .withPort(conf.port)
       .build()
 
+  def noKeySpaceSession: Session = cluster.connect()
   def session: Session = cluster.connect(conf.keySpace)
 
-  private def stop() = toFutureUnit(cluster.closeAsync())
+  def stop() = toFutureUnit(cluster.closeAsync())
 
   appLifecycle.addStopHook(() => stop())
 }
