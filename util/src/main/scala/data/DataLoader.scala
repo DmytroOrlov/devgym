@@ -3,7 +3,7 @@ package data
 import java.io.File
 import java.nio.file.Paths
 
-import com.datastax.driver.core.Session
+import com.datastax.driver.core.{ResultSet, Session}
 import dal.{CassandraCluster, CassandraConfig}
 import monifu.concurrent.Implicits.globalScheduler
 import play.api.inject.ApplicationLifecycle
@@ -43,7 +43,7 @@ object DataLoader extends App {
 
   private def dropKeySpace(keySpace: String, session: Session) =
     Try(session.execute(s"drop schema $keySpace")) match {
-      case Success(AnyRef) => println("key space has been dropped")
+      case Success(_) => println("key space has been dropped")
       case Failure(e) => println(s"drop of key space has been failed, error: ${e.getMessage}")
     }
 
@@ -53,7 +53,7 @@ object DataLoader extends App {
 
       val source = scala.io.Source.fromFile(f.getAbsolutePath)
       val blocks = try {
-        source.mkString.split(blockSeparator)
+        source.mkString.split(blockSeparator).map(_.trim).filterNot(_.isEmpty)
       } finally source.close()
 
       blocks.foreach { b =>
