@@ -71,11 +71,6 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
   .settings(commonSettings: _*)
   .jsConfigure(_ enablePlugins ScalaJSPlay)
 
-lazy val util = project
-  .settings(commonSettings: _*)
-  .enablePlugins(PlayScala)
-  .dependsOn(server)
-
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 
