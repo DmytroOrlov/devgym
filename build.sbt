@@ -18,6 +18,8 @@ lazy val clients = Seq(client)
 
 lazy val UnitTest = config("unit") extend Test
 
+val monifuVer = "1.1"
+
 lazy val server = (project in file("server"))
   .configs(UnitTest)
   .settings(inConfig(UnitTest)(Defaults.testTasks): _*)
@@ -39,10 +41,10 @@ lazy val server = (project in file("server"))
     libraryDependencies ++= Seq(
       cache,
 
-      "org.webjars" % "jquery" % "2.2.1",
+      "org.webjars" % "jquery" % "2.2.2",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
       "com.vmunier" %% "play-scalajs-scripts" % "0.4.0",
-      "org.monifu" %% "monifu" % "1.1",
+      "org.monifu" %% "monifu" % monifuVer,
 
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0"
         exclude("org.xerial.snappy", "snappy-java")
@@ -63,7 +65,7 @@ lazy val client = (project in file("client"))
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.0",
       "be.doeraene" %%% "scalajs-jquery" % "0.9.0",
-      "org.monifu" %%% "monifu" % "1.1"
+      "org.monifu" %%% "monifu" % monifuVer
     )
   )
 
