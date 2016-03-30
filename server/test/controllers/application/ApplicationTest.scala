@@ -16,7 +16,7 @@ class ApplicationTest extends PlaySpec with OneAppPerSuite {
         val Some(result) = route(app, FakeRequest(GET, "/"))
         status(result) mustBe OK
         contentAsString(result) must (include("/task") and include("/addTask") and include("/register")
-          and include( """<li><a href="/task/"""))
+          and include( """<a href="/task/"""))
       }
     }
     "get logout" should {
