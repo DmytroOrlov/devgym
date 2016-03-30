@@ -12,7 +12,9 @@ INSERT INTO devgym.task (
   'scalaClass',
   3475a7b0-e56d-11e5-aa86-091830ac5256,
   'Max occurrence in array',
-  'Find maximum occurrence in array of non-unique elements. ',
+  'Find maximum number of occurrences in the given array. Return the element which has the max number of occurrences than
+  other elements in the input array. For example, array of (1, 2, 2, 4, 4, 4, 1) should result the element 4, as it has 3
+  occurrences in total. In case of equal number of occurrences return any of the elements.',
   'class MaxOccurrenceInArray {
      def maxOccurrence(uniqueNum: Int, a: Array[Int]): Int = {
 

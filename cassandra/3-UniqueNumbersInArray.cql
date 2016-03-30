@@ -12,7 +12,8 @@ INSERT INTO devgym.task (
   'scalaClass',
   915b6150-d90f-11e5-aa5b-091830ac5256,
   'Unique numbers in Array',
-  'Find number of unique elements in array of integers',
+  'Find number of unique elements in array of integers. For example, array of (4, 2, 2, 32, 3, 32, 2) should result
+  the 4 as number of unique elements in the array.',
   'class UniqueNumbersInArray {
      def uniqueNumbers(a: Array[Int]): Int = {
 
