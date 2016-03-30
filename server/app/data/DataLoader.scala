@@ -1,13 +1,10 @@
 package data
 
-import java.io.File
-import java.nio.file.Paths
-
-import com.datastax.driver.core.{ResultSet, Session}
 import dal.{CassandraCluster, CassandraConfig}
 import monifu.concurrent.Implicits.globalScheduler
+import play.api.Play
 import play.api.inject.ApplicationLifecycle
-import play.api.{Configuration, Environment}
+import play.api.inject.guice.GuiceApplicationBuilder
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -15,16 +12,15 @@ import scala.util.{Failure, Success, Try}
 object DataLoader extends App {
   val blockSeparator = "\n/"
   val scriptsPath = "cassandra"
-  val configPath = "server/conf/application.conf"
 
-  val env = Environment.simple(new File(configPath))
-  val cassandraConfig = new CassandraConfig(Configuration.load(env), env)
+  lazy val app = new GuiceApplicationBuilder().build()
+
+  lazy val cassandraConfig = app.injector.instanceOf[CassandraConfig]
 
   getCluster match {
     case Success(cluster) =>
       val session = cluster.noKeySpaceSession
       try {
-        dropKeySpace(cassandraConfig.keySpace, session)
         println("CQL scripts import start...")
         executeScripts(block => session.execute(block))
         println("CQL scripts import completed")
@@ -32,6 +28,7 @@ object DataLoader extends App {
         session.close()
         cluster.stop()
       }
+      Play.stop(app)
     case Failure(e) => print(s"cassandra instance error: ${e.getMessage}")
   }
 
@@ -41,14 +38,8 @@ object DataLoader extends App {
     })
   )
 
-  private def dropKeySpace(keySpace: String, session: Session) =
-    Try(session.execute(s"drop schema $keySpace")) match {
-      case Success(_) => println("key space has been dropped")
-      case Failure(e) => println(s"drop of key space has been failed, error: ${e.getMessage}")
-    }
-
   private def executeScripts(executor: String => Any) = {
-    Paths.get(scriptsPath).toFile.listFiles().foreach { f =>
+    app.path.listFiles().filter(_.getName == scriptsPath).foreach(_.listFiles().foreach { f =>
       println(s"source file: ${f.getAbsolutePath}")
 
       val source = scala.io.Source.fromFile(f.getAbsolutePath)
@@ -60,6 +51,6 @@ object DataLoader extends App {
         println(s"Running CQL:\n $b")
         executor(b)
       }
-    }
+    })
   }
 }
