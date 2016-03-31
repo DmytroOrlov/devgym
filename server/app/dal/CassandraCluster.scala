@@ -4,12 +4,12 @@ import com.datastax.driver.core.{Cluster, Session}
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.Config
 import play.api.inject.ApplicationLifecycle
-import play.api.{Configuration, Environment, Logger, Mode}
+import play.api.{Configuration, Environment}
 import util.FutureUtils.toFutureUnit
 
 import scala.concurrent.ExecutionContext
 import scala.sys.process._
-import scala.util.Try
+import scala.util.matching.Regex
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
@@ -43,19 +43,9 @@ class CassandraConfig @Inject()(configuration: Configuration, environment: Envir
       config.getStringList(hostsConf)
     }
 
-    def docker: Option[Boolean] = configuration.getBoolean(dockerConf)
-
-    def dockerIp() = docker match {
-      case Some(true) =>
-        if (environment.mode == Mode.Prod)
-          Logger.error(s"$dockerConf = true, and we are in prod mode")
-        Try(Seq("docker-machine", "ip", "default").!!.trim).toOption
-      case _ => None
-    }
-
-    dockerIp().fold(hosts) { ip =>
-      Logger.warn(s"$hostsConf overridden with docker $ip")
-      Seq(ip)
+    val r = new Regex( """(\$\()([^)]*)(\))""", "$(", "command", ")")
+    hosts.map { h =>
+      r.replaceAllIn(h, m => m.group("command").!!.trim)
     }
   }
 }
