@@ -36,7 +36,7 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
 class CassandraConfig @Inject()(configuration: Configuration, environment: Environment) {
   val config: Config = configuration.underlying
 
-  val localhost = "127.0.0.1"
+  val temp_db_ip = "172.17.0.2"
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
 
@@ -55,7 +55,7 @@ class CassandraConfig @Inject()(configuration: Configuration, environment: Envir
         val ip = Try(m.group("command").!!)
         ip match {
           case Success(s) => s.trim
-          case Failure(_) => localhost
+          case Failure(_) => temp_db_ip
         }
       })
     }
