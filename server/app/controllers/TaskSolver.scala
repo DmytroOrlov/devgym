@@ -19,7 +19,7 @@ import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.libs.streams.ActorFlow
-import play.api.mvc.{Action, AnyContent, Controller, WebSocket}
+import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import shared.Line
 import util.TryFuture

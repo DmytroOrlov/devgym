@@ -9,7 +9,8 @@ import models.Task
 import models.TaskType._
 import monifu.concurrent.Implicits.globalScheduler
 import org.scalamock.scalatest.MockFactory
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
+import org.scalatest.DoNotDiscover
+import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
 import play.api.cache.CacheApi
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -19,7 +20,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
 
-class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
+@DoNotDiscover class TaskSolverTest extends PlaySpec with MockFactory with ConfiguredApp {
   implicit val system = ActorSystem()
   implicit val mat = ActorMaterializer()
 
@@ -93,7 +94,7 @@ class TaskSolverTest extends PlaySpec with MockFactory with OneAppPerSuite {
         status(result) mustBe OK
 
         //when
-        (cache.get(_: String)(_: ClassTag[Task])) expects (*, *) returning Some(task) repeat 5
+        (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returning Some(task) repeat 5
         0 until 5 foreach { i =>
           val result2 = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
           //then

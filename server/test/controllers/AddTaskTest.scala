@@ -13,7 +13,7 @@ import service._
 
 import scala.concurrent.Future
 
-class ControllerTest extends PlaySpec with MockFactory {
+class AddTaskTest extends PlaySpec with MockFactory {
 
   "AddTask controller" when {
     "post fail with scalaTestRunner when addTask" should {
@@ -38,7 +38,7 @@ class ControllerTest extends PlaySpec with MockFactory {
         val scalaTestRunner = mock[DynamicSuiteExecutor]
         (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", "5", *, *)
         val dao = mock[Dao]
-        dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", "5") returns Future.failed(new RuntimeException)
+        dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", "5") returns Future.failed(new RuntimeException("test exception"))
         //when
         withAddTaskController(scalaTestRunner, dao)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")

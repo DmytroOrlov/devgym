@@ -1,14 +1,19 @@
-package controllers.application
+package controllers
 
 import java.time.{LocalDate, ZoneOffset}
 import java.util.{Date, UUID}
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
+import org.scalatest.DoNotDiscover
 import org.scalatestplus.play._
 import play.api.test.Helpers._
 import play.api.test._
 import tag.RequireDB
 
-class ApplicationTest extends PlaySpec with OneAppPerSuite {
+@DoNotDiscover class ApplicationTest extends PlaySpec with ConfiguredApp {
+  implicit val system = ActorSystem()
+  implicit val mat = ActorMaterializer()
 
   "Application" when {
     "get root" should {
