@@ -10,6 +10,7 @@ import play.api.Logger
 
 import scala.concurrent.ExecutionContext
 import scala.sys.process._
+import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
 @Singleton
@@ -35,6 +36,7 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
 class CassandraConfig @Inject()(configuration: Configuration, environment: Environment) {
   val config: Config = configuration.underlying
 
+  val localhost = "127.0.0.1"
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
 
@@ -49,7 +51,13 @@ class CassandraConfig @Inject()(configuration: Configuration, environment: Envir
 
     val r = new Regex( """(\$\()([^)]*)(\))""", "$(", "command", ")")
     hosts.map { h =>
-      r.replaceAllIn(h, m => m.group("command").!!.trim)
+      r.replaceAllIn(h, m => {
+        val ip = Try(m.group("command").!!)
+        ip match {
+          case Success(s) => s.trim
+          case Failure(_) => localhost
+        }
+      })
     }
   }
 }
