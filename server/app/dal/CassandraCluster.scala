@@ -6,6 +6,7 @@ import com.typesafe.config.Config
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment}
 import util.FutureUtils.toFutureUnit
+import play.api.Logger
 
 import scala.concurrent.ExecutionContext
 import scala.sys.process._
@@ -13,11 +14,14 @@ import scala.util.matching.Regex
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
+  private lazy val hosts = conf.hosts
   private lazy val cluster =
     Cluster.builder()
-      .addContactPoints(conf.hosts: _*)
+      .addContactPoints(hosts: _*)
       .withPort(conf.port)
       .build()
+
+  Logger.info(s"Cassandra host to be used: ${hosts.mkString(",")}:${conf.port}")
 
   def noKeySpaceSession: Session = cluster.connect()
   def session: Session = cluster.connect(conf.keySpace)
