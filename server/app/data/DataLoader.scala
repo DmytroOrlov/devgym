@@ -49,7 +49,7 @@ object DataLoader extends App {
   )
 
   private def executeScripts(executor: String => Any) = {
-    app.path.listFiles().filter(_.getName == scriptsPath).sorted.foreach(_.listFiles().foreach { f =>
+    app.path.listFiles().filter(_.getName == scriptsPath).foreach(_.listFiles().sorted.foreach { f =>
       Logger.info(s"source file: ${f.getAbsolutePath}")
 
       val source = scala.io.Source.fromFile(f.getAbsolutePath)
