@@ -15,4 +15,6 @@ docker run -it --link cassandra:cassandra --rm cassandra sh -c 'exec cqlsh "$CAS
 Apply cassandra migrations:
 ```sh
 sbt "runMain data.DataLoader"
+or to drop schema before loading
+sbt "runMain data.DataLoader drop"
 ```
