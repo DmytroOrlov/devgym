@@ -1,5 +1,6 @@
 package data
 
+import com.datastax.driver.core.Session
 import dal.{CassandraCluster, CassandraConfig}
 import monifu.concurrent.Implicits.globalScheduler
 import play.api.Play
@@ -23,6 +24,7 @@ object DataLoader extends App {
       val session = cluster.noKeySpaceSession
       try {
         Logger.info("CQL scripts import start...")
+        if (args.isDefinedAt(0)) dropKeySpace(cassandraConfig.keySpace, session)
         executeScripts(block => session.execute(block))
         Logger.info("CQL scripts import completed")
       } finally {
@@ -32,6 +34,12 @@ object DataLoader extends App {
       }
     case Failure(e) => Logger.error(s"cassandra instance error: ${e.getMessage}")
   }
+
+  private def dropKeySpace(keySpace: String, session: Session) =
+    Try(session.execute(s"drop schema $keySpace")) match {
+      case Success(_) => println("key space has been dropped")
+      case Failure(e) => println(s"drop of key space has been failed, error: ${e.getMessage}")
+    }
 
   private def getCluster = Try(
     new CassandraCluster(cassandraConfig, new ApplicationLifecycle {
