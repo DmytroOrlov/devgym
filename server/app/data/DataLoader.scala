@@ -19,26 +19,27 @@ object DataLoader extends App {
 
   lazy val cassandraConfig = app.injector.instanceOf[CassandraConfig]
 
-  getCluster match {
-    case Success(cluster) =>
-      val session = cluster.noKeySpaceSession
-      try {
-        Logger.info("CQL scripts import start...")
-        if (args.isDefinedAt(0)) dropKeySpace(cassandraConfig.keySpace, session)
-        executeScripts(block => session.execute(block))
-        Logger.info("CQL scripts import completed")
-      } finally {
-        session.close()
-        cluster.stop()
-        Play.stop(app)
-      }
-    case Failure(e) => Logger.error(s"cassandra instance error: ${e.getMessage}")
-  }
+  try {
+    getCluster match {
+      case Success(cluster) =>
+        val session = cluster.noKeySpaceSession
+        try {
+          Logger.info("CQL scripts import start...")
+          if (args.isDefinedAt(0)) dropKeySpace(cassandraConfig.keySpace, session)
+          executeScripts(block => session.execute(block))
+          Logger.info("CQL scripts import completed")
+        } finally {
+          session.close()
+          cluster.stop()
+        }
+      case Failure(e) => Logger.error(s"cassandra instance error: ${e.getMessage}")
+    }
+  } finally Play.stop(app)
 
   private def dropKeySpace(keySpace: String, session: Session) =
     Try(session.execute(s"drop schema $keySpace")) match {
-      case Success(_) => println("key space has been dropped")
-      case Failure(e) => println(s"drop of key space has been failed, error: ${e.getMessage}")
+      case Success(_) => Logger.info("key space has been dropped")
+      case Failure(e) => Logger.warn(s"drop of key space has been failed, error: ${e.getMessage}")
     }
 
   private def getCluster = Try(
@@ -48,7 +49,7 @@ object DataLoader extends App {
   )
 
   private def executeScripts(executor: String => Any) = {
-    app.path.listFiles().filter(_.getName == scriptsPath).foreach(_.listFiles().foreach { f =>
+    app.path.listFiles().filter(_.getName == scriptsPath).sorted.foreach(_.listFiles().foreach { f =>
       Logger.info(s"source file: ${f.getAbsolutePath}")
 
       val source = scala.io.Source.fromFile(f.getAbsolutePath)
