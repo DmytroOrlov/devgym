@@ -23,13 +23,11 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
       .build()
 
   Logger.info(s"Cassandra host to be used: ${hosts.mkString(",")}:${conf.port}")
+  appLifecycle.addStopHook(() => stop())
 
   def noKeySpaceSession: Session = cluster.connect()
   def session: Session = cluster.connect(conf.keySpace)
-
   def stop() = toFutureUnit(cluster.closeAsync())
-
-  appLifecycle.addStopHook(() => stop())
 }
 
 @Singleton
@@ -44,14 +42,14 @@ class CassandraConfig @Inject()(configuration: Configuration, environment: Envir
     val hostsConf = "devgym.db.cassandra.hosts"
     val dockerConf = "devgym.db.cassandra.docker"
 
-    def hosts: Seq[String] = {
+    def getHosts: Seq[String] = {
       import scala.collection.JavaConversions._
       config.getStringList(hostsConf)
     }
 
-    val r = new Regex( """(\$\()([^)]*)(\))""", "$(", "command", ")")
-    hosts.map { h =>
-      r.replaceAllIn(h, m => {
+    val r = new Regex("""(\$\()([^)]*)(\))""", "$(", "command", ")")
+    getHosts.map { host =>
+      r.replaceAllIn(host, m => {
         val ip = Try(m.group("command").!!)
         ip match {
           case Success(s) => s.trim
