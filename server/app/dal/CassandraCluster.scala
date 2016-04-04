@@ -22,12 +22,12 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
       .withPort(conf.port)
       .build()
 
-  Logger.info(s"Cassandra host to be used: ${hosts.mkString(",")}:${conf.port}")
-  appLifecycle.addStopHook(() => stop())
-
   def noKeySpaceSession: Session = cluster.connect()
   def session: Session = cluster.connect(conf.keySpace)
   def stop() = toFutureUnit(cluster.closeAsync())
+
+  Logger.info(s"Cassandra host to be used: ${hosts.mkString(",")}:${conf.port}")
+  appLifecycle.addStopHook(() => stop())
 }
 
 @Singleton
