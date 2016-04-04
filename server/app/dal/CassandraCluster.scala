@@ -34,7 +34,6 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
 class CassandraConfig @Inject()(configuration: Configuration, environment: Environment) {
   val config: Config = configuration.underlying
 
-  val defaultHostname = "cassandra"
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
 
@@ -48,13 +47,9 @@ class CassandraConfig @Inject()(configuration: Configuration, environment: Envir
 
     val r = new Regex("""(\$\()([^)]*)(\))""", "$(", "command", ")")
     hosts.map { host =>
-      r.replaceAllIn(host, m => {
-        val ip = Try(m.group("command").!!)
-        ip match {
-          case Success(s) => s.trim
-          case Failure(_) => defaultHostname
-        }
-      })
+      Try(r.replaceAllIn(host, _.group("command").!!.trim))
+    }.collect {
+      case Success(h) => h
     }
   }
 }
