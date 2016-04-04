@@ -25,7 +25,7 @@ object DataLoader extends App {
         val session = cluster.noKeySpaceSession
         try {
           Logger.info("CQL scripts import start...")
-          if (args.isDefinedAt(0)) dropKeySpace(cassandraConfig.keySpace, session)
+          if (dropOptionEnabled(args)) dropKeySpace(cassandraConfig.keySpace, session)
           executeScripts(block => session.execute(block))
           Logger.info("CQL scripts import completed")
         } finally {
@@ -35,6 +35,8 @@ object DataLoader extends App {
       case Failure(e) => Logger.error(s"cassandra instance error: ${e.getMessage}")
     }
   } finally Play.stop(app)
+
+  private def dropOptionEnabled(args: Array[String]) = args.isDefinedAt(0) && args(0) == "drop"
 
   private def dropKeySpace(keySpace: String, session: Session) =
     Try(session.execute(s"drop schema $keySpace")) match {
