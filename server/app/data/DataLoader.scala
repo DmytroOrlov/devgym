@@ -2,13 +2,9 @@ package data
 
 import com.datastax.driver.core.Session
 import dal.{CassandraCluster, CassandraConfig}
-import monifu.concurrent.Implicits.globalScheduler
-import play.api.Play
-import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.Logger
+import play.api.{Logger, Play}
 
-import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 object DataLoader extends App {
@@ -44,11 +40,7 @@ object DataLoader extends App {
       case Failure(e) => Logger.warn(s"drop of key space has been failed, error: ${e.getMessage}")
     }
 
-  private def getCluster = Try(
-    new CassandraCluster(cassandraConfig, new ApplicationLifecycle {
-      override def addStopHook(hook: () => Future[_]): Unit = ()
-    })
-  )
+  private def getCluster = Try(app.injector.instanceOf[CassandraCluster])
 
   private def executeScripts(executor: String => Any) = {
     app.path.listFiles().filter(_.getName == scriptsPath).foreach(_.listFiles().sorted.foreach { f =>
