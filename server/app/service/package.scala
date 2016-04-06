@@ -3,6 +3,7 @@ import scala.util.Try
 
 package object service {
   val failed = "FAILED"
+  val traitDefPattern = """trait\s*([\w\$]*)""".r
 
   implicit class RichRunnerFuture(val future: Future[String]) extends AnyVal {
     def check(implicit ec: ExecutionContext) =
@@ -13,4 +14,5 @@ package object service {
     def check = output.filter(!_.contains(failed))
   }
 
+  def findTraitName(suite: String) = traitDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
 }

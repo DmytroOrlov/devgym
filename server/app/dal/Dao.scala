@@ -31,9 +31,9 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     "INSERT INTO user (name, password, timeuuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
   private lazy val addTaskStatement = session.prepare(
-    "INSERT INTO task (year, type, timeuuid, name, description, solution_template, reference_solution, suite)" +
+    "INSERT INTO task (year, type, timeuuid, name, description, solution_template, reference_solution, suite, solution_trait)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)")
-  private lazy val getLastTasksStatement = session.prepare("SELECT year, type, timeuuid, name, description, solution_template, reference_solution, suite FROM task WHERE" +
+  private lazy val getLastTasksStatement = session.prepare("SELECT year, type, timeuuid, name, description, solution_template, reference_solution, suite, solution_trait FROM task WHERE" +
     " year = ?" +
     " and type = ?" +
     " limit ?")
@@ -50,7 +50,8 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     r.getString("description"),
     r.getString("solution_template"),
     r.getString("reference_solution"),
-    r.getString("suite")
+    r.getString("suite"),
+    r.getString("solution_trait")
   )
 
   private def all[T](f: Row => T)(res: ResultSet): Iterable[T] = {
@@ -66,10 +67,12 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
   private def allTasks = all(toTask) _
   private def oneTask = one(toTask) _
 
-  def create(user: User): Future[Boolean] = TryFuture(toFuture(session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
+  def create(user: User): Future[Boolean] = TryFuture(toFuture(
+    session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
 
   def addTask(task: NewTask): Future[Unit] = TryFuture(toFutureUnit {
-    session.executeAsync(addTaskStatement.bind(yearAsOfJan1(), task.`type`.toString, task.name, task.description, task.solutionTemplate, task.referenceSolution, task.suite))
+    session.executeAsync(addTaskStatement.bind(yearAsOfJan1(), task.`type`.toString, task.name, task.description,
+      task.solutionTemplate, task.referenceSolution, task.suite))
   })
 
   def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]] = TryFuture(

@@ -14,18 +14,20 @@ import service._
 import scala.concurrent.Future
 
 class AddTaskTest extends PlaySpec with MockFactory {
+  val suiteWithTrait = "trait ST"
+  val traitName = "ST"
 
   "AddTask controller" when {
     "post fail with scalaTestRunner when addTask" should {
       "result BadRequest with error" in {
         //given
         val scalaTestRunner = mock[DynamicSuiteExecutor]
-        (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", "5", *, *)
+        (scalaTestRunner.apply(_: String, _: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", suiteWithTrait, *, *, *)
         //when
         withAddTaskController(scalaTestRunner)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
-              "referenceSolution" -> "4", "suite" -> "5"))
+              "referenceSolution" -> "4", "suite" -> suiteWithTrait))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")
@@ -36,14 +38,14 @@ class AddTaskTest extends PlaySpec with MockFactory {
       "result BadRequest with error" in {
         //given
         val scalaTestRunner = mock[DynamicSuiteExecutor]
-        (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", "5", *, *)
+        (scalaTestRunner.apply(_: String, _: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", suiteWithTrait, traitName, *, *)
         val dao = mock[Dao]
-        dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", "5") returns Future.failed(new RuntimeException("test exception"))
+        dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", suiteWithTrait, traitName) returns Future.failed(new RuntimeException("test exception"))
         //when
         withAddTaskController(scalaTestRunner, dao)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
-              "referenceSolution" -> "4", "suite" -> "5"))
+              "referenceSolution" -> "4", "suite" -> suiteWithTrait))
           //then
           status(result) mustBe INTERNAL_SERVER_ERROR
           contentAsString(result) must include( """class="error"></dd>""")
@@ -54,14 +56,14 @@ class AddTaskTest extends PlaySpec with MockFactory {
       "persist and redirect" in {
         //given
         val scalaTestRunner = mock[DynamicSuiteExecutor]
-        (scalaTestRunner.apply(_: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", "5", *, *)
+        (scalaTestRunner.apply(_: String, _: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", suiteWithTrait, traitName, *, *)
         val dao = mock[Dao]
-        dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", "5") returns Future.successful(())
+        dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", suiteWithTrait, traitName) returns Future.successful(())
         //when
         withAddTaskController(scalaTestRunner, dao)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
-              "referenceSolution" -> "4", "suite" -> "5"))
+              "referenceSolution" -> "4", "suite" -> suiteWithTrait))
           //then
           status(result) mustBe SEE_OTHER
           redirectLocation(result) mustBe Some("/addTask")
@@ -82,7 +84,7 @@ class AddTaskTest extends PlaySpec with MockFactory {
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")
-          dao.addTask _ verify NewTask(scalaClass, "0", "1", "2", solution, badSuite) never()
+          dao.addTask _ verify NewTask(scalaClass, "0", "1", "2", solution, badSuite, "solution trait") never()
         })
       }
     }

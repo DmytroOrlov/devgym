@@ -13,6 +13,7 @@ verify = Verify
 logoutDone = Logout done
 cannotAddTask = Can not add your task
 cannotAddTaskOnCheck = Can not add your task, reference solution fails on tests
+addTaskErrorOnSolutionTrait = Can not add your task, because solution trait is not defined in the suite code
 taskAdded = Task has been added.
 cannotCheckNow = Can not check your solution now
 userRegistered = Thank you for your registration

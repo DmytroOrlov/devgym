@@ -6,7 +6,8 @@ INSERT INTO devgym.task (
   description,
   solution_template,
   reference_solution,
-  suite
+  suite,
+  solution_trait
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
   'scalaClass',
@@ -49,5 +50,6 @@ INSERT INTO devgym.task (
 
     trait MinDifferenceInArraySolution {
       def minDifference(a: Array[Int]): Int
-    }'
+    }',
+    'MinDifferenceInArraySolution'
 );

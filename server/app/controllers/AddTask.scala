@@ -34,28 +34,43 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
   }
 
   def postNewTask = Action.async { implicit request =>
+    def addTaskViewWithError(errorKey: String, e: Option[Throwable] = None, message: String = "") = {
+      e match {
+        case Some(ex) => Logger.error(ex.getMessage, ex)
+        case None =>
+      }
+      views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(errorKey)} $message"))
+    }
+
     addTaskForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        val check = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite))).check
-        check.flatMap { _ =>
-          dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite))
-            .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
-            .recover {
-              case NonFatal(e) => Logger.warn(e.getMessage, e)
-                InternalServerError {
-                  views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+        val checkTrait = Future(findTraitName(f.suite))
+        def checkSolution(solutionTrait: String) = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite, solutionTrait))).check
+
+        checkTrait.flatMap { traitName =>
+            checkSolution(traitName).flatMap { _ =>
+              dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
+                .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
+                .recover {
+                  case NonFatal(e) => Logger.warn(e.getMessage, e)
+                    InternalServerError {
+                      views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+                    }
                 }
+            }.recover {
+              case e: SuiteException => BadRequest {
+                addTaskViewWithError(cannotAddTaskOnCheck, Some(e), e.msg)
+              }
+              case NonFatal(e) => BadRequest {
+                addTaskViewWithError(cannotAddTaskOnCheck, Some(e))
+              }
             }
         }.recover {
-          case e: SuiteException => BadRequest {
-            views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(cannotAddTaskOnCheck)} ${e.msg}"))
-          }
           case NonFatal(e) => BadRequest {
-            Logger.error(e.getMessage, e)
-            views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(cannotAddTaskOnCheck)}"))
+            addTaskViewWithError(addTaskErrorOnSolutionTrait, Some(e))
           }
         }
       }
@@ -73,5 +88,6 @@ object AddTask {
   val suite = "suite"
   val cannotAddTask = "cannotAddTask"
   val cannotAddTaskOnCheck = "cannotAddTaskOnCheck"
+  val addTaskErrorOnSolutionTrait = "addTaskErrorOnSolutionTrait"
   val taskAdded = "taskAdded"
 }
