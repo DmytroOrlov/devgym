@@ -1,5 +1,7 @@
 package controllers
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import dal.Dao
 import models.NewTask
 import models.TaskType._
@@ -16,6 +18,8 @@ import scala.concurrent.Future
 class AddTaskTest extends PlaySpec with MockFactory {
   val suiteWithTrait = "trait ST"
   val traitName = "ST"
+  implicit val system = ActorSystem()
+  implicit val mat = ActorMaterializer()
 
   "AddTask controller" when {
     "post fail with scalaTestRunner when addTask" should {
@@ -28,6 +32,24 @@ class AddTaskTest extends PlaySpec with MockFactory {
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
               "referenceSolution" -> "4", "suite" -> suiteWithTrait))
+          //then
+          status(result) mustBe BAD_REQUEST
+          contentAsString(result) must include("id='errorReport'>")
+        })
+      }
+    }
+    "post wrong solution trait when addTask" should {
+      "result BadRequest with error" in {
+        //given
+        val scalaTestRunner = mock[DynamicSuiteExecutor]
+        (scalaTestRunner.apply(_: String, _: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", *, *, *, *) never()
+        val dao = mock[Dao]
+        dao.addTask _ expects * never()
+        //when
+        withAddTaskController(scalaTestRunner)({ controller =>
+          val result = controller.postNewTask(FakeRequest("POST", "ignore")
+            .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
+              "referenceSolution" -> "4", "suite" -> "wrong traitkeyword"))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")

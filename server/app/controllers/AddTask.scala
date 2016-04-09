@@ -13,6 +13,7 @@ import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
 import service._
+import util.TryFuture
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -47,11 +48,11 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        val checkTrait = Future(findTraitName(f.suite))
+        val checkTrait = TryFuture(Future(findTraitName(f.suite)))
         def checkSolution(solutionTrait: String) = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite, solutionTrait))).check
 
         checkTrait.flatMap { traitName =>
-            checkSolution(traitName).flatMap { _ =>
+            checkSolution(traitName).flatMap { r =>
               dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
                 .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
                 .recover {
