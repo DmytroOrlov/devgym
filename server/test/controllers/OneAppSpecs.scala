@@ -8,6 +8,9 @@ class OneAppSpecs extends Suites(
   new ApplicationTest,
   new TaskSolverTest
 ) with OneAppPerSuite {
-  implicit override lazy val app: play.api.Application =
-    new GuiceApplicationBuilder().configure(Map("ehcacheplugin" -> "disabled")).build()
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(Map(
+      "ehcacheplugin" -> "disabled",
+      "devgym.db.cassandra.hosts" -> Seq("cassandra")))
+    .build()
 }

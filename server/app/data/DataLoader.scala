@@ -2,13 +2,9 @@ package data
 
 import com.datastax.driver.core.Session
 import dal.{CassandraCluster, CassandraConfig}
-import monifu.concurrent.Implicits.globalScheduler
-import play.api.Play
-import play.api.inject.ApplicationLifecycle
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.Logger
+import play.api.{Logger, Play}
 
-import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 object DataLoader extends App {
@@ -25,7 +21,7 @@ object DataLoader extends App {
         val session = cluster.noKeySpaceSession
         try {
           Logger.info("CQL scripts import start...")
-          if (args.isDefinedAt(0)) dropKeySpace(cassandraConfig.keySpace, session)
+          if (dropOptionEnabled(args)) dropKeySpace(cassandraConfig.keySpace, session)
           executeScripts(block => session.execute(block))
           Logger.info("CQL scripts import completed")
         } finally {
@@ -36,17 +32,15 @@ object DataLoader extends App {
     }
   } finally Play.stop(app)
 
+  private def dropOptionEnabled(args: Array[String]) = args.isDefinedAt(0) && args(0) == "drop"
+
   private def dropKeySpace(keySpace: String, session: Session) =
     Try(session.execute(s"drop schema $keySpace")) match {
       case Success(_) => Logger.info("key space has been dropped")
       case Failure(e) => Logger.warn(s"drop of key space has been failed, error: ${e.getMessage}")
     }
 
-  private def getCluster = Try(
-    new CassandraCluster(cassandraConfig, new ApplicationLifecycle {
-      override def addStopHook(hook: () => Future[_]): Unit = ()
-    })
-  )
+  private def getCluster = Try(app.injector.instanceOf[CassandraCluster])
 
   private def executeScripts(executor: String => Any) = {
     app.path.listFiles().filter(_.getName == scriptsPath).foreach(_.listFiles().sorted.foreach { f =>
