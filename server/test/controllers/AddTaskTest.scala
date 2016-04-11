@@ -27,7 +27,7 @@ class AddTaskTest extends PlaySpec with MockFactory {
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
               "referenceSolution" -> "4", "suite" -> "5"))
           //then
-          status(result) mustBe OK
+          status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")
         })
       }
