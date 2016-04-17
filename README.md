@@ -12,7 +12,7 @@ Start the CQL interactive terminal (note that you will lose your history):
 docker run -it --link cassandra:cassandra --rm cassandra sh -c 'exec cqlsh "$CASSANDRA_PORT_9042_TCP_ADDR"'
 ```
 
-Apply cassandra migrations:
+Load data to cassandra db:
 ```sh
 sbt "runMain data.DataLoader"
 or to drop schema before loading
