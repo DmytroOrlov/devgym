@@ -45,4 +45,12 @@ object TryFuture {
     case Success(s) => s
     case Failure(f) => Future.failed(f)
   }
+
+  implicit class RichTry[A](val wrapped: Try[A]) extends AnyVal {
+    def toFuture = wrapped match {
+      case Success(value) => Future.successful(value)
+      case Failure(e) => Future.failed(e)
+    }
+  }
+
 }

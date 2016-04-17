@@ -84,7 +84,8 @@ import tag.RequireDB
     }
     "post form with bad solution to addTask" should {
       "result BadRequest with error" in {
-        val Some(result) = route(app, FakeRequest(POST, "/addTask").withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3", "suite" -> "4"))
+        val Some(result) = route(app, FakeRequest(POST, "/addTask").withFormUrlEncodedBody("taskName" -> "0",
+          "taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3", "suite" -> "trait ST"))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")
@@ -101,7 +102,8 @@ import tag.RequireDB
         val year = LocalDate.of(2016, 1, 1)
         val instant = year.atStartOfDay().atZone(ZoneOffset.UTC).toInstant
 
-        val Some(result) = route(app, FakeRequest(GET, s"/task/scalaClass/${Date.from(instant).getTime}/9894cd10-ce12-11e5-8ee9-091830ac5256"))
+        val Some(result) = route(app,
+          FakeRequest(GET, s"/task/scalaClass/${Date.from(instant).getTime}/9894cd10-ce12-11e5-8ee9-091830ac5256"))
 
         status(result) mustBe OK
         contentAsString(result) must (

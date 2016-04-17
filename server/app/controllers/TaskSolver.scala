@@ -60,7 +60,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
           val taskType = (fromClient \ "taskType").as[String]
           val timeuuid = (fromClient \ "timeuuid").as[String]
           getCachedTask(year, taskType, UUID.fromString(timeuuid)).map { t =>
-            ObservableRunner(executor(solution, t.get.suite)).map(Line(_))
+            ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait)).map(Line(_))
           }
         },
         Some(Line("Compiling..."))

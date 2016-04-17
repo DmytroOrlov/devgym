@@ -33,7 +33,7 @@ import scala.reflect.ClassTag
         val template = "some template"
         val year = new Date()
         val timeuuid = new UUID(1, 1)
-        val replyTask = Task(year, scalaClass, timeuuid, "array", description, template, "ref", "test suite")
+        val replyTask = Task(year, scalaClass, timeuuid, "array", description, template, "ref", "test suite", "solution trait")
         val cache = mock[CacheApi]
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
         //when
@@ -83,7 +83,7 @@ import scala.reflect.ClassTag
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
         val year = new Date()
         val timeuuid = new UUID(1, 1)
-        val task = Task(year, scalaClass, timeuuid, "name", "descr", "template", "reference", "suite")
+        val task = Task(year, scalaClass, timeuuid, "name", "descr", "template", "reference", "suite", "solution trait")
 
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
@@ -111,7 +111,7 @@ import scala.reflect.ClassTag
         val timeuuid = new UUID(1, 1)
         val cache = mock[CacheApi]
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
-        val task = Task(year, scalaClass, timeuuid, "name", "descr", "template", "reference", "suite")
+        val task = Task(year, scalaClass, timeuuid, "name", "descr", "template", "reference", "suite", "solution trait")
 
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None

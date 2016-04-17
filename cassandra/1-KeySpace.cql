@@ -17,5 +17,6 @@ CREATE TABLE devgym.task (
   solution_template TEXT,
   reference_solution TEXT,
   suite TEXT,
+  solution_trait TEXT,
   PRIMARY KEY ((year, type), timeuuid)
 ) WITH CLUSTERING ORDER BY (timeuuid DESC);

@@ -36,7 +36,6 @@ trait SuiteToolbox {
   val failed = "FAILED"
   val userClass = "UserSolution"
   val classDefPattern = """class\s*([\w\$]*)""".r
-  val traitDefPattern = """trait\s*([\w\$]*)""".r
   val defaultImports = "import org.scalatest._"
   val tb = {
     import scala.reflect.runtime._

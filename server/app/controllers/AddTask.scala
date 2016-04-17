@@ -13,8 +13,10 @@ import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
 import service._
+import util.TryFuture._
 
 import scala.concurrent.Future
+import scala.util.Try
 import scala.util.control.NonFatal
 
 class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
@@ -34,28 +36,40 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
   }
 
   def postNewTask = Action.async { implicit request =>
+    def addTaskViewWithError(errorKey: String, e: Throwable, message: String = "") = {
+      Logger.error(e.getMessage, e)
+      views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(errorKey)} $message"))
+    }
+
     addTaskForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        val check = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite))).check
-        check.flatMap { _ =>
-          dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite))
-            .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
-            .recover {
-              case NonFatal(e) => Logger.warn(e.getMessage, e)
-                InternalServerError {
-                  views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
-                }
+        val checkTrait = Try(findTraitName(f.suite)).toFuture
+        def checkSolution(solutionTrait: String) = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite, solutionTrait))).check
+
+        checkTrait.flatMap { traitName =>
+          checkSolution(traitName).flatMap { r =>
+            dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
+              .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
+              .recover {
+                case NonFatal(e) => Logger.warn(e.getMessage, e)
+                  InternalServerError {
+                    views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+                  }
+              }
+          }.recover {
+            case e: SuiteException => BadRequest {
+              addTaskViewWithError(cannotAddTaskOnCheck, e, e.msg)
             }
-        }.recover {
-          case e: SuiteException => BadRequest {
-            views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(cannotAddTaskOnCheck)} ${e.msg}"))
+            case NonFatal(e) => BadRequest {
+              addTaskViewWithError(cannotAddTaskOnCheck, e)
+            }
           }
+        }.recover {
           case NonFatal(e) => BadRequest {
-            Logger.error(e.getMessage, e)
-            views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(cannotAddTaskOnCheck)}"))
+            addTaskViewWithError(addTaskErrorOnSolutionTrait, e)
           }
         }
       }
@@ -73,5 +87,6 @@ object AddTask {
   val suite = "suite"
   val cannotAddTask = "cannotAddTask"
   val cannotAddTaskOnCheck = "cannotAddTaskOnCheck"
+  val addTaskErrorOnSolutionTrait = "addTaskErrorOnSolutionTrait"
   val taskAdded = "taskAdded"
 }
