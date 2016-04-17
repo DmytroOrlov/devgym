@@ -35,11 +35,8 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
   }
 
   def postNewTask = Action.async { implicit request =>
-    def addTaskViewWithError(errorKey: String, e: Option[Throwable] = None, message: String = "") = {
-      e match {
-        case Some(ex) => Logger.error(ex.getMessage, ex)
-        case None =>
-      }
+    def addTaskViewWithError(errorKey: String, e: Throwable, message: String = "") = {
+      Logger.error(e.getMessage, e)
       views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(errorKey)} $message"))
     }
 
@@ -52,26 +49,26 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
         def checkSolution(solutionTrait: String) = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite, solutionTrait))).check
 
         checkTrait.flatMap { traitName =>
-            checkSolution(traitName).flatMap { r =>
-              dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
-                .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
-                .recover {
-                  case NonFatal(e) => Logger.warn(e.getMessage, e)
-                    InternalServerError {
-                      views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
-                    }
-                }
-            }.recover {
-              case e: SuiteException => BadRequest {
-                addTaskViewWithError(cannotAddTaskOnCheck, Some(e), e.msg)
+          checkSolution(traitName).flatMap { r =>
+            dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
+              .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
+              .recover {
+                case NonFatal(e) => Logger.warn(e.getMessage, e)
+                  InternalServerError {
+                    views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+                  }
               }
-              case NonFatal(e) => BadRequest {
-                addTaskViewWithError(cannotAddTaskOnCheck, Some(e))
-              }
+          }.recover {
+            case e: SuiteException => BadRequest {
+              addTaskViewWithError(cannotAddTaskOnCheck, e, e.msg)
             }
+            case NonFatal(e) => BadRequest {
+              addTaskViewWithError(cannotAddTaskOnCheck, e)
+            }
+          }
         }.recover {
           case NonFatal(e) => BadRequest {
-            addTaskViewWithError(addTaskErrorOnSolutionTrait, Some(e))
+            addTaskViewWithError(addTaskErrorOnSolutionTrait, e)
           }
         }
       }
