@@ -18,7 +18,7 @@ lazy val clients = Seq(client)
 
 lazy val UnitTest = config("unit") extend Test
 
-val monifuVer = "1.1"
+val monifuVer = "1.2"
 
 lazy val server = (project in file("server"))
   .configs(UnitTest)
