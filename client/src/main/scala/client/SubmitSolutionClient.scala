@@ -21,16 +21,20 @@ object SubmitSolutionClient extends JSApp {
   def main(): Unit = initSubmitter("submit", "solution", to = "report")
 
   def initSubmitter(buttonId: String, solutionId: String, to: String) = {
+    val submitButton = jQuery(s"#$buttonId")
+    submitButton.click(submit _)
+
+    def enableButton(): Unit = submitButton.prop("disabled", false); ()
+
     def submit() = {
       loadingIcon.show()
+      submitButton.prop("disabled", true)
       val lines = new DataConsumer(solutionId).collect { case e: Line => e }
-      lines.subscribe(new Report(to))
+      lines.subscribe(new Report(to, enableButton))
     }
-
-    jQuery(s"#$buttonId").click(submit _)
   }
 
-  final class Report(reportId: String) extends Observer[Line] {
+  final class Report(reportId: String, onCompleteCall: => () => Unit) extends Observer[Line] {
     val report = {
       val r = jQuery(s"#$reportId")
       r.empty()
@@ -43,7 +47,10 @@ object SubmitSolutionClient extends JSApp {
       Continue
     }
 
-    def onComplete() = loadingIcon.hide()
+    def onComplete() = {
+      loadingIcon.hide()
+      onCompleteCall()
+    }
 
     def onError(ex: Throwable) = {
       val m = s"${this.getClass.getName} $ex"
