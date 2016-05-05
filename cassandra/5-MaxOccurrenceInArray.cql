@@ -54,7 +54,7 @@ INSERT INTO devgym.task (
       }
 
       it should "return max occurrence in array of equal count of max occurrence" in {
-        solution.maxOccurrence(3, Array(1, 2, 2, 3, 3)) ensuring (m => m == 2 || m == 3) //improve
+        solution.maxOccurrence(3, Array(1, 2, 2, 3, 3)) should (be(2) or be(3))
       }
     }
 

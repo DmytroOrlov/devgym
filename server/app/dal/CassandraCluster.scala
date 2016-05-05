@@ -26,7 +26,7 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
   def session: Session = cluster.connect(conf.keySpace)
   def stop() = toFutureUnit(cluster.closeAsync())
 
-  Logger.info(s"Cassandra host to be used: ${hosts.mkString(",")}:${conf.port}")
+  Logger.info(s"Cassandra host to be used : '${hosts.mkString(",")}' with port:${conf.port}")
   appLifecycle.addStopHook(() => stop())
 }
 
