@@ -16,10 +16,10 @@ INSERT INTO devgym.task (
   'Find number of unique elements in array of integers. For example, array of (4, 2, 2, 32, 3, 32, 2) should result
   the 4 as number of unique elements in the array.',
   'class UniqueNumbersInArray {
-     def uniqueNumbers(a: Array[Int]): Int = {
+    def uniqueNumbers(a: Array[Int]): Int = {
 
-     }
-   }',
+    }
+}',
    'class UniqueNumbersInArray {
       override def uniqueNumbers(a: Array[Int]): Int = {
         val b = Array.fill(a.length)(true)
