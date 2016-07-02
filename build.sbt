@@ -28,6 +28,7 @@ lazy val server = (project in file("server"))
   .dependsOn(sharedJvm)
   .settings(commonSettings ++ testSettings)
   .settings(
+    includeFilter in (Assets, LessKeys.less) := "*.less",
     name := "devgym",
     version := "1.0-SNAPSHOT",
     testOptions in UnitTest += Tests.Argument("-l",  "RequireDB"),
