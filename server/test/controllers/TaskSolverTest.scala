@@ -17,7 +17,7 @@ import play.api.test.Helpers._
 import service.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
 
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
 
 @DoNotDiscover class TaskSolverTest extends PlaySpec with MockFactory with ConfiguredApp {
@@ -39,6 +39,7 @@ import scala.reflect.ClassTag
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         dao.getTask _ expects(year, scalaClass, timeuuid) returns Future.successful(Some(replyTask))
+        (cache.set(_: String, _:Any, _:Duration)) expects(*, *, *)
         val result = taskSolver.getTask(year.getTime, scalaClass.toString, timeuuid)(FakeRequest(GET, "ignore"))
         //then
         status(result) mustBe OK

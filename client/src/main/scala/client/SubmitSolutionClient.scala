@@ -2,6 +2,7 @@ package client
 
 import java.util.Date
 
+import common.CodeEditor
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.reactive.Ack.Continue
 import monifu.reactive.OverflowStrategy.DropOld
@@ -17,10 +18,11 @@ import scala.scalajs.js.{JSApp, JSON}
 
 object SubmitSolutionClient extends JSApp {
   val loadingIcon = jQuery("#icon")
+  var editor = new CodeEditor("solution")
 
-  def main(): Unit = initSubmitter("submit", "solution", to = "report")
+  def main(): Unit = initSubmitter("submit", to = "report")
 
-  def initSubmitter(buttonId: String, solutionId: String, to: String) = {
+  def initSubmitter(buttonId: String, to: String) = {
     val submitButton = jQuery(s"#$buttonId")
     submitButton.click(submit _)
 
@@ -29,7 +31,7 @@ object SubmitSolutionClient extends JSApp {
     def submit() = {
       loadingIcon.show()
       disableButton(true)
-      val lines = new DataConsumer(solutionId).collect { case e: Line => e }
+      val lines = new DataConsumer().collect { case e: Line => e }
       lines.subscribe(new Report(to, () => disableButton(false)))
     }
   }
@@ -60,7 +62,7 @@ object SubmitSolutionClient extends JSApp {
     }
   }
 
-  final class DataConsumer(solutionId: String) extends Observable[Event] {
+  final class DataConsumer extends Observable[Event] {
     def onSubscribe(subscriber: Subscriber[Event]) = {
       val host = dom.window.location.host
       val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
@@ -69,7 +71,7 @@ object SubmitSolutionClient extends JSApp {
         url = s"$protocol//$host/task-stream",
         DropOld(20),
         sendOnOpen = Some(obj(
-          "solution" -> jQuery(s"#$solutionId").`val`().asInstanceOf[String],
+          "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
           "taskType" -> jQuery("#taskType").`val`().asInstanceOf[String],
           "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String]
@@ -94,7 +96,7 @@ object SubmitSolutionClient extends JSApp {
           val errorType = json.`type`.asInstanceOf[String]
           val message = json.message.asInstanceOf[String]
           val timestamp = json.timestamp.asInstanceOf[Number].longValue()
-          throw new SimpleWebSocketClient.Exception(s"Server-side error throw (${new Date(timestamp)}) - $errorType: $message")
+          throw new SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(timestamp)}) - $errorType: $message")
         case _ => None
       }
     }

@@ -28,6 +28,7 @@ lazy val server = (project in file("server"))
   .dependsOn(sharedJvm)
   .settings(commonSettings ++ testSettings)
   .settings(
+    includeFilter in (Assets, LessKeys.less) := "*.less",
     name := "devgym",
     version := "1.0-SNAPSHOT",
     testOptions in UnitTest += Tests.Argument("-l",  "RequireDB"),
@@ -60,7 +61,7 @@ lazy val client = (project in file("client"))
   .dependsOn(sharedJs)
   .settings(commonSettings: _*)
   .settings(
-    persistLauncher := true,
+    persistLauncher := false,
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.0",

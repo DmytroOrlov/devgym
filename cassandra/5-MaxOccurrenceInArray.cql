@@ -17,10 +17,10 @@ INSERT INTO devgym.task (
   other elements in the input array. For example, array of (1, 2, 2, 4, 4, 4, 1) should result the element 4, as it has 3
   occurrences in total. In case of equal number of occurrences return any of the elements.',
   'class MaxOccurrenceInArray {
-     def maxOccurrence(uniqueNum: Int, a: Array[Int]): Int = {
+  def maxOccurrence(uniqueNum: Int, a: Array[Int]): Int = {
 
-     }
-   }',
+  }
+}',
    'class MaxOccurrenceInArray {
       def maxOccurrence(uniqueNum: Int, a: Array[Int]): Int = {
         val count = new Array[Int](uniqueNum + 1)
