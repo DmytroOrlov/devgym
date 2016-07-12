@@ -94,7 +94,7 @@ object SubmitSolutionClient extends JSApp {
           val errorType = json.`type`.asInstanceOf[String]
           val message = json.message.asInstanceOf[String]
           val timestamp = json.timestamp.asInstanceOf[Number].longValue()
-          throw new SimpleWebSocketClient.Exception(s"Server-side error throw (${new Date(timestamp)}) - $errorType: $message")
+          throw new SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(timestamp)}) - $errorType: $message")
         case _ => None
       }
     }
