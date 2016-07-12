@@ -1,11 +1,6 @@
-// Comment to get more information during initialization
-logLevel := Level.Warn
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.4")
 
-resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
-
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.5.0")
-
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.7")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.10")
 
 addSbtPlugin("com.vmunier" % "sbt-play-scalajs" % "0.3.0")
 

@@ -32,7 +32,7 @@ object DataLoader extends App {
     }
   } finally Play.stop(app)
 
-  private def dropOptionEnabled(args: Array[String]) = args.isDefinedAt(0) && args(0) == "drop"
+  private def dropOptionEnabled(args: Array[String]) = args.headOption.contains("drop")
 
   private def dropKeySpace(keySpace: String, session: Session) =
     Try(session.execute(s"drop schema $keySpace")) match {

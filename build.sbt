@@ -8,8 +8,7 @@ lazy val commonSettings = Seq(scalaVersion := scalaV)
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % scalatestV % "test",
-    "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
-    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % "test",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
   )
 )
@@ -18,7 +17,7 @@ lazy val clients = Seq(client)
 
 lazy val UnitTest = config("unit") extend Test
 
-val monifuVer = "1.1"
+val monifuVer = "1.2"
 
 lazy val server = (project in file("server"))
   .configs(UnitTest)
@@ -42,12 +41,12 @@ lazy val server = (project in file("server"))
     libraryDependencies ++= Seq(
       cache,
 
-      "org.webjars" % "jquery" % "2.2.2",
+      "org.webjars" % "jquery" % "2.2.4",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
-      "com.vmunier" %% "play-scalajs-scripts" % "0.4.0",
+      "com.vmunier" %% "play-scalajs-scripts" % "0.5.0",
       "org.monifu" %% "monifu" % monifuVer,
 
-      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0"
+      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2"
         exclude("org.xerial.snappy", "snappy-java")
         exclude("com.google.guava", "guava"),
 
@@ -64,7 +63,7 @@ lazy val client = (project in file("client"))
     persistLauncher := false,
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "0.9.0",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.1",
       "be.doeraene" %%% "scalajs-jquery" % "0.9.0",
       "org.monifu" %%% "monifu" % monifuVer
     )

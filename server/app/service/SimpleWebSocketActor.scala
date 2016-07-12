@@ -1,7 +1,6 @@
 package service
 
-import akka.actor.Status.Success
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor._
 import monifu.concurrent.Scheduler
 import monifu.concurrent.cancelables.CompositeCancelable
 import monifu.reactive.Ack.Continue
@@ -47,8 +46,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
 
   override def postStop(): Unit = {
     subscription.cancel()
-    out ! Success
-    super.postStop()
+    out ! PoisonPill
   }
 
   def serverError(e: Throwable) = {
