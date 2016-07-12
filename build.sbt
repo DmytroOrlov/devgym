@@ -46,7 +46,7 @@ lazy val server = (project in file("server"))
       "com.vmunier" %% "play-scalajs-scripts" % "0.5.0",
       "org.monifu" %% "monifu" % monifuVer,
 
-      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.0"
+      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2"
         exclude("org.xerial.snappy", "snappy-java")
         exclude("com.google.guava", "guava"),
 
