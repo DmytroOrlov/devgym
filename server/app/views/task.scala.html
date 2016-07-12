@@ -2,8 +2,9 @@
 @import helper._
 @import views.html.templates.{codeEditor, main}
 
-@(taskDescription: String, solutionForm: Form[SolutionForm])(implicit msg: Messages, session: Session)
+@(taskName: String, taskDescription: String, solutionForm: Form[SolutionForm])(implicit msg: Messages, session: Session)
 @main(msg("task")) {
+    <h4>@taskName</h4>
     <div class="description">@taskDescription</div>
     <div class="solution">
     @form(routes.Application.index()) {
@@ -11,7 +12,7 @@
         <input type="hidden" id="@year" value='@solutionForm(year).value' >
         <input type="hidden" id="@taskType" value='@solutionForm(taskType).value' >
         <input type="hidden" id="@timeuuid" value='@solutionForm(timeuuid).value' >
-        <input type="button" value="@msg("submit")" id="submit"/>
+        <input type="button" value="@msg("submit")" id="submit" class="btn btn-primary"/>
     }
     </div>
     <div id="report"></div>

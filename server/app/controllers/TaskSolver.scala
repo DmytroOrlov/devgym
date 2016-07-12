@@ -47,7 +47,8 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
 
     val task = TryFuture(getCachedTask(year, taskType, timeuuid))
     task.map {
-      case Some(t) => Ok(views.html.task(t.description, solutionForm.fill(SolutionForm(t.solutionTemplate, year, taskType, timeuuid.toString))))
+      case Some(t) => Ok(views.html.task(t.name, t.description,
+        solutionForm.fill(SolutionForm(t.solutionTemplate, year, taskType, timeuuid.toString))))
       case None => notFound
     }.recover { case NonFatal(e) => notFound }
   }
