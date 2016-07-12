@@ -11,6 +11,6 @@ class OneAppSpecs extends Suites(
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(Map(
       "ehcacheplugin" -> "disabled",
-      "devgym.db.cassandra.hosts" -> Seq("cassandra")))
+      "devgym.db.cassandra.hosts" -> Seq("$(docker-machine ip default)")))
     .build()
 }
