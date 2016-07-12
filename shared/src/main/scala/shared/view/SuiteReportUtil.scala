@@ -7,7 +7,7 @@ object SuiteReportUtil {
   val red = "\u001B[31m"
 
   val reflectionWrapperPattern = """__wrapper([\w:\n\$]*)"""
-  val compilationFailed = "reflective compilation has failed:"
+  val compilationFailed = "reflective compilation has been failed:"
 
   def enhanceReport(report: Option[String]): String = report match {
     case Some(r) =>

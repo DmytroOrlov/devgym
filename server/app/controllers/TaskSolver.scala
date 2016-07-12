@@ -117,7 +117,7 @@ object TaskSolver {
   val taskType = "taskType"
   val timeuuid = "timeuuid"
 
-  val expiration = 15.seconds
+  val expiration = 60 seconds
 
   // TODO rethink or remove
   def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>

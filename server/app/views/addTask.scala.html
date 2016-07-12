@@ -8,7 +8,9 @@
 @mainFlashToUser(msg("addTask")) {
     @form(routes.AddTask.postNewTask()) {
         @Html(SuiteReportUtil.enhanceReport(testReport))
-        @inputText(task(taskName), 'size -> "20", 'placeholder -> "Some Name...")
+        @inputText(task(taskName), 'size -> "50", 'placeholder -> "Some Name...")
+
+        <!-- -Task Description -->
         <div class="form-row">
             <div class="form-cell">
                 @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90", 'maxlength -> 1500,
@@ -29,7 +31,5 @@
 
     <script type="text/javascript" src="@routes.Assets.versioned("client-fastopt.js")"></script>
     @codeEditor()
-    <script type="text/javascript" charset="utf-8">
-            controller.AddTaskController().main();
-    </script>
+    <script type="text/javascript" charset="utf-8">controller.AddTaskController().main();</script>
 }
