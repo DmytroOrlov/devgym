@@ -16,9 +16,9 @@ INSERT INTO devgym.task (
   'Find minimum difference in the given array. Numbers can be also negative. Minimum length of array is 2.
   For example, having such input Array(1, 4, 10, 22, 43, -12), then result should be 3.',
   'class MinDifferenceInArray {
-    def minDifference(a: Array[Int]): Int = {
-
-    }
+  def minDifference(a: Array[Int]): Int = {
+    
+  }
 }',
    'class MinDifferenceInArray {
       def minDifference(a: Array[Int]): Int = {
