@@ -2,6 +2,7 @@ package client
 
 import java.util.Date
 
+import common.CodeEditor
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.reactive.Ack.Continue
 import monifu.reactive.OverflowStrategy.DropOld
@@ -12,13 +13,12 @@ import shared.view.SuiteReportUtil._
 import shared.{Event, Line}
 
 import scala.concurrent.Future
-import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => obj}
-import scala.scalajs.js.annotation.JSName
 import scala.scalajs.js.{JSApp, JSON}
 
 object SubmitSolutionClient extends JSApp {
   val loadingIcon = jQuery("#icon")
+  var editor = new CodeEditor("solution")
 
   def main(): Unit = initSubmitter("submit", to = "report")
 
@@ -62,12 +62,6 @@ object SubmitSolutionClient extends JSApp {
     }
   }
 
-  @js.native
-  @JSName("editor")
-  object CodeEditor extends js.Object {
-    def getValue(): String = js.native
-  }
-
   final class DataConsumer extends Observable[Event] {
     def onSubscribe(subscriber: Subscriber[Event]) = {
       val host = dom.window.location.host
@@ -77,7 +71,7 @@ object SubmitSolutionClient extends JSApp {
         url = s"$protocol//$host/task-stream",
         DropOld(20),
         sendOnOpen = Some(obj(
-          "solution" -> CodeEditor.getValue(),
+          "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
           "taskType" -> jQuery("#taskType").`val`().asInstanceOf[String],
           "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String]

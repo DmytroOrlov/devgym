@@ -1,7 +1,7 @@
 @import AddTask._
-@import shared.view.SuiteReportUtil
 @import helper._
-@import views.html.templates.mainFlashToUser
+@import shared.view.SuiteReportUtil
+@import views.html.templates.{codeEditor, mainFlashToUser}
 
 @(task: Form[AddTaskForm], testReport: Option[String] = None)(implicit flash: Flash, msg: Messages, session: Session)
 
@@ -13,6 +13,15 @@
         @textarea(task(solutionTemplate), 'rows -> "13", 'cols -> "90")
         @textarea(task(referenceSolution), 'rows -> "23", 'cols -> "90")
         @textarea(task(suite), 'rows -> "23", 'cols -> "90")
-        <input type="submit" value="@msg("addTask")"/>
+        <input type="submit" value="@msg("addTask")" id="submit"/>
+        <input type="hidden" id="@solutionTemplate" name="@solutionTemplate"/>
+        <input type="hidden" id="@referenceSolution" name="@referenceSolution"/>
+        <input type="hidden" id="@suite" name="@suite"/>
     }
+
+    <script type="text/javascript" src="@routes.Assets.versioned("client-fastopt.js")"></script>
+    @codeEditor()
+    <script type="text/javascript" charset="utf-8">
+            controller.AddTaskController().main();
+    </script>
 }

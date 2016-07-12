@@ -1,30 +1,27 @@
 @import controllers.TaskSolver._
 @import helper._
-@import views.html.templates.main
+@import views.html.templates.{codeEditor, main}
 
 @(taskDescription: String, solutionForm: Form[SolutionForm])(implicit msg: Messages, session: Session)
-    @main(msg("task")) {
-        <div class="description">@taskDescription</div>
-        <div class="solution">
-        @form(routes.Application.index()) {
-            @textarea(solutionForm(solution), 'rows -> "25", 'cols -> "80")
-            <input type="hidden" id="@year" value='@solutionForm(year).value' >
-            <input type="hidden" id="@taskType" value='@solutionForm(taskType).value' >
-            <input type="hidden" id="@timeuuid" value='@solutionForm(timeuuid).value' >
-            <input type="button" value="@msg("submit")" id="submit"/>
-        }
-        </div>
-        <div id="report"></div>
-        <div id="icon">
-            <img id="loader" width="25px" src="@routes.Assets.versioned("images/ajax-loader-big.gif")" alt="Wait"/>
-        </div>
-        @playscalajs.html.scripts("client")
-
-        <script src="@routes.Assets.versioned("javascripts/ace-build-1.2.3/src-min-noconflict/ace.js")"
-        type="text/javascript" charset="utf-8"></script>
-        <script>
-                editor = ace.edit("solution");
-                editor.setTheme("ace/theme/tomorrow");
-                editor.getSession().setMode("ace/mode/scala");
-        </script>
+@main(msg("task")) {
+    <div class="description">@taskDescription</div>
+    <div class="solution">
+    @form(routes.Application.index()) {
+        @textarea(solutionForm(solution), 'rows -> "25", 'cols -> "80")
+        <input type="hidden" id="@year" value='@solutionForm(year).value' >
+        <input type="hidden" id="@taskType" value='@solutionForm(taskType).value' >
+        <input type="hidden" id="@timeuuid" value='@solutionForm(timeuuid).value' >
+        <input type="button" value="@msg("submit")" id="submit"/>
     }
+    </div>
+    <div id="report"></div>
+    <div id="icon">
+        <img id="loader" width="25px" src="@routes.Assets.versioned("images/ajax-loader-big.gif")" alt="Wait"/>
+    </div>
+
+    <script type="text/javascript" src="@routes.Assets.versioned("client-fastopt.js")"></script>
+    @codeEditor()
+    <script type="text/javascript" charset="utf-8">
+            client.SubmitSolutionClient().main();
+    </script>
+}
