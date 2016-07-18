@@ -10,14 +10,14 @@ class TTRotateArray extends PositiveOutput {
 }
 
 class RotateArray extends RotateArraySolution {
-  override def rotate(a: Array[Int], order: Int) = {
-    // do not rotate redundantly if order is > a.length
-    val curOrder = if (order > a.length) order % a.length else order
+  override def rotate(a: Array[Int], steps: Int) = {
+    // do not rotate redundantly if steps is > a.length
+    val curSteps = if (steps > a.length) steps % a.length else steps
 
-    for (i <- 0 until curOrder) {
+    for (i <- 0 until curSteps) {
       val t = a(i)
-      a(i) = a(a.length - curOrder + i)
-      a(a.length - curOrder + i) = t
+      a(i) = a(a.length - curSteps + i)
+      a(a.length - curSteps + i) = t
     }
   }
 }

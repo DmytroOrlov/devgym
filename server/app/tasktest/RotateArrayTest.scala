@@ -10,19 +10,19 @@ class RotateArrayTest(solution: RotateArraySolution) extends FlatSpec with Match
     inA should be(Array(2, 5, 7, 1, 40, 3, 4, 5, 7, 4))
   }
 
-  it should "return array as is if oder is 0" in {
+  it should "return array as is if steps is 0" in {
     val initialA = inA.clone()
     solution.rotate(inA, 0)
     inA should be(initialA)
   }
 
-  it should "return original array if order is equal to array length" in {
+  it should "return original array if steps is equal to array length" in {
     val initialA = inA.clone()
     solution.rotate(inA, inA.length)
     inA should be(initialA)
   }
 
-  it should "rotate array even if order is greater than array length" in {
+  it should "rotate array even if steps is greater than array length" in {
     val a = Array(1, 2)
     solution.rotate(a, 3)
     a should be(Array(2, 1))
@@ -30,5 +30,5 @@ class RotateArrayTest(solution: RotateArraySolution) extends FlatSpec with Match
 }
 
 trait RotateArraySolution {
-  def rotate(a: Array[Int], order: Int)
+  def rotate(a: Array[Int], steps: Int)
 }
