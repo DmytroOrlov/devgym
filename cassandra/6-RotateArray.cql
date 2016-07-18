@@ -16,7 +16,7 @@ INSERT INTO devgym.task (
   'Given array of integers rotate its content by k steps forward. For example: a = {1, 2, 3, 4, 5} to be rotated by 4 steps
   will result to a = {2, 3, 4, 5, 1}. If k = 5, then result would be: a = {1, 2, 3, 4, 5}, i.e. array rotated by its length,
   so that the elements took their previous places again. Note that algorithm should support k > a.length',
-  'class RotateArray extends RotateArraySolution {
+  'class RotateArray {
   def rotate(a: Array[Int], steps: Int) = {
 
   }
@@ -58,6 +58,9 @@ INSERT INTO devgym.task (
         solution.rotate(a, 3)
         a should be(Array(2, 1))
       }
+    }
+    trait RotateArraySolution {
+      def rotate(a: Array[Int], steps: Int)
     }',
     'RotateArraySolution'
 );
