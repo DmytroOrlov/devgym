@@ -43,8 +43,18 @@ object SubmitSolutionClient extends JSApp {
       r
     }
 
+    var compileOutStarted = false
+
     override def onNext(elem: Line): Future[Ack] = {
       val line = removeToolboxText(replaceMarkers(elem.value))
+
+      if (line.contains("Compiling"))
+        compileOutStarted = true
+      else if (compileOutStarted) {
+        compileOutStarted = false
+        report.empty()
+      }
+
       report.append( s"""<div>$line</div>""")
       Continue
     }
@@ -96,7 +106,7 @@ object SubmitSolutionClient extends JSApp {
           val errorType = json.`type`.asInstanceOf[String]
           val message = json.message.asInstanceOf[String]
           val timestamp = json.timestamp.asInstanceOf[Number].longValue()
-          throw new SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(timestamp)}) - $errorType: $message")
+          throw SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(timestamp)}) - $errorType: $message")
         case _ => None
       }
     }

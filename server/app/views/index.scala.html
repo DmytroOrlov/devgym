@@ -2,7 +2,7 @@
 
 @(tasks: Iterable[Task])(implicit flash: Flash, session: Session, msg: Messages)
     @mainFlashToUser(msg("home")) {
-        <h3>Latest Challenges</h3>
+        <h3>Latest Exercises</h3>
 
         <div class="row">
         @for(task <- tasks) {
