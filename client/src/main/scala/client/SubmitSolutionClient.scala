@@ -52,10 +52,10 @@ object SubmitSolutionClient extends JSApp {
         compileOutStarted = true
       else if (compileOutStarted) {
         compileOutStarted = false
-        report.empty()
+        report.html("<div class='result-output'>Result:</div>")
       }
 
-      report.append( s"""<div>$line</div>""")
+      report.append(s"""<div>$line</div>""")
       Continue
     }
 
