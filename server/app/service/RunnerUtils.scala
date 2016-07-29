@@ -19,6 +19,7 @@ trait SuiteExecution {
       override def write(b: Int): Unit = channel(b.toChar.toString)
     }
     try {
+      //scalatest entry point - execute()
       Console.withOut(s)(suiteInstance.execute())
     } finally s.close()
   }
@@ -28,7 +29,7 @@ object WithSuiteException {
   def apply[B](msg: String)(block: => B): B =
     try block catch {
       case e: SuiteException => throw e
-      case NonFatal(e) => throw new SuiteException(msg, Some(e))
+      case NonFatal(e) => throw SuiteException(msg, Some(e))
     }
 }
 
