@@ -17,7 +17,7 @@ INSERT INTO devgym.task (
    For example, having such input Array(-2, 1, -3, 4, -1, 2, 1, -5, 4), then result should be Array(4, -1, 2, 1), which has maximum sum = 6. You can not rearrange elements of the initial array.',
    'class SubArrayWithMaxSum {
   def apply(a: Array[Int]): Array[Int] = {
-    
+
   }
 }',
    'class SubArrayWithMaxSum {
