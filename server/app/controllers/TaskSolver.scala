@@ -22,6 +22,7 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import shared.Line
+import shared.view.SuiteReportUtil.compilingStatus
 import util.TryFuture
 
 import scala.concurrent.Future
@@ -64,7 +65,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
             ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait)).map(Line(_))
           }
         },
-        Some(Line("Compiling..."))
+        Some(Line(compilingStatus))
       )
     }
   }
@@ -90,12 +91,20 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }
   }
 
+  /**
+    * it is an example of executing the pre-loaded classes for test and solution trait. We only parse solution text
+    * Such approach is faster of course than approach in controllers.TaskSolver#taskStream().
+    *
+    * This approach can be used for predefined tests of DevGym platform to get better performance for demo tests
+    * Currently, we are not using this method and it should be removed from here to some snippet storage
+    * @return WebSocket
+    */
   def runtimeTaskStream = WebSocket.accept { req =>
     ActorFlow.actorRef[JsValue, JsValue] { out =>
       SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
         try {
-          val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
-          val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
+          val suiteClass = "tasktest.SubArrayWithMaxSumTest"
+          val solutionTrait = "tasktest.SubArrayWithMaxSumSolution"
           val solution = (fromClient \ "solution").as[String]
           Future.successful(ObservableRunner(executor(
             Class.forName(suiteClass).asInstanceOf[Class[Suite]],
@@ -103,7 +112,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
         } catch {
           case NonFatal(e) => Future.failed(e)
         },
-        Some(Line("Compiling..."))
+        Some(Line(compilingStatus))
       )
     }
   }
