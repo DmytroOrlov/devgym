@@ -43,15 +43,15 @@ object SubmitSolutionClient extends JSApp {
       r
     }
 
-    var compileOutStarted = false
+    var compilationStarted = false
 
     override def onNext(elem: Line): Future[Ack] = {
       val line = removeToolboxText(replaceMarkers(elem.value))
 
-      if (line.contains("Compiling"))
-        compileOutStarted = true
-      else if (compileOutStarted) {
-        compileOutStarted = false
+      if (line.contains(compilingStatus))
+        compilationStarted = true
+      else if (compilationStarted) {
+        compilationStarted = false
         report.html("<div class='result-output'>Result:</div>")
       }
 
