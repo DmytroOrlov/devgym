@@ -12,7 +12,9 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.mvc.{Action, Controller}
+import service.StringBuilderRunner
 import service._
+import service.reflection.{DynamicSuiteExecutor, SuiteException}
 import util.TryFuture._
 
 import scala.concurrent.Future
@@ -47,7 +49,8 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
       },
       f => {
         val checkTrait = Try(findTraitName(f.suite)).toFuture
-        def checkSolution(solutionTrait: String) = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite, solutionTrait))).check
+        def checkSolution(solutionTrait: String) =
+          Future(StringBuilderRunner(executor(f.referenceSolution, f.suite, solutionTrait))).check
 
         checkTrait.flatMap { traitName =>
           checkSolution(traitName).flatMap { r =>
@@ -89,4 +92,7 @@ object AddTask {
   val cannotAddTaskOnCheck = "cannotAddTaskOnCheck"
   val addTaskErrorOnSolutionTrait = "addTaskErrorOnSolutionTrait"
   val taskAdded = "taskAdded"
+
+  val traitDefPattern = """trait\s*([\w\$]*)""".r
+  def findTraitName(suite: String) = traitDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
 }

@@ -12,6 +12,7 @@ import org.scalatestplus.play.PlaySpec
 import play.api.test.Helpers._
 import play.api.test._
 import service._
+import service.reflection.{DynamicSuiteExecutor, ScalaTestRunner}
 
 import scala.concurrent.Future
 

@@ -15,20 +15,18 @@ import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
+import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
 import shared.Line
-import shared.view.SuiteReportUtil.compilingStatus
+import shared.view.SuiteReportUtil.compilationStartedStatus
 import util.TryFuture
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.sys.process._
-import scala.util.Try
 import scala.util.control.NonFatal
 
 class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, cache: CacheApi)
@@ -57,15 +55,18 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   def taskStream = WebSocket.accept { req =>
     ActorFlow.actorRef[JsValue, JsValue] { out =>
       SimpleWebSocketActor.props(out, (fromClient: JsValue) => {
-          val solution = (fromClient \ "solution").as[String]
-          val year = (fromClient \ "year").as[Long]
-          val taskType = (fromClient \ "taskType").as[String]
-          val timeuuid = (fromClient \ "timeuuid").as[String]
-          getCachedTask(year, taskType, UUID.fromString(timeuuid)).map { t =>
-            ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait)).map(Line(_))
-          }
-        },
-        Some(Line(compilingStatus))
+        val solution = (fromClient \ "solution").as[String]
+        val year = (fromClient \ "year").as[Long]
+        val taskType = (fromClient \ "taskType").as[String]
+        val timeuuid = (fromClient \ "timeuuid").as[String]
+
+        val task = getCachedTask(year, taskType, UUID.fromString(timeuuid))
+        task.map { t =>
+          // TODO: t.get may blow up in case task in db
+          ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testStatus).map(Line(_))
+        }
+      },
+        Some(Line(compilationStartedStatus))
       )
     }
   }
@@ -92,10 +93,10 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   }
 
   /**
-    * it is an example of executing the pre-loaded classes for test and solution trait. We only parse solution text
-    * Such approach is faster of course than approach in controllers.TaskSolver#taskStream().
+    * it is an example of executing the loaded test classes into the classPath. We only parse solution text coming from a user
+    * Such approach is faster of course, than controllers.TaskSolver#taskStream().
     *
-    * This approach can be used for predefined tests of DevGym platform to get better performance for demo tests
+    * This approach can be used for predefined tests of DevGym platform to get better performance for demo tests.
     * Currently, we are not using this method and it should be removed from here to some snippet storage
     * @return WebSocket
     */
@@ -112,7 +113,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
         } catch {
           case NonFatal(e) => Future.failed(e)
         },
-        Some(Line(compilingStatus))
+        Some(Line(compilationStartedStatus))
       )
     }
   }
@@ -128,14 +129,4 @@ object TaskSolver {
   val timeuuid = "timeuuid"
 
   val expiration = 60 seconds
-
-  // TODO rethink or remove
-  def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
-    if (o.filter(_ != '\r') == from) Invalid(ValidationError("error.changesRequired")) else Valid
-  }
-
-  def sbt(command: String): Try[Boolean] = Try(Seq("sbt", command).! == 0)
-
-  // no exception, so sbt is in the PATH
-  lazy val sbtInstalled = sbt("--version").isSuccess
 }

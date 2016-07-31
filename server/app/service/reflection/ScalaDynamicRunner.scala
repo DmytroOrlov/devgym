@@ -1,11 +1,11 @@
-package service
+package service.reflection
 
 import monifu.concurrent.Scheduler
 
 trait DynamicSuiteExecutor {
   def apply(solution: String, suite: String, solutionTrait: String)
            (channel: String => Unit)
-           (implicit s: Scheduler): Unit
+           (implicit s: Scheduler): String
 }
 
 trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
@@ -15,7 +15,7 @@ trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
    */
   def apply(solution: String, suite: String, solutionTrait: String)
            (channel: String => Unit)
-           (implicit s: Scheduler): Unit = {
+           (implicit s: Scheduler): String = {
 
     classDefPattern.findFirstIn(solution).orElse(throw SuiteException(s"There is no class definition in solution code: $solution"))
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $solutionTrait ")

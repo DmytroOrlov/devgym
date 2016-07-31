@@ -5,7 +5,7 @@ import com.typesafe.config.Config
 import dal.{Dao, DaoImpl}
 import monifu.concurrent.Scheduler
 import play.api.Configuration
-import service.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaTestRunner}
+import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaTestRunner}
 
 import scala.concurrent.ExecutionContext
 

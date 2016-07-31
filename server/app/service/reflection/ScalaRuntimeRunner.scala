@@ -1,4 +1,4 @@
-package service
+package service.reflection
 
 import monifu.concurrent.Scheduler
 import org.scalatest.Suite
@@ -6,7 +6,7 @@ import org.scalatest.Suite
 trait RuntimeSuiteExecutor {
   def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef], solution: String)
            (channel: String => Unit)
-           (implicit s: Scheduler): Unit
+           (implicit s: Scheduler): String
 }
 
 trait ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with SuiteToolbox {
@@ -15,9 +15,9 @@ trait ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with S
    */
   def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef], solution: String)
            (channel: String => Unit)
-           (implicit s: Scheduler): Unit = {
+           (implicit s: Scheduler): String = {
     val solutionInstance = createSolutionInstance(solution, solutionTrait)
-    executionOutput(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance), channel)
+    executionTestSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance), channel)
   }
 
   def createSolutionInstance(solution: String, solutionTrait: Class[AnyRef]): AnyRef = {

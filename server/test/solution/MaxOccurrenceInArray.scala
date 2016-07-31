@@ -1,6 +1,6 @@
 package solution
 
-import service.PositiveOutput
+import service.reflection.PositiveOutput
 import tasktest.{MaxOccurrenceInArraySolution, MaxOccurrenceInArrayTest}
 
 class TTMaxOccurrenceInArray extends PositiveOutput {

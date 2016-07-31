@@ -8,21 +8,30 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object ObservableRunner {
-  def apply(block: => (String => Unit) => Unit)(implicit s: Scheduler) = {
+  def apply(block: => (String => Unit) => String,
+            testStatus: Either[Throwable, String] => Option[String] = {_ => None})
+           (implicit s: Scheduler) = {
+
     val channel = PublishChannel[String](DropOld(20))
+
+    def completeTest(result: Either[Throwable, String]) = {
+      testStatus(result).foreach(channel.pushNext(_))
+      channel.pushComplete()
+    }
+
     val f = Future(block(s => channel.pushNext(s)))
     f.onComplete {
-      case Success(_) => channel.pushComplete()
+      case Success(r) =>
+        completeTest(Right(r))
       case Failure(e) =>
-        channel.pushNext(e.getMessage)
-        channel.pushComplete()
+        completeTest(Left(e))
     }
     channel
   }
 }
 
 object StringBuilderRunner {
-  def apply(block: => (String => Unit) => Unit)(implicit ec: ExecutionContext): String = {
+  def apply(block: => (String => Unit) => String)(implicit ec: ExecutionContext): String = {
     val sb = new StringBuilder
     block(s => sb.append(s))
     sb.toString()
