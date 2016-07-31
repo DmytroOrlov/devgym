@@ -37,18 +37,15 @@ object SubmitSolutionClient extends JSApp {
   }
 
   final class Report(reportId: String, onCompleteCall: () => Unit) extends Observer[Line] {
-    val report = {
-      val r = jQuery(s"#$reportId")
-      r.empty()
-      r
-    }
+    val report = jQuery(s"#$reportId")
+    report.empty()
 
     var compilationStarted = false
 
     override def onNext(elem: Line): Future[Ack] = {
-      val line = removeToolboxText(replaceMarkers(elem.value))
+      val line = removeToolboxText(replaceMarkers(elem.value)) //TODO: move text clearing to server side
 
-      if (line.contains(compilingStatus))
+      if (line.contains(compilationStartedStatus))
         compilationStarted = true
       else if (compilationStarted) {
         compilationStarted = false

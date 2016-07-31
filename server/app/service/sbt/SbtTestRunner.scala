@@ -1,4 +1,4 @@
-package service
+package service.sbt
 
 import java.nio.charset.StandardCharsets
 import java.nio.file._

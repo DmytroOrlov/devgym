@@ -1,4 +1,4 @@
-package service
+package service.reflection
 
 /**
  * Runs test suite of scalatest library using the 'execute' method

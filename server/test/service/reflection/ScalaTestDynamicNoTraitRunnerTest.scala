@@ -1,7 +1,8 @@
-package service
+package service.reflection
 
 import monifu.concurrent.Implicits.globalScheduler
 import org.scalatest.{FlatSpec, Matchers}
+import service.StringBuilderRunner
 
 import scala.util.Try
 

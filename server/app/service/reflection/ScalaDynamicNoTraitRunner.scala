@@ -1,4 +1,4 @@
-package service
+package service.reflection
 
 import monifu.concurrent.Scheduler
 
@@ -9,7 +9,7 @@ trait ScalaDynamicNoTraitRunner extends DynamicExecution {
    */
   def execSuiteNoTrait(solution: String, suite: String)
                       (channel: String => Unit)
-                      (implicit s: Scheduler): Unit = {
+                      (implicit s: Scheduler): String = {
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass ")
     executeDynamic(suite, patchedSolution, channel)
   }

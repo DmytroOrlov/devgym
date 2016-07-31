@@ -14,7 +14,7 @@ import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
 import play.api.cache.CacheApi
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import service.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
+import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
 
 import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
