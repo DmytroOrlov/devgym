@@ -41,7 +41,7 @@ INSERT INTO devgym.task (
         inA should be(Array(2, 5, 7, 1, 40, 3, 4, 5, 7, 4))
       }
 
-      it should "return array as is if oder is 0" in {
+      it should "return array as is if steps is 0" in {
         val initialA = inA.clone()
         solution.rotate(inA, 0)
         inA should be(initialA)
