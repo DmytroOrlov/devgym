@@ -8,7 +8,7 @@ import monifu.reactive.Ack.Continue
 import monifu.reactive.Observable
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json, Writes}
-import shared.Event
+import shared.model.Event
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

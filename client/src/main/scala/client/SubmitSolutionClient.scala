@@ -8,9 +8,9 @@ import monifu.reactive.Ack.Continue
 import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive.{Ack, Observable, Observer, Subscriber}
 import org.scalajs.dom
-import org.scalajs.jquery.jQuery
+import org.scalajs.jquery.{JQuery, jQuery}
 import shared.view.SuiteReportUtil._
-import shared.{Event, Line}
+import shared.model.{Event, Line, TestResult, TestStatus}
 
 import scala.concurrent.Future
 import scala.scalajs.js.Dynamic.{literal => obj}
@@ -26,24 +26,42 @@ object SubmitSolutionClient extends JSApp {
     val submitButton = jQuery(s"#$buttonId")
     submitButton.click(submit _)
 
-    def disableButton(flag: Boolean): Unit = submitButton.prop("disabled", flag)
+    def disableButton(flag: Boolean = true): Unit = submitButton.prop("disabled", flag)
 
     def submit() = {
       loadingIcon.show()
-      disableButton(true)
-      val lines = new DataConsumer().collect { case e: Line => e }
-      lines.subscribe(new Report(to, () => disableButton(false)))
+      disableButton()
+      val consumer = new TestExecution()
+      consumer.subscribe(new Report(to, () => disableButton(false)))
     }
   }
 
-  final class Report(reportId: String, onCompleteCall: () => Unit) extends Observer[Line] {
+  final class Report(reportId: String, onCompleteCall: () => Unit) extends Observer[Event] {
     val report = jQuery(s"#$reportId")
     report.empty()
 
     var compilationStarted = false
 
-    override def onNext(elem: Line): Future[Ack] = {
-      val line = removeToolboxText(replaceMarkers(elem.value)) //TODO: move text clearing to server side
+
+    override def onNext(elem: Event): Future[Ack] = {
+      elem match {
+        case l: Line => processLine(l)
+        case tr: TestResult => processTestResult(tr)
+        case _ => System.err.println(s"Event $elem is not supported")
+      }
+      Continue
+    }
+
+    private def processTestResult(tr: TestResult) = {
+      val (result, cssClass) = tr.testStatus match {
+        case TestStatus.Passed => ("Test Passed!", "testPassed")
+        case TestStatus.Failed => (s"${tr.errorMessage} Test Failed. Keep going!", "testFailed")
+      }
+      report.append(s"""<div class="$cssClass">$result</div>""")
+    }
+
+    private def processLine(l: Line): JQuery = {
+      val line = removeToolboxText(replaceMarkers(l.value))
 
       if (line.contains(compilationStartedStatus))
         compilationStarted = true
@@ -53,7 +71,6 @@ object SubmitSolutionClient extends JSApp {
       }
 
       report.append(s"""<div>$line</div>""")
-      Continue
     }
 
     def onComplete() = {
@@ -69,12 +86,12 @@ object SubmitSolutionClient extends JSApp {
     }
   }
 
-  final class DataConsumer extends Observable[Event] {
+  final class TestExecution extends Observable[Event] {
     def onSubscribe(subscriber: Subscriber[Event]) = {
       val host = dom.window.location.host
       val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
 
-      val source = new SimpleWebSocketClient(
+      val source: Observable[Event] = new SimpleWebSocketClient(
         url = s"$protocol//$host/task-stream",
         DropOld(20),
         sendOnOpen = Some(obj(
@@ -85,18 +102,22 @@ object SubmitSolutionClient extends JSApp {
         ))
       ).collect { case IsEvent(e) => e }
 
-      (Observable.unit(Line("Submitting...")) ++ source)
-        .onSubscribe(subscriber)
+      (Observable(Line("Submitting...")) ++ source).onSubscribe(subscriber)
     }
   }
 
   object IsEvent {
-    def unapply(message: String) = {
+    def unapply(message: String): Option[Event] = {
       val json = JSON.parse(message)
 
-      json.event.asInstanceOf[String] match {
-        case "line" => Some(Line(
+      json.name.asInstanceOf[String] match {
+        case Line.name => Some(Line(
           value = json.value.asInstanceOf[String],
+          timestamp = json.timestamp.asInstanceOf[Number].longValue()
+        ))
+        case TestResult.name => Some(TestResult(
+          status = json.status.asInstanceOf[String],
+          errorMessage = json.errorMessage.asInstanceOf[String],
           timestamp = json.timestamp.asInstanceOf[Number].longValue()
         ))
         case "error" =>

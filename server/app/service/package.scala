@@ -1,10 +1,12 @@
 import service.reflection.SuiteException
+import shared.model.{TestResult, TestStatus}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 package object service {
-  val failed = "FAILED" //scalatest keyword
+  //scalatest keyword
+  val failed = "FAILED"
 
   implicit class RichRunnerFuture(val future: Future[String]) extends AnyVal {
     def check(implicit ec: ExecutionContext) =
@@ -15,10 +17,9 @@ package object service {
     def check = output.filter(!_.contains(failed))
   }
 
-  def testStatus(report: Either[Throwable, String]): Option[String] = {
-    Option(report.fold(
-      f => f.getMessage,
-      s => if (s.contains(failed)) "Test Failed" else "Test Passed"
-    ))
-  }
+  def testStatus(report: Try[String]): Option[TestResult] =
+    Option(report match {
+      case Success(s) => TestResult((if (s.contains(failed)) TestStatus.Failed else TestStatus.Passed).toString)
+      case Failure(e) => TestResult(TestStatus.Failed.toString, e.getMessage)
+    })
 }
