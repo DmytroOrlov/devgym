@@ -3,29 +3,25 @@ package service
 import monifu.concurrent.Scheduler
 import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive.channels.PublishChannel
+import shared.model.{Event, Line, TestResult}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.Try
 
 object ObservableRunner {
+
   def apply(block: => (String => Unit) => String,
-            testStatus: Either[Throwable, String] => Option[String] = {_ => None})
-           (implicit s: Scheduler) = {
+            testStatus: Try[String] => Option[TestResult] = { _ => None })
+           (implicit s: Scheduler): PublishChannel[Event] = {
 
-    val channel = PublishChannel[String](DropOld(20))
+    val channel = PublishChannel[Event](DropOld(20))
 
-    def completeTest(result: Either[Throwable, String]) = {
+    def pushTestResult(result: Try[String]) = {
       testStatus(result).foreach(channel.pushNext(_))
       channel.pushComplete()
     }
 
-    val f = Future(block(s => channel.pushNext(s)))
-    f.onComplete {
-      case Success(r) =>
-        completeTest(Right(r))
-      case Failure(e) =>
-        completeTest(Left(e))
-    }
+    Future(block(s => channel.pushNext(Line(s)))).onComplete(pushTestResult)
     channel
   }
 }

@@ -21,7 +21,7 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.Line
+import shared.model.Line
 import shared.view.SuiteReportUtil.compilationStartedStatus
 import util.TryFuture
 
@@ -63,7 +63,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
         val task = getCachedTask(year, taskType, UUID.fromString(timeuuid))
         task.map { t =>
           // TODO: t.get may blow up in case task in db
-          ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testStatus).map(Line(_))
+          ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testStatus)
         }
       },
         Some(Line(compilationStartedStatus))
@@ -109,7 +109,8 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
           val solution = (fromClient \ "solution").as[String]
           Future.successful(ObservableRunner(executor(
             Class.forName(suiteClass).asInstanceOf[Class[Suite]],
-            Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution)).map(Line(_)))
+            Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
+            solution)))
         } catch {
           case NonFatal(e) => Future.failed(e)
         },

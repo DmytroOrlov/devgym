@@ -46,8 +46,7 @@ object AddTaskController extends JSApp {
   var suiteEditorExample = new CodeEditor("suiteExample", readOnly = true, suiteExample)
 
   def main(): Unit = {
-    val submitButton = jQuery(s"#$buttonId")
-    submitButton.click(submit _)
+    jQuery(s"#$buttonId").click(submit _)
 
     def submit() = {
       jQuery("#solutionTemplate").value(templateEditor.value)
