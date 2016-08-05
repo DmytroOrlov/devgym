@@ -21,8 +21,7 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.model.{Compiling, Line}
-import shared.view.SuiteReportUtil.compilationStartedStatus
+import shared.model.Compiling
 import util.TryFuture
 
 import scala.concurrent.Future
@@ -98,6 +97,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     *
     * This approach can be used for predefined tests of DevGym platform to get better performance for demo tests.
     * Currently, we are not using this method and it should be removed from here to some snippet storage
+    *
     * @return WebSocket
     */
   def runtimeTaskStream = WebSocket.accept { req =>
@@ -114,7 +114,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
         } catch {
           case NonFatal(e) => Future.failed(e)
         },
-        Some(Line(compilationStartedStatus))
+        Some(Compiling())
       )
     }
   }
