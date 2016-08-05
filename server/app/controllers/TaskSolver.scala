@@ -21,7 +21,7 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.model.Line
+import shared.model.{Compiling, Line}
 import shared.view.SuiteReportUtil.compilationStartedStatus
 import util.TryFuture
 
@@ -66,7 +66,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
           ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testStatus)
         }
       },
-        Some(Line(compilationStartedStatus))
+        Some(Compiling())
       )
     }
   }

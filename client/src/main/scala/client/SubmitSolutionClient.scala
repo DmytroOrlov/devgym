@@ -10,7 +10,7 @@ import monifu.reactive.{Ack, Observable, Observer, Subscriber}
 import org.scalajs.dom
 import org.scalajs.jquery.{JQuery, jQuery}
 import shared.view.SuiteReportUtil._
-import shared.model.{Event, Line, TestResult, TestStatus}
+import shared.model._
 
 import scala.concurrent.Future
 import scala.scalajs.js.Dynamic.{literal => obj}
@@ -42,11 +42,13 @@ object SubmitSolutionClient extends JSApp {
 
     var compilationStarted = false
 
-
     override def onNext(elem: Event): Future[Ack] = {
       elem match {
         case l: Line => processLine(l)
         case tr: TestResult => processTestResult(tr)
+        case _: Compiling =>
+          report.append("Compiling...")
+          compilationStarted = true
         case _ => System.err.println(s"Event $elem is not supported")
       }
       Continue
@@ -63,9 +65,7 @@ object SubmitSolutionClient extends JSApp {
     private def processLine(l: Line): JQuery = {
       val line = removeToolboxText(replaceMarkers(l.value))
 
-      if (line.contains(compilationStartedStatus))
-        compilationStarted = true
-      else if (compilationStarted) {
+      if (compilationStarted) {
         compilationStarted = false
         report.html("<div class='result-output'>Result:</div>")
       }
@@ -110,21 +110,23 @@ object SubmitSolutionClient extends JSApp {
     def unapply(message: String): Option[Event] = {
       val json = JSON.parse(message)
 
+      def getTimestamp = json.timestamp.asInstanceOf[Number].longValue()
+
       json.name.asInstanceOf[String] match {
         case Line.name => Some(Line(
           value = json.value.asInstanceOf[String],
-          timestamp = json.timestamp.asInstanceOf[Number].longValue()
+          timestamp = getTimestamp
         ))
         case TestResult.name => Some(TestResult(
           status = json.status.asInstanceOf[String],
           errorMessage = json.errorMessage.asInstanceOf[String],
-          timestamp = json.timestamp.asInstanceOf[Number].longValue()
+          timestamp = getTimestamp
         ))
+        case Compiling.name => Some(Compiling(getTimestamp))
         case "error" =>
           val errorType = json.`type`.asInstanceOf[String]
           val message = json.message.asInstanceOf[String]
-          val timestamp = json.timestamp.asInstanceOf[Number].longValue()
-          throw SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(timestamp)}) - $errorType: $message")
+          throw SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(getTimestamp)}) - $errorType: $message")
         case _ => None
       }
     }
