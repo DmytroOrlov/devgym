@@ -57,7 +57,9 @@ object SubmitSolutionClient extends JSApp {
     private def processTestResult(tr: TestResult) = {
       val (result, cssClass) = tr.testStatus match {
         case TestStatus.Passed => ("Test Passed!", "testPassed")
-        case TestStatus.Failed => (s"${tr.errorMessage} Test Failed. Keep going!", "testFailed")
+        case TestStatus.Failed =>
+          val error = Option(tr.errorMessage).filter(_.nonEmpty).map(s => s + "<br/>").getOrElse("")
+          (s"$error Test Failed. Keep going!", "testFailed")
       }
       report.append(s"""<div class="$cssClass">$result</div>""")
     }
