@@ -46,20 +46,23 @@ object SubmitSolutionClient extends JSApp {
       elem match {
         case l: Line => processLine(l)
         case tr: TestResult => processTestResult(tr)
-        case _: Compiling =>
-          report.append("Compiling...")
-          compilationStarted = true
+        case _: Compiling => processCompiling()
         case _ => System.err.println(s"Event $elem is not supported")
       }
       Continue
+    }
+
+    private def processCompiling(): Unit = {
+      report.append("Compiling...")
+      compilationStarted = true
     }
 
     private def processTestResult(tr: TestResult) = {
       val (result, cssClass) = tr.testStatus match {
         case TestStatus.Passed => ("Test Passed!", "testPassed")
         case TestStatus.Failed =>
-          val error = Option(tr.errorMessage).filter(_.nonEmpty).map(s => s + "<br/>").getOrElse("")
-          (s"$error Test Failed. Keep going!", "testFailed")
+          val error = Option(tr.errorMessage).filter(_.nonEmpty).map(_ + "<br/>").getOrElse("")
+          (s"${error}Test Failed. Keep going!", "testFailed")
       }
       report.append(s"""<div class="$cssClass">$result</div>""")
     }
