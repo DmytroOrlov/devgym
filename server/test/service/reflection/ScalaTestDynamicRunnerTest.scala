@@ -53,7 +53,7 @@ class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
   val runner = new ScalaDynamicRunner() {}
 
   override def getReport(solution: String, check: Boolean = false) = {
-    val unchecked = Try(StringBuilderRunner(runner(solution, correctSuite, solutionTrait)))
+    val unchecked = Try(StringBuilderRunner(runner(solution, correctSuite, solutionTrait), service.testStatus))
     if (check) unchecked.check
     else unchecked
   }

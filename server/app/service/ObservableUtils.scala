@@ -6,7 +6,7 @@ import monifu.reactive.channels.PublishChannel
 import shared.model.{Event, Line, TestResult}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Success, Try}
 
 object ObservableRunner {
 
@@ -27,9 +27,12 @@ object ObservableRunner {
 }
 
 object StringBuilderRunner {
-  def apply(block: => (String => Unit) => String)(implicit ec: ExecutionContext): String = {
+  def apply(block: => (String => Unit) => String,
+            testStatus: Try[String] => Option[TestResult] = { _ => None })
+           (implicit ec: ExecutionContext): String = {
     val sb = new StringBuilder
     block(s => sb.append(s))
+    testStatus(Success(sb.toString())).map(_.testStatus.toString).foreach(sb.append)
     sb.toString()
   }
 }

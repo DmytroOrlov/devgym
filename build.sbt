@@ -43,7 +43,6 @@ lazy val server = (project in file("server"))
 
       "org.webjars" % "jquery" % "2.2.4",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
-      "com.vmunier" %% "play-scalajs-scripts" % "0.5.0",
       "org.monifu" %% "monifu" % monifuVer,
 
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2"
