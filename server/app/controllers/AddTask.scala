@@ -49,8 +49,11 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
       },
       f => {
         val checkTrait = Try(findTraitName(f.suite)).toFuture
-        def checkSolution(solutionTrait: String) =
+
+        def checkSolution(solutionTrait: String): Future[String] = {
+          //TODO: replace 'check' function with testStatus function and get rid of one more future object!
           Future(StringBuilderRunner(executor(f.referenceSolution, f.suite, solutionTrait))).check
+        }
 
         checkTrait.flatMap { traitName =>
           checkSolution(traitName).flatMap { r =>

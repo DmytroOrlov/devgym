@@ -18,7 +18,7 @@ import scala.scalajs.js.{JSApp, JSON}
 
 object SubmitSolutionClient extends JSApp {
   val loadingIcon = jQuery("#icon")
-  var editor = new CodeEditor("solution")
+  val editor = new CodeEditor("solution")
 
   def main(): Unit = initSubmitter("submit", to = "report")
 
@@ -40,7 +40,7 @@ object SubmitSolutionClient extends JSApp {
     val report = jQuery(s"#$reportId")
     report.empty()
 
-    var compilationStarted = false
+    var compilationJustStarted = false
 
     override def onNext(elem: Event): Future[Ack] = {
       elem match {
@@ -54,10 +54,12 @@ object SubmitSolutionClient extends JSApp {
 
     private def processCompiling(): Unit = {
       report.append("Compiling...")
-      compilationStarted = true
+      compilationJustStarted = true
     }
 
     private def processTestResult(tr: TestResult) = {
+      cleanReportAreaIfNeeded()
+
       val (result, cssClass) = tr.testStatus match {
         case TestStatus.Passed => ("Test Passed!", "testPassed")
         case TestStatus.Failed =>
@@ -69,13 +71,15 @@ object SubmitSolutionClient extends JSApp {
 
     private def processLine(l: Line): JQuery = {
       val line = removeToolboxText(replaceMarkers(l.value))
+      cleanReportAreaIfNeeded()
+      report.append(s"""<div>$line</div>""")
+    }
 
-      if (compilationStarted) {
-        compilationStarted = false
+    private def cleanReportAreaIfNeeded(): Unit = {
+      if (compilationJustStarted) {
+        compilationJustStarted = false
         report.html("<div class='result-output'>Result:</div>")
       }
-
-      report.append(s"""<div>$line</div>""")
     }
 
     def onComplete() = {
