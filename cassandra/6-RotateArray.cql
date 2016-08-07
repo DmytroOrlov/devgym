@@ -18,7 +18,7 @@ INSERT INTO devgym.task (
   so that the elements took their previous places again. Note that algorithm should support k > a.length',
   'class RotateArray {
   def rotate(a: Array[Int], steps: Int) = {
-
+    
   }
 }',
    'class RotateArray {

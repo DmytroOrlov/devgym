@@ -18,7 +18,7 @@ INSERT INTO devgym.task (
   occurrences in total. In case of equal number of occurrences return any of the elements.',
   'class MaxOccurrenceInArray {
   def maxOccurrence(uniqueNum: Int, a: Array[Int]): Int = {
-
+    
   }
 }',
    'class MaxOccurrenceInArray {

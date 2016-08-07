@@ -17,7 +17,7 @@ INSERT INTO devgym.task (
   For example, having such input Array(1, 4, 10, 22, 43, -12), then result should be 3.',
   'class MinDifferenceInArray {
   def minDifference(a: Array[Int]): Int = {
-
+    
   }
 }',
    'class MinDifferenceInArray {

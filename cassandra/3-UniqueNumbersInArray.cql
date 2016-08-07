@@ -17,7 +17,7 @@ INSERT INTO devgym.task (
   the 4 as number of unique elements in the array.',
   'class UniqueNumbersInArray {
   def uniqueNumbers(a: Array[Int]): Int = {
-
+    
   }
 }',
    'class UniqueNumbersInArray {
