@@ -9,7 +9,8 @@ lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % scalatestV % "test",
     "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
-    "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test"
+    "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
+    "com.storm-enroute" %% "scalameter-core" % "0.7" % "test"
   )
 )
 

@@ -19,7 +19,11 @@ package object service {
 
   def testStatus(report: Try[String]): Option[TestResult] =
     Option(report match {
-      case Success(s) => TestResult((if (s.contains(failed)) TestStatus.Failed else TestStatus.Passed).toString)
+      case Success(s) =>
+        val (status, error) =
+          if (s.contains(failed)) (TestStatus.Failed.toString, s)
+          else (TestStatus.Passed.toString, "")
+        TestResult(status, error)
       case Failure(e) => TestResult(TestStatus.Failed.toString, e.getMessage)
     })
 }
