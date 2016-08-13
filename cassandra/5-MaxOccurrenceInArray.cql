@@ -29,12 +29,12 @@ INSERT INTO devgym.task (
 
         for (i <- a.indices) {
           if (count(a(i)) > 0) {
-            val tmp = count(a(i))
-            if (tmp > maxOccurrence) {
-              maxOccurrence = tmp
-              index = i
-            }
-            count(a(i)) = tmp + 1
+          val tmp = count(a(i)) + 1
+          if (tmp > maxOccurrence) {
+            maxOccurrence = tmp
+            index = i
+          }
+          count(a(i)) = tmp
           } else {
             count(a(i)) = 1
           }
