@@ -83,7 +83,7 @@ class RunnerPerformanceTest extends FlatSpec with Matchers {
   def runPerformanceTest(executor: ((String) => Unit) => String, testName: String): Unit = {
     def testReport(executor: ((String) => Unit) => String) = Try(StringBuilderRunner(executor))
     //when
-    val result = service.testStatus(testReport(executor)).get
+    val result = service.testResult(testReport(executor))
     println(s"${result.status} ${result.errorMessage}")
     //then
     result.testStatus should be(TestStatus.Passed)

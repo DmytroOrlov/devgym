@@ -11,13 +11,13 @@ import scala.util.{Success, Try}
 object ObservableRunner {
 
   def apply(block: => (String => Unit) => String,
-            testStatus: Try[String] => Option[TestResult] = { _ => None })
+            testResult: Try[String] => TestResult)
            (implicit s: Scheduler): PublishChannel[Event] = {
 
     val channel = PublishChannel[Event](DropOld(20))
 
     def pushTestResult(result: Try[String]) = {
-      testStatus(result).foreach(channel.pushNext(_))
+      channel.pushNext(testResult(result))
       channel.pushComplete()
     }
 
@@ -27,12 +27,11 @@ object ObservableRunner {
 }
 
 object StringBuilderRunner {
-  def apply(block: => (String => Unit) => String,
-            testStatus: Try[String] => Option[TestResult] = { _ => None })
+  def apply(block: => (String => Unit) => String, testResult: Try[String] => Option[TestResult] = { _ => None})
            (implicit ec: ExecutionContext): String = {
     val sb = new StringBuilder
     block(s => sb.append(s))
-    testStatus(Success(sb.toString())).map(_.testStatus.toString).foreach(sb.append)
+    testResult(Success(sb.toString())).map(_.testStatus.toString).foreach(sb.append)
     sb.toString()
   }
 }

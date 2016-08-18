@@ -4,7 +4,7 @@ import monifu.concurrent.Implicits.globalScheduler
 import org.scalatest.{FlatSpec, Matchers, Suite}
 import service.StringBuilderRunner
 import service._
-import shared.model.TestStatus
+import shared.model.{TestResult, TestStatus}
 
 import scala.util.Try
 
@@ -37,7 +37,7 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
       Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
       Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]],
       solution),
-      service.testStatus))
+      (r: Try[String]) => Option(service.testResult(r))))
     if (check) unchecked.check
     else unchecked
   }

@@ -61,8 +61,8 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
 
         val task = getCachedTask(year, taskType, UUID.fromString(timeuuid))
         task.map { t =>
-          // TODO: t.get may blow up in case task in db
-          ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testStatus)
+          if (t.isEmpty) throw new RuntimeException(s"Task is not available for a given solution: $solution")
+          ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testResult)
         }
       },
         Some(Compiling())
@@ -110,7 +110,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
           Future.successful(ObservableRunner(executor(
             Class.forName(suiteClass).asInstanceOf[Class[Suite]],
             Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
-            solution)))
+            solution), service.testResult))
         } catch {
           case NonFatal(e) => Future.failed(e)
         },
