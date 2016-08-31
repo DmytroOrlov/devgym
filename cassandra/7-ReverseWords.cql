@@ -18,7 +18,7 @@ INSERT INTO devgym.task (
    For example, given s = "it is given string to be reversed", return "reversed be to string given is it"',
   'class ReverseWords {
   def reverse(s: String): String = {
-
+    
   }
 }',
    'class ReverseWords extends ReverseWordsSolution {

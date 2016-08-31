@@ -8,9 +8,9 @@ import monifu.reactive.Ack.Continue
 import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive.{Ack, Observable, Observer, Subscriber}
 import org.scalajs.dom
-import org.scalajs.jquery.jQuery
+import org.scalajs.jquery.{JQuery, jQuery}
 import shared.view.SuiteReportUtil._
-import shared.{Event, Line}
+import shared.model._
 
 import scala.concurrent.Future
 import scala.scalajs.js.Dynamic.{literal => obj}
@@ -18,7 +18,7 @@ import scala.scalajs.js.{JSApp, JSON}
 
 object SubmitSolutionClient extends JSApp {
   val loadingIcon = jQuery("#icon")
-  var editor = new CodeEditor("solution")
+  val editor = new CodeEditor("solution")
 
   def main(): Unit = initSubmitter("submit", to = "report")
 
@@ -26,27 +26,60 @@ object SubmitSolutionClient extends JSApp {
     val submitButton = jQuery(s"#$buttonId")
     submitButton.click(submit _)
 
-    def disableButton(flag: Boolean): Unit = submitButton.prop("disabled", flag)
+    def disableButton(flag: Boolean = true): Unit = submitButton.prop("disabled", flag)
 
     def submit() = {
       loadingIcon.show()
-      disableButton(true)
-      val lines = new DataConsumer().collect { case e: Line => e }
-      lines.subscribe(new Report(to, () => disableButton(false)))
+      disableButton()
+      val consumer = new TestExecution()
+      consumer.subscribe(new Report(to, () => disableButton(false)))
     }
   }
 
-  final class Report(reportId: String, onCompleteCall: () => Unit) extends Observer[Line] {
-    val report = {
-      val r = jQuery(s"#$reportId")
-      r.empty()
-      r
+  final class Report(reportId: String, onCompleteCall: () => Unit) extends Observer[Event] {
+    val report = jQuery(s"#$reportId")
+    report.empty()
+
+    var compilationJustStarted = false
+
+    override def onNext(elem: Event): Future[Ack] = {
+      elem match {
+        case l: Line => processLine(l)
+        case tr: TestResult => processTestResult(tr)
+        case _: Compiling => processCompiling()
+        case _ => System.err.println(s"Event $elem is not supported")
+      }
+      Continue
     }
 
-    override def onNext(elem: Line): Future[Ack] = {
-      val line = removeToolboxText(replaceMarkers(elem.value))
-      report.append( s"""<div>$line</div>""")
-      Continue
+    private def processCompiling(): Unit = {
+      report.append("Compiling...")
+      compilationJustStarted = true
+    }
+
+    private def processTestResult(tr: TestResult) = {
+      cleanReportAreaIfNeeded()
+
+      val (result, cssClass) = tr.testStatus match {
+        case TestStatus.Passed => ("Test Passed!", "testPassed")
+        case TestStatus.Failed =>
+          val error = Option(tr.errorMessage).filter(_.nonEmpty).map(_ + "<br/>").getOrElse("")
+          (s"${error}Test Failed. Keep going!", "testFailed")
+      }
+      report.append(s"""<div class="$cssClass">$result</div>""")
+    }
+
+    private def processLine(l: Line): JQuery = {
+      val line = removeToolboxText(replaceMarkers(l.value))
+      cleanReportAreaIfNeeded()
+      report.append(s"""<div>$line</div>""")
+    }
+
+    private def cleanReportAreaIfNeeded(): Unit = {
+      if (compilationJustStarted) {
+        compilationJustStarted = false
+        report.html("<div class='result-output'>Result:</div>")
+      }
     }
 
     def onComplete() = {
@@ -62,12 +95,12 @@ object SubmitSolutionClient extends JSApp {
     }
   }
 
-  final class DataConsumer extends Observable[Event] {
+  final class TestExecution extends Observable[Event] {
     def onSubscribe(subscriber: Subscriber[Event]) = {
       val host = dom.window.location.host
       val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
 
-      val source = new SimpleWebSocketClient(
+      val source: Observable[Event] = new SimpleWebSocketClient(
         url = s"$protocol//$host/task-stream",
         DropOld(20),
         sendOnOpen = Some(obj(
@@ -78,25 +111,31 @@ object SubmitSolutionClient extends JSApp {
         ))
       ).collect { case IsEvent(e) => e }
 
-      (Observable.unit(Line("Submitting...")) ++ source)
-        .onSubscribe(subscriber)
+      (Observable(Line("Submitting...")) ++ source).onSubscribe(subscriber)
     }
   }
 
   object IsEvent {
-    def unapply(message: String) = {
+    def unapply(message: String): Option[Event] = {
       val json = JSON.parse(message)
 
-      json.event.asInstanceOf[String] match {
-        case "line" => Some(Line(
+      def getTimestamp = json.timestamp.asInstanceOf[Number].longValue()
+
+      json.name.asInstanceOf[String] match {
+        case Line.name => Some(Line(
           value = json.value.asInstanceOf[String],
-          timestamp = json.timestamp.asInstanceOf[Number].longValue()
+          timestamp = getTimestamp
         ))
+        case TestResult.name => Some(TestResult(
+          status = json.status.asInstanceOf[String],
+          errorMessage = json.errorMessage.asInstanceOf[String],
+          timestamp = getTimestamp
+        ))
+        case Compiling.name => Some(Compiling(getTimestamp))
         case "error" =>
           val errorType = json.`type`.asInstanceOf[String]
           val message = json.message.asInstanceOf[String]
-          val timestamp = json.timestamp.asInstanceOf[Number].longValue()
-          throw new SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(timestamp)}) - $errorType: $message")
+          throw SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(getTimestamp)}) - $errorType: $message")
         case _ => None
       }
     }

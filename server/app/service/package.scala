@@ -1,18 +1,24 @@
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import shared.model.{TestResult, TestStatus}
+
+import scala.util.{Failure, Success, Try}
 
 package object service {
+  //scalatest keyword
   val failed = "FAILED"
-  val traitDefPattern = """trait\s*([\w\$]*)""".r
-
-  implicit class RichRunnerFuture(val future: Future[String]) extends AnyVal {
-    def check(implicit ec: ExecutionContext) =
-      future.flatMap(r => if (r.contains(failed)) Future.failed(new SuiteException(r)) else Future.successful(r))
-  }
 
   implicit class RichRunnerString(val output: Try[String]) extends AnyVal {
     def check = output.filter(!_.contains(failed))
   }
 
-  def findTraitName(suite: String) = traitDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
+  def testResult(report: Try[String]): TestResult =
+    report match {
+      case Success(s) =>
+        val (status, error) =
+        //no need to send test result as error, even it is test is failed.
+        //Improvement here is to introduce new TestStatus like FailedByTest, FailedByCompilation instead of ambiguous Failed
+          if (s.contains(failed)) (TestStatus.Failed.toString, "")
+          else (TestStatus.Passed.toString, "")
+        TestResult(status, error)
+      case Failure(e) => TestResult(TestStatus.Failed.toString, e.getMessage)
+    }
 }

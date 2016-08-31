@@ -11,13 +11,15 @@ import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.mvc.{Action, Controller}
-import service._
+import play.api.mvc.{Action, Controller, Result}
+import service.reflection.DynamicSuiteExecutor
+import service.{StringBuilderRunner, _}
+import shared.model.TestStatus
 import util.TryFuture._
 
 import scala.concurrent.Future
-import scala.util.Try
 import scala.util.control.NonFatal
+import scala.util.{Success, Try}
 
 class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
                        (implicit s: Scheduler) extends Controller with I18nSupport {
@@ -36,8 +38,9 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
   }
 
   def postNewTask = Action.async { implicit request =>
-    def addTaskViewWithError(errorKey: String, e: Throwable, message: String = "") = {
-      Logger.error(e.getMessage, e)
+
+    def addTaskViewWithError(errorKey: String, message: String = "", ex: Option[Throwable] = None) = {
+      ex.foreach(e => Logger.error(e.getMessage, e))
       views.html.addTask(addTaskForm.bindFromRequest(), Some(s"${messagesApi(errorKey)} $message"))
     }
 
@@ -46,30 +49,35 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
         Future.successful(BadRequest(views.html.addTask(errorForm)))
       },
       f => {
-        val checkTrait = Try(findTraitName(f.suite)).toFuture
-        def checkSolution(solutionTrait: String) = Future(StringBuilderRunner(executor(f.referenceSolution, f.suite, solutionTrait))).check
+        def addTaskIfValid(traitName: String) = {
+          val testResultOpt = (r: Try[String]) => Option(service.testResult(r))
+          val result = StringBuilderRunner(executor(f.referenceSolution, f.suite, traitName), testResultOpt)
+          val tR = testResult(Success(result))
 
-        checkTrait.flatMap { traitName =>
-          checkSolution(traitName).flatMap { r =>
-            dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
-              .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
-              .recover {
-                case NonFatal(e) => Logger.warn(e.getMessage, e)
-                  InternalServerError {
-                    views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
-                  }
+          tR.testStatus match {
+            case TestStatus.Passed =>
+              dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
+                .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
+                .recover {
+                  case NonFatal(e) => Logger.warn(e.getMessage, e)
+                    InternalServerError {
+                      views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+                    }
+                }
+            case TestStatus.Failed => Future {
+              BadRequest {
+                addTaskViewWithError(cannotAddTaskOnCheck, tR.errorMessage)
               }
-          }.recover {
-            case e: SuiteException => BadRequest {
-              addTaskViewWithError(cannotAddTaskOnCheck, e, e.msg)
-            }
-            case NonFatal(e) => BadRequest {
-              addTaskViewWithError(cannotAddTaskOnCheck, e)
             }
           }
+        }
+
+        val checkTrait = Try(findTraitName(f.suite)).toFuture
+        checkTrait.flatMap { traitName =>
+          addTaskIfValid(traitName)
         }.recover {
           case NonFatal(e) => BadRequest {
-            addTaskViewWithError(addTaskErrorOnSolutionTrait, e)
+            addTaskViewWithError(addTaskErrorOnSolutionTrait, "Task cannot be saved", Some(e))
           }
         }
       }
@@ -89,4 +97,8 @@ object AddTask {
   val cannotAddTaskOnCheck = "cannotAddTaskOnCheck"
   val addTaskErrorOnSolutionTrait = "addTaskErrorOnSolutionTrait"
   val taskAdded = "taskAdded"
+
+  val traitDefPattern = """trait\s*([\w\$]*)""".r
+
+  def findTraitName(suite: String) = traitDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
 }

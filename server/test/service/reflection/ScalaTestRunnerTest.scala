@@ -1,7 +1,10 @@
-package service
+package service.reflection
 
 import monifu.concurrent.Implicits.globalScheduler
 import org.scalatest.{FlatSpec, Matchers, Suite}
+import service.StringBuilderRunner
+import service._
+import shared.model.{TestResult, TestStatus}
 
 import scala.util.Try
 
@@ -10,7 +13,9 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
   val incorrectSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {weekday || vacation}}"
 
   it should "return success when correct solution is provided" in {
-    getReport(correctSolution).isSuccess shouldBe true
+    val report = getReport(correctSolution)
+    report.isSuccess shouldBe true
+    report.get should include (TestStatus.Passed.toString)
   }
 
   it should "return success when compilable solution is provided" in {
@@ -31,7 +36,8 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
     val unchecked = Try(StringBuilderRunner(runner(
       Class.forName("service.SleepInTest").asInstanceOf[Class[Suite]],
       Class.forName("service.SleepInSolution").asInstanceOf[Class[AnyRef]],
-      solution)))
+      solution),
+      (r: Try[String]) => Option(service.testResult(r))))
     if (check) unchecked.check
     else unchecked
   }

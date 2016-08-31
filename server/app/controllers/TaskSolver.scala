@@ -15,19 +15,17 @@ import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
-import shared.Line
+import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
+import shared.model.Compiling
 import util.TryFuture
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.sys.process._
-import scala.util.Try
 import scala.util.control.NonFatal
 
 class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, cache: CacheApi)
@@ -56,15 +54,18 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   def taskStream = WebSocket.accept { req =>
     ActorFlow.actorRef[JsValue, JsValue] { out =>
       SimpleWebSocketActor.props(out, (fromClient: JsValue) => {
-          val solution = (fromClient \ "solution").as[String]
-          val year = (fromClient \ "year").as[Long]
-          val taskType = (fromClient \ "taskType").as[String]
-          val timeuuid = (fromClient \ "timeuuid").as[String]
-          getCachedTask(year, taskType, UUID.fromString(timeuuid)).map { t =>
-            ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait)).map(Line(_))
-          }
-        },
-        Some(Line("Compiling..."))
+        val solution = (fromClient \ "solution").as[String]
+        val year = (fromClient \ "year").as[Long]
+        val taskType = (fromClient \ "taskType").as[String]
+        val timeuuid = (fromClient \ "timeuuid").as[String]
+
+        val task = getCachedTask(year, taskType, UUID.fromString(timeuuid))
+        task.map { t =>
+          if (t.isEmpty) throw new RuntimeException(s"Task is not available for a given solution: $solution")
+          ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testResult)
+        }
+      },
+        Some(Compiling())
       )
     }
   }
@@ -90,20 +91,30 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }
   }
 
+  /**
+    * it is an example of executing the loaded test classes into the classPath. We only parse solution text coming from a user
+    * Such approach is faster of course, than controllers.TaskSolver#taskStream().
+    *
+    * This approach can be used for predefined tests of DevGym platform to get better performance for demo tests.
+    * Currently, we are not using this method and it should be removed from here to some snippet storage
+    *
+    * @return WebSocket
+    */
   def runtimeTaskStream = WebSocket.accept { req =>
     ActorFlow.actorRef[JsValue, JsValue] { out =>
       SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
         try {
-          val suiteClass = "tasktest.SubArrayWithMaxSumTest" // (fromClient \ "suiteClass").as[String]
-          val solutionTrait = "tasktest.SubArrayWithMaxSumSolution" // (fromClient \ "solutionTrait").as[String]
+          val suiteClass = "tasktest.SubArrayWithMaxSumTest"
+          val solutionTrait = "tasktest.SubArrayWithMaxSumSolution"
           val solution = (fromClient \ "solution").as[String]
           Future.successful(ObservableRunner(executor(
             Class.forName(suiteClass).asInstanceOf[Class[Suite]],
-            Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]], solution)).map(Line(_)))
+            Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
+            solution), service.testResult))
         } catch {
           case NonFatal(e) => Future.failed(e)
         },
-        Some(Line("Compiling..."))
+        Some(Compiling())
       )
     }
   }
@@ -119,14 +130,4 @@ object TaskSolver {
   val timeuuid = "timeuuid"
 
   val expiration = 60 seconds
-
-  // TODO rethink or remove
-  def nonEmptyAndDiffer(from: String) = nonEmptyText verifying Constraint[String]("changes.required") { o =>
-    if (o.filter(_ != '\r') == from) Invalid(ValidationError("error.changesRequired")) else Valid
-  }
-
-  def sbt(command: String): Try[Boolean] = Try(Seq("sbt", command).! == 0)
-
-  // no exception, so sbt is in the PATH
-  lazy val sbtInstalled = sbt("--version").isSuccess
 }
