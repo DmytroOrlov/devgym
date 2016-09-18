@@ -19,6 +19,7 @@ import scala.scalajs.js.{JSApp, JSON}
 object SubmitSolutionClient extends JSApp {
   val loadingIcon = jQuery("#icon")
   val editor = new CodeEditor("solution")
+  var prevTimestamp = 0L
 
   def main(): Unit = initSubmitter("submit", to = "report")
 
@@ -31,8 +32,8 @@ object SubmitSolutionClient extends JSApp {
     def submit() = {
       loadingIcon.show()
       disableButton()
-      val consumer = new TestExecution()
-      consumer.subscribe(new Report(to, () => disableButton(false)))
+      val testExecution = new TestExecution()
+      testExecution.subscribe(new Report(to, () => disableButton(false)))
     }
   }
 
@@ -47,7 +48,7 @@ object SubmitSolutionClient extends JSApp {
         case l: Line => processLine(l)
         case tr: TestResult => processTestResult(tr)
         case _: Compiling => processCompiling()
-        case _ => System.err.println(s"Event $elem is not supported")
+        case _ => System.err.println(s"Event '$elem' is not supported")
       }
       Continue
     }
@@ -60,13 +61,13 @@ object SubmitSolutionClient extends JSApp {
     private def processTestResult(tr: TestResult) = {
       cleanReportAreaIfNeeded()
 
-      val (result, cssClass) = tr.testStatus match {
+      val (message, cssClass) = tr.testStatus match {
         case TestStatus.Passed => ("Test Passed!", "testPassed")
         case TestStatus.Failed =>
           val error = Option(tr.errorMessage).filter(_.nonEmpty).map(_ + "<br/>").getOrElse("")
           (s"${error}Test Failed. Keep going!", "testFailed")
       }
-      report.append(s"""<div class="$cssClass">$result</div>""")
+      report.append(s"""<div class="$cssClass">$message</div>""")
     }
 
     private def processLine(l: Line): JQuery = {
@@ -100,6 +101,9 @@ object SubmitSolutionClient extends JSApp {
       val host = dom.window.location.host
       val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
 
+      val currentTimestamp = System.currentTimeMillis()
+      val prevTimestampCopy = prevTimestamp
+
       val source: Observable[Event] = new SimpleWebSocketClient(
         url = s"$protocol//$host/task-stream",
         DropOld(20),
@@ -107,11 +111,14 @@ object SubmitSolutionClient extends JSApp {
           "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
           "taskType" -> jQuery("#taskType").`val`().asInstanceOf[String],
-          "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String]
+          "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String],
+          "prevTimestamp" -> prevTimestampCopy,
+          "currentTimestamp" -> currentTimestamp
         ))
       ).collect { case IsEvent(e) => e }
 
       (Observable(Line("Submitting...")) ++ source).onSubscribe(subscriber)
+      prevTimestamp = currentTimestamp
     }
   }
 
