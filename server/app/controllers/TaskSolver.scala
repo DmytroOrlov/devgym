@@ -60,7 +60,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
         val currentTimestamp = (fromClient \ "currentTimestamp").as[Long]
 
         if (Duration(currentTimestamp - prevTimestamp, TimeUnit.MILLISECONDS) < 1.seconds) {
-          Future(Observable(Line("Too many requests from the same client.")))
+          Future(Observable(Line("Too many requests per second from the same client. Slow down")))
         } else {
           val solution = (fromClient \ "solution").as[String]
           val year = (fromClient \ "year").as[Long]

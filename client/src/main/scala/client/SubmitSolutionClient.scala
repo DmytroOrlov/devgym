@@ -9,8 +9,8 @@ import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive.{Ack, Observable, Observer, Subscriber}
 import org.scalajs.dom
 import org.scalajs.jquery.{JQuery, jQuery}
-import shared.view.SuiteReportUtil._
 import shared.model._
+import shared.view.SuiteReportUtil._
 
 import scala.concurrent.Future
 import scala.scalajs.js.Dynamic.{literal => obj}
@@ -21,17 +21,30 @@ object SubmitSolutionClient extends JSApp {
   val editor = new CodeEditor("solution")
   var prevTimestamp = 0L
 
-  def main(): Unit = initSubmitter("submit", to = "report")
+  def main(): Unit = {
+    initSubmitter("submit", to = "report")
+  }
 
   def initSubmitter(buttonId: String, to: String) = {
+    // submit by click
     val submitButton = jQuery(s"#$buttonId")
     submitButton.click(submit _)
+
+    // submit by keyboard shortcut
+    editor.bindShortcut("submitSolution", "Ctrl+Shift+S", "Ctrl+Shift+S", submitSolution)
+
+    def submitSolution(editor: Any): Unit = {
+      if (!isSubmitInProgress)
+        submit()
+    }
+
+    def isSubmitInProgress = submitButton.prop("disabled").asInstanceOf[Boolean]
 
     def disableButton(flag: Boolean = true): Unit = submitButton.prop("disabled", flag)
 
     def submit() = {
-      loadingIcon.show()
       disableButton()
+      loadingIcon.show()
       val testExecution = new TestExecution()
       testExecution.subscribe(new Report(to, () => disableButton(false)))
     }
