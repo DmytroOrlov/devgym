@@ -1,6 +1,6 @@
 INSERT INTO devgym.task (
   year,
-  type,
+  lang,
   timeuuid,
   name,
   description,
@@ -10,7 +10,7 @@ INSERT INTO devgym.task (
   solution_trait
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
-  'scalaClass',
+  'scalaLang',
   3475a7b0-e56d-11e5-aa86-091830ac5256,
   'Max occurrence in array',
   'Find maximum number of occurrences in the given array. Return the element which has the max number of occurrences than

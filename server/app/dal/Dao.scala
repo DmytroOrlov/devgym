@@ -7,8 +7,8 @@ import java.util.{Date, UUID}
 import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.google.inject.Inject
 import dal.Dao._
-import models.TaskType._
-import models.{NewTask, Task, TaskType, User}
+import models.Language._
+import models.{NewTask, Task, Language, User}
 import util.FutureUtils._
 import util.TryFuture
 
@@ -19,9 +19,9 @@ trait Dao {
 
   def addTask(task: NewTask): Future[Unit]
 
-  def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]]
+  def getTasks(lang: Language, limit: Int, yearAgo: Int): Future[Iterable[Task]]
 
-  def getTask(year: Date, taskType: TaskType.TaskType, timeuuid: UUID): Future[Option[Task]]
+  def getTask(year: Date, lang: Language.Language, timeuuid: UUID): Future[Option[Task]]
 }
 
 class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext) extends Dao {
@@ -31,20 +31,20 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     "INSERT INTO user (name, password, timeuuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
   private lazy val addTaskStatement = session.prepare(
-    "INSERT INTO task (year, type, timeuuid, name, description, solution_template, reference_solution, suite, solution_trait)" +
+    "INSERT INTO task (year, lang, timeuuid, name, description, solution_template, reference_solution, suite, solution_trait)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)")
-  private lazy val getLastTasksStatement = session.prepare("SELECT year, type, timeuuid, name, description, solution_template, reference_solution, suite, solution_trait FROM task WHERE" +
+  private lazy val getLastTasksStatement = session.prepare("SELECT year, lang, timeuuid, name, description, solution_template, reference_solution, suite, solution_trait FROM task WHERE" +
     " year = ?" +
-    " and type = ?" +
+    " and lang = ?" +
     " limit ?")
   private lazy val getTaskStatement = session.prepare("SELECT * FROM task WHERE " +
     " year = ?" +
-    " and type = ?" +
+    " and lang = ?" +
     " and timeuuid = ?")
 
   private def toTask(r: Row) = Task(
     r.getTimestamp("year"),
-    models.TaskType.withName(r.getString("type")),
+    models.Language.withName(r.getString("lang")),
     r.getUUID("timeuuid"),
     r.getString("name"),
     r.getString("description"),
@@ -71,19 +71,19 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
 
   def addTask(task: NewTask): Future[Unit] = TryFuture(toFutureUnit {
-    session.executeAsync(addTaskStatement.bind(yearAsOfJan1(), task.`type`.toString, task.name, task.description,
+    session.executeAsync(addTaskStatement.bind(yearAsOfJan1(), task.lang.toString, task.name, task.description,
       task.solutionTemplate, task.referenceSolution, task.suite))
   })
 
-  def getTasks(`type`: TaskType, limit: Int, yearAgo: Int): Future[Iterable[Task]] = TryFuture(
+  def getTasks(lang: Language, limit: Int, yearAgo: Int): Future[Iterable[Task]] = TryFuture(
     toFuture {
       val limitInt: Integer = limit
-      session.executeAsync(getLastTasksStatement.bind(yearAsOfJan1(yearAgo), `type`.toString, limitInt))
+      session.executeAsync(getLastTasksStatement.bind(yearAsOfJan1(yearAgo), lang.toString, limitInt))
     }.map(allTasks))
 
-  def getTask(year: Date, `type`: TaskType, timeuuid: UUID): Future[Option[Task]] = TryFuture(
+  def getTask(year: Date, lang: Language, timeuuid: UUID): Future[Option[Task]] = TryFuture(
     toFuture {
-      session.executeAsync(getTaskStatement.bind(year, `type`.toString, timeuuid))
+      session.executeAsync(getTaskStatement.bind(year, lang.toString, timeuuid))
     }.map(oneTask))
 }
 

@@ -10,7 +10,7 @@ CREATE TABLE devgym.user (
 /
 CREATE TABLE devgym.task (
   year TIMESTAMP,
-  type TEXT,
+  lang TEXT,
   timeuuid TIMEUUID,
   name TEXT,
   description TEXT,
@@ -18,5 +18,5 @@ CREATE TABLE devgym.task (
   reference_solution TEXT,
   suite TEXT,
   solution_trait TEXT,
-  PRIMARY KEY ((year, type), timeuuid)
+  PRIMARY KEY ((year, lang), timeuuid)
 ) WITH CLUSTERING ORDER BY (timeuuid DESC);

@@ -1,6 +1,6 @@
 INSERT INTO devgym.task (
   year,
-  type,
+  lang,
   timeuuid,
   name,
   description,
@@ -10,7 +10,7 @@ INSERT INTO devgym.task (
   solution_trait
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
-  'scalaClass',
+  'scalaLang',
   94268893-4d29-11e6-ac46-f58bd8d3766a,
   'Rotate array by k steps forward',
   'Given array of integers rotate its content by k steps forward. For example: a = {1, 2, 3, 4, 5} to be rotated by 4 steps

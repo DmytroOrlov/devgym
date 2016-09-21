@@ -1,6 +1,6 @@
 INSERT INTO devgym.task (
   year,
-  type,
+  lang,
   timeuuid,
   name,
   description,
@@ -10,7 +10,7 @@ INSERT INTO devgym.task (
   solution_trait
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
-  'scalaClass',
+  'scalaLang',
   915b6150-d90f-11e5-aa5b-091830ac5256,
   'Unique numbers in Array',
   'Find number of unique elements in array of integers. For example, array of (4, 2, 2, 32, 3, 32, 2) should result

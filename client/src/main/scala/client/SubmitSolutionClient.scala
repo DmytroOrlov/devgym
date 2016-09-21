@@ -123,7 +123,7 @@ object SubmitSolutionClient extends JSApp {
         sendOnOpen = Some(obj(
           "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
-          "taskType" -> jQuery("#taskType").`val`().asInstanceOf[String],
+          "lang" -> jQuery("#lang").`val`().asInstanceOf[String],
           "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String],
           "prevTimestamp" -> prevTimestampCopy,
           "currentTimestamp" -> currentTimestamp

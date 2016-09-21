@@ -1,6 +1,6 @@
 INSERT INTO devgym.task (
   year,
-  type,
+  lang,
   timeuuid,
   name,
   description,
@@ -10,7 +10,7 @@ INSERT INTO devgym.task (
   solution_trait
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
-  'scalaClass',
+  'scalaLang',
   467530b0-e3b1-11e5-aa86-091830ac5256,
   'Min difference in array',
   'Find minimum difference in the given array. Numbers can be also negative. Minimum length of array is 2.

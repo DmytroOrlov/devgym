@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import dal.Dao
 import models.NewTask
-import models.TaskType._
+import models.Language._
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.concurrent.Scheduler
 import org.scalamock.scalatest.MockFactory
@@ -63,7 +63,7 @@ class AddTaskTest extends PlaySpec with MockFactory {
         val scalaTestRunner = mock[DynamicSuiteExecutor]
         (scalaTestRunner.apply(_: String, _: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", suiteWithTrait, traitName, *, *)
         val dao = mock[Dao]
-        dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", suiteWithTrait, traitName) returns Future.failed(new RuntimeException("test exception"))
+        dao.addTask _ expects NewTask(scalaLang, "1", "2", "3", "4", suiteWithTrait, traitName) returns Future.failed(new RuntimeException("test exception"))
         //when
         withAddTaskController(scalaTestRunner, dao)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
@@ -81,7 +81,7 @@ class AddTaskTest extends PlaySpec with MockFactory {
         val scalaTestRunner = mock[DynamicSuiteExecutor]
         (scalaTestRunner.apply(_: String, _: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", suiteWithTrait, traitName, *, *)
         val dao = mock[Dao]
-        dao.addTask _ expects NewTask(scalaClass, "1", "2", "3", "4", suiteWithTrait, traitName) returns Future.successful(())
+        dao.addTask _ expects NewTask(scalaLang, "1", "2", "3", "4", suiteWithTrait, traitName) returns Future.successful(())
         //when
         withAddTaskController(scalaTestRunner, dao)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
@@ -107,7 +107,7 @@ class AddTaskTest extends PlaySpec with MockFactory {
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")
-          dao.addTask _ verify NewTask(scalaClass, "0", "1", "2", solution, badSuite, "solution trait") never()
+          dao.addTask _ verify NewTask(scalaLang, "0", "1", "2", solution, badSuite, "solution trait") never()
         })
       }
     }

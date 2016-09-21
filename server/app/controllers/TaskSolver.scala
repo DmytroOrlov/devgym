@@ -9,7 +9,7 @@ import com.google.inject.Inject
 import controllers.TaskSolver._
 import controllers.UserController._
 import dal.Dao
-import models.{Task, TaskType}
+import models.{Task, Language}
 import monifu.concurrent.Scheduler
 import monifu.reactive.Observable
 import org.scalatest.Suite
@@ -37,18 +37,18 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     mapping(
       solution -> nonEmptyText,
       year -> longNumber,
-      taskType -> nonEmptyText,
+      lang -> nonEmptyText,
       timeuuid -> nonEmptyText
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  def getTask(year: Long, taskType: String, timeuuid: UUID) = Action.async { implicit request =>
+  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
-    val task = TryFuture(getCachedTask(year, taskType, timeuuid))
+    val task = TryFuture(getCachedTask(year, lang, timeuuid))
     task.map {
       case Some(t) => Ok(views.html.task(t.name, t.description,
-        solutionForm.fill(SolutionForm(t.solutionTemplate, year, taskType, timeuuid.toString))))
+        solutionForm.fill(SolutionForm(t.solutionTemplate, year, lang, timeuuid.toString))))
       case None => notFound
     }.recover { case NonFatal(e) => notFound }
   }
@@ -64,10 +64,10 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
         } else {
           val solution = (fromClient \ "solution").as[String]
           val year = (fromClient \ "year").as[Long]
-          val taskType = (fromClient \ "taskType").as[String]
+          val lang = (fromClient \ "lang").as[String]
           val timeuuid = (fromClient \ "timeuuid").as[String]
 
-          val task = getCachedTask(year, taskType, UUID.fromString(timeuuid))
+          val task = getCachedTask(year, lang, UUID.fromString(timeuuid))
           task.map { t =>
             if (t.isEmpty) throw new RuntimeException(s"Task is not available for a given solution: $solution")
             ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testResult)
@@ -79,13 +79,13 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }
   }
 
-  private def getCachedTask(year: Long, taskType: String, timeuuid: UUID): Future[Option[Task]] = {
+  private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
     def getFromDb: Future[Option[Task]] = {
-      Logger.debug(s"getting task from db: $year, $taskType, $timeuuid")
-      TryFuture(dao.getTask(new Date(year), TaskType.withName(taskType), timeuuid))
+      Logger.debug(s"getting task from db: $year, $lang, $timeuuid")
+      TryFuture(dao.getTask(new Date(year), Language.withName(lang), timeuuid))
     }
 
-    val suiteKey = (year, taskType, timeuuid).toString()
+    val suiteKey = (year, lang, timeuuid).toString()
 
     val task = cache.get[Task](suiteKey)
     task match {
@@ -135,7 +135,7 @@ object TaskSolver {
   val cannotCheckNow = "cannotCheckNow"
   val solution = "solution"
   val year = "year"
-  val taskType = "taskType"
+  val lang = "lang"
   val timeuuid = "timeuuid"
 
   val expiration = 60 seconds
