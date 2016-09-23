@@ -1,0 +1,5 @@
+1. Do not use solution trait:
+    - add SUT function(s) dynamically to the test suite source the before test run
+    !Limitation: it won't work with runtime runner which is bassev on classpath
+
+2. Add Task with multiple functions to implement. For example: LinkedList or Stack

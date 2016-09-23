@@ -17,6 +17,8 @@ import scala.concurrent.{ExecutionContext, Future}
 trait Dao {
   def create(user: User): Future[Boolean]
 
+  def find(userName: String): Future[Option[User]]
+
   def addTask(task: NewTask): Future[Unit]
 
   def getTasks(lang: Language, limit: Int, yearAgo: Int): Future[Iterable[Task]]
@@ -30,6 +32,9 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
   private lazy val createUserStatement = session.prepare(
     "INSERT INTO user (name, password, timeuuid)" +
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
+  private lazy val findUserStatement = session.prepare(
+    "SELECT * FROM user WHERE" +
+    " name = ?")
   private lazy val addTaskStatement = session.prepare(
     "INSERT INTO task (year, lang, timeuuid, name, description, solution_template, reference_solution, suite, solution_trait)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)")
@@ -54,6 +59,12 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
     r.getString("solution_trait")
   )
 
+  private def toUser(r: Row) = new User(
+    r.getString("name"),
+    r.getUUID("timeuuid"),
+    r.getString("password")
+  )
+
   private def all[T](f: Row => T)(res: ResultSet): Iterable[T] = {
     import scala.collection.JavaConversions._
     res.map(f)
@@ -69,6 +80,9 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
 
   def create(user: User): Future[Boolean] = TryFuture(toFuture(
     session.executeAsync(createUserStatement.bind(user.name, user.password)))).map(_.one().getBool(applied))
+
+  def find(userName: String): Future[Option[User]] = TryFuture(toFuture(
+    session.executeAsync(findUserStatement.bind(userName)))).map(one(toUser))
 
   def addTask(task: NewTask): Future[Unit] = TryFuture(toFutureUnit {
     session.executeAsync(addTaskStatement.bind(yearAsOfJan1(), task.lang.toString, task.name, task.description,
