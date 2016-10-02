@@ -41,7 +41,7 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
     }
   }
 
-  def postRegister() = Action.async { implicit request =>
+  def postRegister = Action.async { implicit request =>
     def nameBusy = BadRequest(views.html.register(registerForm.bindFromRequest
       .withError(name, messagesApi(nameRegistered))))
 
@@ -75,7 +75,7 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
     }
   }
 
-  def postLogin() = Action.async { implicit request =>
+  def postLogin = Action.async { implicit request =>
     loginForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.login(errorForm)))
