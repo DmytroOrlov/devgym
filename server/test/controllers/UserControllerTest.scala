@@ -6,13 +6,14 @@ import dal.Dao
 import models.User
 import monifu.concurrent.Implicits.globalScheduler
 import org.scalamock.scalatest.MockFactory
-import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
+import org.scalatest.DoNotDiscover
+import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 import scala.concurrent.Future
 
-class UserControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
+@DoNotDiscover class UserControllerTest extends PlaySpec with MockFactory with ConfiguredApp {
   implicit val system = ActorSystem()
   implicit val mat = ActorMaterializer()
 
