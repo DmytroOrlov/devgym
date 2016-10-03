@@ -77,6 +77,16 @@ class UserControllerTest extends PlaySpec with MockFactory with OneAppPerSuite {
         redirectLocation(result) mustBe Some("/")
       }
     }
+    "registration form" should {
+      "not register new user with not matched passwords" in {
+        //when
+        val result = controller.postRegister(FakeRequest("POST", "ignore")
+          .withFormUrlEncodedBody("name" -> "name", "password" -> "pass", "verify" -> "no match"))
+        //then
+        status(result) mustBe BAD_REQUEST
+        redirectLocation(result) mustBe None
+      }
+    }
   }
 
   def controller = new UserController(mock[Dao], new MockMessageApi)
