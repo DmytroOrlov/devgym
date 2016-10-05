@@ -8,7 +8,7 @@ import com.datastax.driver.core.{ResultSet, Row, Session}
 import com.google.inject.Inject
 import dal.Dao._
 import models.Language._
-import models.{NewTask, Task, Language, User}
+import models.{Language, NewTask, Task, User}
 import util.FutureUtils._
 import util.TryFuture
 
@@ -34,7 +34,7 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
       " VALUES (?, ?, NOW()) IF NOT EXISTS")
   private lazy val findUserStatement = session.prepare(
     "SELECT * FROM user WHERE" +
-    " name = ?")
+      " name = ?")
   private lazy val addTaskStatement = session.prepare(
     "INSERT INTO task (year, lang, timeuuid, name, description, solution_template, reference_solution, suite, solution_trait)" +
       " VALUES (?, ?, NOW(), ?, ?, ?, ?, ?)")
@@ -76,6 +76,7 @@ class DaoImpl @Inject()(cluster: CassandraCluster)(implicit ec: ExecutionContext
   }
 
   private def allTasks = all(toTask) _
+
   private def oneTask = one(toTask) _
 
   def create(user: User): Future[Boolean] = TryFuture(toFuture(

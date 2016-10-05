@@ -11,8 +11,8 @@ trait RuntimeSuiteExecutor {
 
 trait ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with SuiteToolbox {
   /**
-   * Runs suite loaded in runtime with dynamic solution
-   */
+    * Runs suite loaded in runtime with dynamic solution
+    */
   def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef], solution: String)
            (channel: String => Unit)
            (implicit s: Scheduler): String = {

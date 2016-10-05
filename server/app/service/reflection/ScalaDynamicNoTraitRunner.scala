@@ -4,9 +4,9 @@ import monifu.concurrent.Scheduler
 
 trait ScalaDynamicNoTraitRunner extends DynamicExecution {
   /**
-   * Runs dynamic solution as well as dynamic suite using the structural type for test, instead of explicitly defined
-   * trait
-   */
+    * Runs dynamic solution as well as dynamic suite using the structural type for test, instead of explicitly defined
+    * trait
+    */
   def execSuiteNoTrait(solution: String, suite: String)
                       (channel: String => Unit)
                       (implicit s: Scheduler): String = {

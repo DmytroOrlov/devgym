@@ -69,7 +69,7 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
     )
   }
 
-  def getLogin = Action { implicit  request =>
+  def getLogin = Action { implicit request =>
     request.session.get(username).fold(Ok(views.html.login(loginForm))) { _ =>
       Redirect(routes.Application.index).flashing(flashToUser -> messagesApi(alreadyLoggedin))
     }
@@ -97,6 +97,7 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
 }
 
 case class RegisterForm(name: String, password: String, verify: String)
+
 case class LoginForm(name: String, password: String)
 
 object UserController {
@@ -127,5 +128,6 @@ object UserController {
   }
 
   def combine(password: String, salt: String) = password + "," + salt
+
   def getSalt(password: String) = password.split(",")(1)
 }

@@ -71,9 +71,9 @@ object SimpleWebSocketActor {
   }
 
   /**
-   * Used in order to not confuse self messages versus those
-   * sent from the client.
-   */
+    * Used in order to not confuse self messages versus those
+    * sent from the client.
+    */
   case class Next(value: JsValue)
 
 }

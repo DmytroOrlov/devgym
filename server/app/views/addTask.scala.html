@@ -13,7 +13,7 @@
             @Html(SuiteReportUtil.enhanceReport(testReport))
             @inputText(task(taskName), 'size -> "50", 'placeholder -> "Some Name...")
 
-            <!-- -Task Description -->
+                <!-- -Task Description -->
             <div class="form-row">
                 <div class="form-cell">
                 @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90", 'maxlength -> 1500,
@@ -43,9 +43,9 @@
                     <a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseSolutionExample" aria-expanded="false" aria-controls="collapseSolutionExample">
                         Show Example
                     </a>
-                <div class="collapse" id="collapseSolutionExample">
-                    <div class="well well-lg ace_editor_example" id="solutionTemplateExample"></div>
-                </div>
+                    <div class="collapse" id="collapseSolutionExample">
+                        <div class="well well-lg ace_editor_example" id="solutionTemplateExample"></div>
+                    </div>
                 </p>
             </div>
             @textarea(task(solutionTemplate), 'rows -> "10", 'cols -> "90")

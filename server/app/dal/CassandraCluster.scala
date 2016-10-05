@@ -4,14 +4,13 @@ import com.datastax.driver.core.{Cluster, Session}
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.Config
 import play.api.inject.ApplicationLifecycle
-import play.api.{Configuration, Environment}
+import play.api.{Configuration, Environment, Logger}
 import util.FutureUtils.toFutureUnit
-import play.api.Logger
 
 import scala.concurrent.ExecutionContext
 import scala.sys.process._
-import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
@@ -23,7 +22,9 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
       .build()
 
   def noKeySpaceSession: Session = cluster.connect()
+
   def session: Session = cluster.connect(conf.keySpace)
+
   def stop() = toFutureUnit(cluster.closeAsync())
 
   Logger.info(s"Cassandra host to be used : '${hosts.mkString(",")}' with port:${conf.port}")

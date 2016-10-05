@@ -9,7 +9,7 @@ import com.google.inject.Inject
 import controllers.TaskSolver._
 import controllers.UserController._
 import dal.Dao
-import models.{Task, Language}
+import models.{Language, Task}
 import monifu.concurrent.Scheduler
 import monifu.reactive.Observable
 import org.scalatest.Suite

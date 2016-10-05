@@ -16,9 +16,11 @@ class DevgymModule extends AbstractModule {
     bind(classOf[DynamicSuiteExecutor]) to classOf[ScalaTestRunner]
   }
 
-  @Provides @Singleton
+  @Provides
+  @Singleton
   def config(ec: ExecutionContext): Scheduler = Scheduler(ec)
 
-  @Provides @Singleton
+  @Provides
+  @Singleton
   def config(c: Configuration): Config = c.underlying
 }
