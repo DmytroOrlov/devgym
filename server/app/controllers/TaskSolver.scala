@@ -1,5 +1,6 @@
 package controllers
 
+import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
 import akka.actor.ActorSystem
@@ -10,6 +11,7 @@ import controllers.UserController._
 import dal.Dao
 import models.{Task, TaskType}
 import monifu.concurrent.Scheduler
+import monifu.reactive.Observable
 import org.scalatest.Suite
 import play.api.Logger
 import play.api.cache.CacheApi
@@ -21,7 +23,7 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.model.Compiling
+import shared.model.{Compiling, Line}
 import util.TryFuture
 
 import scala.concurrent.Future
@@ -54,15 +56,22 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   def taskStream = WebSocket.accept { req =>
     ActorFlow.actorRef[JsValue, JsValue] { out =>
       SimpleWebSocketActor.props(out, (fromClient: JsValue) => {
-        val solution = (fromClient \ "solution").as[String]
-        val year = (fromClient \ "year").as[Long]
-        val taskType = (fromClient \ "taskType").as[String]
-        val timeuuid = (fromClient \ "timeuuid").as[String]
+        val prevTimestamp = (fromClient \ "prevTimestamp").as[Long]
+        val currentTimestamp = (fromClient \ "currentTimestamp").as[Long]
 
-        val task = getCachedTask(year, taskType, UUID.fromString(timeuuid))
-        task.map { t =>
-          if (t.isEmpty) throw new RuntimeException(s"Task is not available for a given solution: $solution")
-          ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testResult)
+        if (Duration(currentTimestamp - prevTimestamp, TimeUnit.MILLISECONDS) < 1.seconds) {
+          Future(Observable(Line("Too many requests from the same client.")))
+        } else {
+          val solution = (fromClient \ "solution").as[String]
+          val year = (fromClient \ "year").as[Long]
+          val taskType = (fromClient \ "taskType").as[String]
+          val timeuuid = (fromClient \ "timeuuid").as[String]
+
+          val task = getCachedTask(year, taskType, UUID.fromString(timeuuid))
+          task.map { t =>
+            if (t.isEmpty) throw new RuntimeException(s"Task is not available for a given solution: $solution")
+            ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testResult)
+          }
         }
       },
         Some(Compiling())
