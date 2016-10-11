@@ -1,6 +1,6 @@
 INSERT INTO devgym.task (
   year,
-  type,
+  lang,
   timeuuid,
   name,
   description,
@@ -10,7 +10,7 @@ INSERT INTO devgym.task (
   solution_trait
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
-  'scalaClass',
+  'scalaLang',
   9894cd10-ce12-11e5-8ee9-091830ac5256,
   'Array of max sum',
   'Implement apply function to return  a sub-array of original array ''a'', which has maximum sum of its elements.

@@ -5,7 +5,7 @@ import controllers.AddTask._
 import controllers.UserController._
 import dal.Dao
 import models.NewTask
-import models.TaskType._
+import models.Language._
 import monifu.concurrent.Scheduler
 import play.api.Logger
 import play.api.data.Form
@@ -56,7 +56,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
 
           tR.testStatus match {
             case TestStatus.Passed =>
-              dao.addTask(NewTask(scalaClass, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
+              dao.addTask(NewTask(scalaLang, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
                 .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
                 .recover {
                   case NonFatal(e) => Logger.warn(e.getMessage, e)

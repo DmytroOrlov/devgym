@@ -10,7 +10,7 @@
     @form(routes.Application.index()) {
         @textarea(solutionForm(solution), 'rows -> "25", 'cols -> "80")
         <input type="hidden" id="@year" value='@solutionForm(year).value' >
-        <input type="hidden" id="@taskType" value='@solutionForm(taskType).value' >
+        <input type="hidden" id="@lang" value='@solutionForm(lang).value' >
         <input type="hidden" id="@timeuuid" value='@solutionForm(timeuuid).value' >
         <input type="button" value="@msg("submit")" id="submit" class="btn btn-primary"/>
         <span>Ctrl+Shift+S</span>

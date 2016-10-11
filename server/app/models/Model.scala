@@ -2,17 +2,19 @@ package models
 
 import java.util.{Date, UUID}
 
+import models.Language.Language
+
 
 case class User(name: String, password: String)
 
-case class Task(year: Date, `type`: TaskType.TaskType, timeuuid: UUID, name: String, description: String,
+case class Task(year: Date, lang: Language, timeuuid: UUID, name: String, description: String,
                 solutionTemplate: String, referenceSolution: String, suite: String, solutionTrait: String)
 
-case class NewTask(`type`: TaskType.TaskType, name: String, description: String, solutionTemplate: String,
+case class NewTask(lang: Language, name: String, description: String, solutionTemplate: String,
                    referenceSolution: String, suite: String, solutionTrait: String)
 
-object TaskType extends Enumeration {
-  type TaskType = Value
+object Language extends Enumeration {
+  type Language = Value
 
-  val scalaClass = Value
+  val scalaLang = Value
 }

@@ -1,6 +1,6 @@
 INSERT INTO devgym.task (
   year,
-  type,
+  lang,
   timeuuid,
   name,
   description,
@@ -10,7 +10,7 @@ INSERT INTO devgym.task (
   solution_trait
 ) VALUES (
   '2016-01-01 00:00:00 UTC',
-  'scalaClass',
+  'scalaLang',
   d09d48c4-4d2b-11e6-ac46-f58bd8d3766a,
   'Reverse words in a string',
   'Given an input string, reverse the string word by word.

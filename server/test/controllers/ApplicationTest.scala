@@ -103,17 +103,17 @@ import tag.RequireDB
         val instant = year.atStartOfDay().atZone(ZoneOffset.UTC).toInstant
 
         val Some(result) = route(app,
-          FakeRequest(GET, s"/task/scalaClass/${Date.from(instant).getTime}/9894cd10-ce12-11e5-8ee9-091830ac5256"))
+          FakeRequest(GET, s"/task/scalaLang/${Date.from(instant).getTime}/9894cd10-ce12-11e5-8ee9-091830ac5256"))
 
         status(result) mustBe OK
         contentAsString(result) must (
-          include("<form") and include("solution") and include("taskType") and include("timeuuid") and include("year")
+          include("<form") and include("solution") and include("lang") and include("timeuuid") and include("year")
             and include( """<input type="button""""))
       }
     }
     "get the unavailable task" should {
       "result BadRequest with Error" in {
-        val Some(result) = route(app, FakeRequest(GET, s"/task/scalaClass/${new Date().getTime}/${new UUID(1, 1)}"))
+        val Some(result) = route(app, FakeRequest(GET, s"/task/scalaLang/${new Date().getTime}/${new UUID(1, 1)}"))
 
         status(result) mustBe SEE_OTHER
         flash(result).get("flashToUser").get must be("Task does not exist")
