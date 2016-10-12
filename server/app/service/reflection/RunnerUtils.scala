@@ -8,9 +8,10 @@ import scala.util.control.NonFatal
 
 trait SuiteExecution {
   /**
-   * Executes tests in this <code>Suite</code>.
-   * @param channel is used to pass the test result to
-   */
+    * Executes tests in this <code>Suite</code>.
+    *
+    * @param channel is used to pass the test result to
+    */
   def executionTestSuite(suite: Suite, channel: String => Unit): String = {
     val result = new StringBuilder
     val s = new OutputStream() {

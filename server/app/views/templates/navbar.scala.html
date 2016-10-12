@@ -9,13 +9,12 @@
         <nav id="bs-navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li><a href="@routes.AddTask.getAddTask()">@msg("addTask")</a></li>
-                <li>
                 @session.get(username).fold {
-                    <a href="@routes.UserController.getRegister()">@msg("register")</a>
+                    <li><a href="@routes.UserController.getLogin()">@msg("login")</a></li>
+                    <li><a href="@routes.UserController.getRegister()">@msg("register")</a></li>
                 } { _ =>
-                    <a href="@routes.Application.logout()">@msg("logout")</a>
+                    <li><a href="@routes.Application.logout()">@msg("logout")</a></li>
                 }
-                </li>
             </ul>
         </nav>
     </div>

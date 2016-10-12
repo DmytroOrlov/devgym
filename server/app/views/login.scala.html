@@ -1,0 +1,13 @@
+@import UserController._
+@import helper._
+@import views.html.templates.main
+
+@(user: Form[LoginForm])(implicit flash: Flash, msg: Messages, session: Session)
+
+@main(msg("login")) {
+    @form(routes.UserController.postLogin()) {
+        @inputText(user(name))
+        @inputPassword(user(password))
+        <input type="submit" value="@msg("login")" class="btn btn-primary"/>
+    }
+}

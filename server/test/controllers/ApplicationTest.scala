@@ -34,8 +34,15 @@ import tag.RequireDB
   }
   "AddTask" when {
     "get addTask" should {
-      "result with form" in {
+      "result with non-logged user message" in {
         val Some(result) = route(app, FakeRequest(GET, "/addTask"))
+        status(result) mustBe OK
+        contentAsString(result) must include("Please login or register")
+      }
+    }
+    "get addTask" should {
+      "result with form" in {
+        val Some(result) = route(app, FakeRequest(GET, "/addTask").withSession("username" -> "user1"))
 
         status(result) mustBe OK
         contentAsString(result) must (
@@ -46,7 +53,9 @@ import tag.RequireDB
     }
     "post form with missed fields to addTask" should {
       "result BadRequest with error1" in {
-        val Some(result) = route(app, FakeRequest(POST, "/addTask").withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3" /*, "suite" -> "4"*/))
+        val Some(result) = route(app, FakeRequest(POST, "/addTask")
+          .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3")
+          .withSession("username" -> "user1"))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (
@@ -55,7 +64,9 @@ import tag.RequireDB
         contentAsString(result) must (include( """class="error"""") and include("This field is required"))
       }
       "result BadRequest with error2" in {
-        val Some(result) = route(app, FakeRequest(POST, "/addTask").withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", /*"referenceSolution" -> "3",*/ "suite" -> "4"))
+        val Some(result) = route(app, FakeRequest(POST, "/addTask")
+          .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", "suite" -> "4")
+          .withSession("username" -> "user1"))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")
@@ -64,7 +75,9 @@ import tag.RequireDB
         contentAsString(result) must (include( """class="error"""") and include("This field is required"))
       }
       "result BadRequest with error3" in {
-        val Some(result) = route(app, FakeRequest(POST, "/addTask").withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", /*"solutionTemplate" -> "2",*/ "referenceSolution" -> "3", "suite" -> "4"))
+        val Some(result) = route(app, FakeRequest(POST, "/addTask")
+          .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "referenceSolution" -> "3", "suite" -> "4")
+          .withSession("username" -> "user1"))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")
@@ -73,7 +86,9 @@ import tag.RequireDB
         contentAsString(result) must (include( """class="error"""") and include("This field is required"))
       }
       "result BadRequest with error4" in {
-        val Some(result) = route(app, FakeRequest(POST, "/addTask").withFormUrlEncodedBody("taskName" -> "0", /*"taskDescription" -> "1",*/ "solutionTemplate" -> "2", "referenceSolution" -> "3" /*, "suite" -> "4"*/))
+        val Some(result) = route(app, FakeRequest(POST, "/addTask")
+          .withFormUrlEncodedBody("taskName" -> "0", "solutionTemplate" -> "2", "referenceSolution" -> "3")
+          .withSession("username" -> "user1"))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")
@@ -84,8 +99,9 @@ import tag.RequireDB
     }
     "post form with bad solution to addTask" should {
       "result BadRequest with error" in {
-        val Some(result) = route(app, FakeRequest(POST, "/addTask").withFormUrlEncodedBody("taskName" -> "0",
-          "taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3", "suite" -> "trait ST"))
+        val Some(result) = route(app, FakeRequest(POST, "/addTask")
+          .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3", "suite" -> "trait ST")
+          .withSession("username" -> "user1"))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")

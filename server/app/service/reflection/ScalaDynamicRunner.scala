@@ -11,8 +11,8 @@ trait DynamicSuiteExecutor {
 trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
 
   /**
-   * Runs dynamic solution and dynamic suite
-   */
+    * Runs dynamic solution and dynamic suite
+    */
   def apply(solution: String, suite: String, solutionTrait: String)
            (channel: String => Unit)
            (implicit s: Scheduler): String = {

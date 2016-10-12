@@ -1,23 +1,23 @@
 @import views.html.templates.mainFlashToUser
 
 @(tasks: Iterable[Task])(implicit flash: Flash, session: Session, msg: Messages)
-    @mainFlashToUser(msg("home")) {
-        <h3>Latest Exercises</h3>
+@mainFlashToUser(msg("home")) {
+    <h3>Latest Exercises</h3>
 
-        <div class="row">
-        @for(task <- tasks) {
-            <div class="col-sm-6 col-md-4">
-                <div class="thumbnail">
-                    <div class="caption">
-                        <h4>
-                            <a href="@routes.TaskSolver.getTask(task.year.getTime, task.lang.toString, task.timeuuid)">@task.name</a>
-                        </h4>
-                        <p class="shortTaskDescription">
+    <div class="row">
+    @for(task <- tasks) {
+        <div class="col-sm-6 col-md-4">
+            <div class="thumbnail">
+                <div class="caption">
+                    <h4>
+                        <a href="@routes.TaskSolver.getTask(task.year.getTime, task.lang.toString, task.timeuuid)">@task.name</a>
+                    </h4>
+                    <p class="shortTaskDescription">
                         @Html(task.description.take(300)) ...
-                        </p>
-                    </div>
+                    </p>
                 </div>
             </div>
-        }
         </div>
     }
+    </div>
+}

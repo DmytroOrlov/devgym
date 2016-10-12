@@ -14,7 +14,6 @@ INSERT INTO devgym.task (
   d09d48c4-4d2b-11e6-ac46-f58bd8d3766a,
   'Reverse words in a string',
   'Given an input string, reverse the string word by word.
-
    For example, given s = "it is given string to be reversed", return "reversed be to string given is it"',
   'class ReverseWords {
   def reverse(s: String): String = {

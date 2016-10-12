@@ -3,20 +3,20 @@ package controllers
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import dal.Dao
-import models.NewTask
 import models.Language._
+import models.NewTask
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.concurrent.Scheduler
 import org.scalamock.scalatest.MockFactory
-import org.scalatestplus.play.PlaySpec
+import org.scalatest.DoNotDiscover
+import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
 import play.api.test.Helpers._
 import play.api.test._
-import service._
 import service.reflection.{DynamicSuiteExecutor, ScalaTestRunner}
 
 import scala.concurrent.Future
 
-class AddTaskTest extends PlaySpec with MockFactory {
+@DoNotDiscover class AddTaskTest extends PlaySpec with MockFactory with ConfiguredApp {
   val suiteWithTrait = "trait ST"
   val traitName = "ST"
   implicit val system = ActorSystem()
@@ -32,7 +32,8 @@ class AddTaskTest extends PlaySpec with MockFactory {
         withAddTaskController(scalaTestRunner)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
-              "referenceSolution" -> "4", "suite" -> suiteWithTrait))
+              "referenceSolution" -> "4", "suite" -> suiteWithTrait)
+            .withSession("username" -> "user1"))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")
@@ -50,7 +51,8 @@ class AddTaskTest extends PlaySpec with MockFactory {
         withAddTaskController(scalaTestRunner)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
-              "referenceSolution" -> "4", "suite" -> "wrong traitkeyword"))
+              "referenceSolution" -> "4", "suite" -> "wrong traitkeyword")
+            .withSession("username" -> "user1"))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")
@@ -68,7 +70,8 @@ class AddTaskTest extends PlaySpec with MockFactory {
         withAddTaskController(scalaTestRunner, dao)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
-              "referenceSolution" -> "4", "suite" -> suiteWithTrait))
+              "referenceSolution" -> "4", "suite" -> suiteWithTrait)
+            .withSession("username" -> "user1"))
           //then
           status(result) mustBe INTERNAL_SERVER_ERROR
           contentAsString(result) must include( """class="error"></dd>""")
@@ -103,7 +106,8 @@ class AddTaskTest extends PlaySpec with MockFactory {
         withAddTaskController(new ScalaTestRunner, dao)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1",
-              "solutionTemplate" -> "2", "referenceSolution" -> solution, "suite" -> badSuite))
+              "solutionTemplate" -> "2", "referenceSolution" -> solution, "suite" -> badSuite)
+            .withSession("username" -> "user1"))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")

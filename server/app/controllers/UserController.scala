@@ -27,6 +27,13 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
     )(RegisterForm.apply)(RegisterForm.unapply) verifying(passwordsNotMatched, validatePassword _)
   }
 
+  val loginForm: Form[LoginForm] = Form {
+    mapping(
+      name -> nonEmptyText,
+      password -> nonEmptyText
+    )(LoginForm.apply)(LoginForm.unapply)
+  }
+
   def getRegister = Action { implicit request =>
     request.session.get(username).fold(Ok(views.html.register(registerForm))) { _ =>
       Redirect(routes.Application.index)
@@ -34,7 +41,7 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
     }
   }
 
-  def postRegister() = Action.async { implicit request =>
+  def postRegister = Action.async { implicit request =>
     def nameBusy = BadRequest(views.html.register(registerForm.bindFromRequest
       .withError(name, messagesApi(nameRegistered))))
 
@@ -48,7 +55,7 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
         Future.successful(BadRequest(views.html.register(withPasswordMatchError(errorForm))))
       },
       form => {
-        val hashSalt = toHashSalt(form.password, Random.nextInt().toString) match { case (h, s) => combine(h, s)}
+        val hashSalt = toHashSalt(form.password, Random.nextInt().toString)
         dao.create(User(form.name, hashSalt)).map { applied =>
           if (applied) Redirect(routes.Application.index)
             .withSession(username -> form.name)
@@ -61,9 +68,37 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
       }
     )
   }
+
+  def getLogin = Action { implicit request =>
+    request.session.get(username).fold(Ok(views.html.login(loginForm))) { _ =>
+      Redirect(routes.Application.index).flashing(flashToUser -> messagesApi(alreadyLoggedin))
+    }
+  }
+
+  def postLogin = Action.async { implicit request =>
+    loginForm.bindFromRequest.fold(
+      errorForm => {
+        Future.successful(BadRequest(views.html.login(errorForm)))
+      },
+      f => {
+        def passwordsMatch(userPassword: String, formPassword: String) = {
+          userPassword == toHashSalt(formPassword, getSalt(userPassword))
+        }
+        dao.find(f.name).map {
+          case Some(u) if passwordsMatch(u.password, f.password) => Redirect(routes.Application.index)
+            .withSession(username -> f.name)
+          case _ => BadRequest(views.html.login(loginForm.bindFromRequest()
+            .withError(name, messagesApi(nameOrPasswordsNotMatched))))
+        }
+      }
+    )
+  }
+
 }
 
 case class RegisterForm(name: String, password: String, verify: String)
+
+case class LoginForm(name: String, password: String)
 
 object UserController {
   val username = "username"
@@ -75,8 +110,10 @@ object UserController {
 
   val userRegistered = "userRegistered"
   val alreadyRegistered = "alreadyRegistered"
+  val alreadyLoggedin = "alreadyLoggedin"
   val nameRegistered = "nameRegistered"
   val passwordsNotMatched = "passwordsNotMatched"
+  val nameOrPasswordsNotMatched = "nameOrPasswordsNotMatched"
 
   def validatePassword(f: RegisterForm) = f.password.equals(f.verify)
 
@@ -87,8 +124,10 @@ object UserController {
     val digest = MessageDigest.getInstance("MD5")
     digest.update(withSalt.getBytes)
     val hashedBytes = new String(digest.digest, "UTF-8").getBytes
-    encoder.encode(hashedBytes) -> salt
+    combine(encoder.encode(hashedBytes), salt)
   }
 
   def combine(password: String, salt: String) = password + "," + salt
+
+  def getSalt(password: String) = password.split(",")(1)
 }

@@ -6,74 +6,78 @@
 @(task: Form[AddTaskForm], testReport: Option[String] = None)(implicit flash: Flash, msg: Messages, session: Session)
 
 @mainFlashToUser(msg("addTask")) {
-    @form(routes.AddTask.postNewTask()) {
-        @Html(SuiteReportUtil.enhanceReport(testReport))
-        @inputText(task(taskName), 'size -> "50", 'placeholder -> "Some Name...")
+    @session.get(UserController.username).fold {
+        <p>@msg("loginToAddTask")</p>
+    } { _ =>
+        @form(routes.AddTask.postNewTask()) {
+            @Html(SuiteReportUtil.enhanceReport(testReport))
+            @inputText(task(taskName), 'size -> "50", 'placeholder -> "Some Name...")
 
-        <!-- -Task Description -->
-        <div class="form-row">
-            <div class="form-cell">
+                <!-- -Task Description -->
+            <div class="form-row">
+                <div class="form-cell">
                 @textarea(task(taskDescription), 'rows -> "10", 'cols -> "90", 'maxlength -> 1500,
                     'placeholder ->
-                        "Implement a function to return an array .... and bla-bla... (max length is 1500 characters)")
+                            "Implement a function to return an array .... and bla-bla... (max length is 1500 characters)")
+                </div>
+                <div class="form-cell-narrow"></div>
             </div>
-            <div class="form-cell-narrow"></div>
-        </div>
 
-        <!-- Reference Solution -->
-        <br/>
-        <div class="bs-callout-info">
-            <h4>Reference Solution</h4>
-            <p>
-                Put complete solution code here. It should satisfy below unit test(s). You can use reference solution for
-                solution template after removing methods bodies to be implemented.
-            </p>
-        </div>
-        @textarea(task(referenceSolution), 'rows -> "23", 'cols -> "90")
+                <!-- Reference Solution -->
+            <br/>
+            <div class="bs-callout-info">
+                <h4>Reference Solution</h4>
+                <p>
+                    Put complete solution code here. It should satisfy below unit test(s). You can use reference solution for
+                    solution template after removing methods bodies to be implemented.
+                </p>
+            </div>
+            @textarea(task(referenceSolution), 'rows -> "23", 'cols -> "90")
 
-        <!-- Solution Template -->
-        <br/>
-        <div class="bs-callout-info">
-            <h4>Solution Template</h4>
-            <p>Copy reference solution here, but remove that code you want another person to implement.</p>
-            <p>
-                <a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseSolutionExample" aria-expanded="false" aria-controls="collapseSolutionExample">
-                    Show Example
-                </a>
-                <div class="collapse" id="collapseSolutionExample">
-                    <div class="well well-lg ace_editor_example" id="solutionTemplateExample"></div>
-                </div>
-            </p>
-        </div>
-        @textarea(task(solutionTemplate), 'rows -> "10", 'cols -> "90")
+                <!-- Solution Template -->
+            <br/>
+            <div class="bs-callout-info">
+                <h4>Solution Template</h4>
+                <p>Copy reference solution here, but remove that code you want another person to implement.</p>
+                <p>
+                    <a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseSolutionExample" aria-expanded="false" aria-controls="collapseSolutionExample">
+                        Show Example
+                    </a>
+                    <div class="collapse" id="collapseSolutionExample">
+                        <div class="well well-lg ace_editor_example" id="solutionTemplateExample"></div>
+                    </div>
+                </p>
+            </div>
+            @textarea(task(solutionTemplate), 'rows -> "10", 'cols -> "90")
 
-        <!-- Test Suite -->
-        <br/>
-        <div class="bs-callout-info">
-            <h4>Test Suite</h4>
-            <p>There are two things to be defined inside below text area:</p>
-            <p>
-                1. Test with single parameter of solution type. <br/>
-                2. Solution scala trait. Put it right after the test code.
-            </p>
-            <p>
-                <a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseSuiteExample" aria-expanded="false" aria-controls="collapseSuiteExample">
-                    Show Example
-                </a>
-                <div class="collapse" id="collapseSuiteExample">
-                    <div class="well well-lg ace_editor_example_wide" id="suiteExample"></div>
-                </div>
-            </p>
-        </div>
-        @textarea(task(suite), 'rows -> "20", 'cols -> "90")
+                <!-- Test Suite -->
+            <br/>
+            <div class="bs-callout-info">
+                <h4>Scala Test Suite</h4>
+                <p>There are two things to be defined inside below text area:</p>
+                <p>
+                    1. Test using <b>org.scalatest</b> library with single parameter of solution type. <br/>
+                    2. Solution scala trait. Put it right after the test code.
+                </p>
+                <p>
+                    <a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseSuiteExample" aria-expanded="false" aria-controls="collapseSuiteExample">
+                        Show Example
+                    </a>
+            <div class="collapse" id="collapseSuiteExample">
+                <div class="well well-lg ace_editor_example_wide" id="suiteExample"></div>
+            </div>
+                </p>
+            </div>
+            @textarea(task(suite), 'rows -> "20", 'cols -> "90")
 
-        <input type="submit" value="@msg("addTask")" id="submit" class="btn btn-primary"/>
-        <input type="hidden" id="@solutionTemplate" name="@solutionTemplate"/>
-        <input type="hidden" id="@referenceSolution" name="@referenceSolution"/>
-        <input type="hidden" id="@suite" name="@suite"/>
+            <input type="submit" value="@msg("addTask")" id="submit" class="btn btn-primary"/>
+            <input type="hidden" id="@solutionTemplate" name="@solutionTemplate"/>
+            <input type="hidden" id="@referenceSolution" name="@referenceSolution"/>
+            <input type="hidden" id="@suite" name="@suite"/>
+        }
+
+        <script type="text/javascript" src="@routes.Assets.versioned("client-fastopt.js")"></script>
+        @codeEditor()
+        <script type="text/javascript" charset="utf-8">controller.AddTaskController().main();</script>
     }
-
-    <script type="text/javascript" src="@routes.Assets.versioned("client-fastopt.js")"></script>
-    @codeEditor()
-    <script type="text/javascript" charset="utf-8">controller.AddTaskController().main();</script>
 }
