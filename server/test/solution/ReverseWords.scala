@@ -11,8 +11,6 @@ class TTReverseWords extends PositiveOutput {
 
 class ReverseWords extends ReverseWordsSolution {
   override def reverse(s: String): String = {
-    val separator = " "
-    val words = s.split(separator)
-    words.reverse.filter(!_.isEmpty).mkString(separator)
+    s.split(" ").reverse.filter(_.nonEmpty).mkString(" ")
   }
 }
