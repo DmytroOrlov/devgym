@@ -1,5 +1,3 @@
-@import UserController._
-
 @()(implicit msg: Messages, session: Session)
 <header class="navbar dg-task-nav">
     <div class="container-menu">
@@ -9,9 +7,14 @@
         <nav id="bs-navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li><a href="@routes.AddTask.getAddTask()">@msg("addTask")</a></li>
-                @session.get(username).fold {
-                    <li><a href="@routes.UserController.getLogin()">@msg("login")</a></li>
+                @session.get(user).fold {
                     <li><a href="@routes.UserController.getRegister()">@msg("register")</a></li>
+                    @*<li><a href="@routes.UserController.getLogin()">@msg("login")</a></li>*@
+                    <li>
+                        <a href="@routes.GitHubUserController.getLogin()" class="github-login-a">
+                            <i class="github-login">&nbsp;</i>@msg("GitHubLogin")
+                        </a>
+                    </li>
                 } { _ =>
                     <li><a href="@routes.Application.logout()">@msg("logout")</a></li>
                 }

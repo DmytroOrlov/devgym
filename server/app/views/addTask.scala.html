@@ -6,7 +6,7 @@
 @(task: Form[AddTaskForm], testReport: Option[String] = None)(implicit flash: Flash, msg: Messages, session: Session)
 
 @mainFlashToUser(msg("addTask")) {
-    @session.get(UserController.username).fold {
+    @session.get(controllers.user).fold {
         <p>@msg("loginToAddTask")</p>
     } { _ =>
         @form(routes.AddTask.postNewTask()) {
@@ -38,7 +38,7 @@
             <br/>
             <div class="bs-callout-info">
                 <h4>Solution Template</h4>
-                <p>Copy reference solution here, but remove that code you want another person to implement.</p>
+                <p>Copy reference solution here, but remove a code to be implemented.</p>
                 <p>
                     <a class="btn btn-primary" role="button" data-toggle="collapse" href="#collapseSolutionExample" aria-expanded="false" aria-controls="collapseSolutionExample">
                         Show Example

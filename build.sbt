@@ -2,6 +2,7 @@ import sbt.Project.projectToRef
 
 val scalaV = "2.11.8"
 val scalatestV = "2.2.6"
+val akkaV = "2.4.12"
 
 lazy val commonSettings = Seq(scalaVersion := scalaV)
 
@@ -28,10 +29,10 @@ lazy val server = (project in file("server"))
   .dependsOn(sharedJvm)
   .settings(commonSettings ++ testSettings)
   .settings(
-    includeFilter in (Assets, LessKeys.less) := "*.less",
+    includeFilter in(Assets, LessKeys.less) := "*.less",
     name := "devgym",
     version := "1.0-SNAPSHOT",
-    testOptions in UnitTest += Tests.Argument("-l",  "RequireDB"),
+    testOptions in UnitTest += Tests.Argument("-l", "RequireDB"),
     scalaJSProjects := clients,
     pipelineStages := Seq(scalaJSProd, gzip),
 
@@ -45,13 +46,16 @@ lazy val server = (project in file("server"))
       "org.webjars" % "jquery" % "2.2.4",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
       "org.monifu" %% "monifu" % monifuVer,
-
+      "org.json4s" %% "json4s-native" % "3.4.0",
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2"
         exclude("org.xerial.snappy", "snappy-java")
         exclude("com.google.guava", "guava"),
 
       "org.scala-lang" % "scala-compiler" % scalaV,
-      "org.scalatest" %% "scalatest" % scalatestV
+      "org.scalatest" %% "scalatest" % scalatestV,
+
+      "com.typesafe.akka" %% "akka-http-core" % "2.4.11",
+      "com.typesafe.akka" %% "akka-http-experimental" % "2.4.11"
     )
   )
 
