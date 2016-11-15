@@ -2,6 +2,7 @@ package controllers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import controllers.TestParams.fakeSession
 import dal.Dao
 import models.User
 import monifu.concurrent.Implicits.globalScheduler
@@ -30,7 +31,7 @@ import scala.concurrent.Future
     "getting login page" should {
       "redirect to index for already logged in user" in {
         //when
-        val result = controller.getLogin(FakeRequest("GET", "/login").withSession("username" -> "user1"))
+        val result = controller.getLogin(FakeRequest("GET", "/login").withSession(fakeSession))
         //then
         status(result) mustBe SEE_OTHER
         redirectLocation(result) mustBe Some("/")

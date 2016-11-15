@@ -5,6 +5,7 @@ import java.util.{Date, UUID}
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import controllers.TestParams.fakeSession
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.play._
 import play.api.test.Helpers._
@@ -42,7 +43,7 @@ import tag.RequireDB
     }
     "get addTask" should {
       "result with form" in {
-        val Some(result) = route(app, FakeRequest(GET, "/addTask").withSession("username" -> "user1"))
+        val Some(result) = route(app, FakeRequest(GET, "/addTask").withSession(fakeSession))
 
         status(result) mustBe OK
         contentAsString(result) must (
@@ -55,7 +56,7 @@ import tag.RequireDB
       "result BadRequest with error1" in {
         val Some(result) = route(app, FakeRequest(POST, "/addTask")
           .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3")
-          .withSession("username" -> "user1"))
+          .withSession(fakeSession))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (
@@ -66,7 +67,7 @@ import tag.RequireDB
       "result BadRequest with error2" in {
         val Some(result) = route(app, FakeRequest(POST, "/addTask")
           .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", "suite" -> "4")
-          .withSession("username" -> "user1"))
+          .withSession(fakeSession))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")
@@ -77,7 +78,7 @@ import tag.RequireDB
       "result BadRequest with error3" in {
         val Some(result) = route(app, FakeRequest(POST, "/addTask")
           .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "referenceSolution" -> "3", "suite" -> "4")
-          .withSession("username" -> "user1"))
+          .withSession(fakeSession))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")
@@ -88,7 +89,7 @@ import tag.RequireDB
       "result BadRequest with error4" in {
         val Some(result) = route(app, FakeRequest(POST, "/addTask")
           .withFormUrlEncodedBody("taskName" -> "0", "solutionTemplate" -> "2", "referenceSolution" -> "3")
-          .withSession("username" -> "user1"))
+          .withSession(fakeSession))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")
@@ -101,7 +102,7 @@ import tag.RequireDB
       "result BadRequest with error" in {
         val Some(result) = route(app, FakeRequest(POST, "/addTask")
           .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1", "solutionTemplate" -> "2", "referenceSolution" -> "3", "suite" -> "trait ST")
-          .withSession("username" -> "user1"))
+          .withSession(fakeSession))
 
         status(result) mustBe BAD_REQUEST
         contentAsString(result) must (include("<form") and include("/addTask") and include("taskDescription")

@@ -6,5 +6,7 @@ package object controllers {
   implicit val mat = ActorMaterializer()
 
   // http param names
-  val user = "user"
+  val loginName = "user"
+  val userName = "userName"
+  val avatarUrl = "avatarUrl"
 }

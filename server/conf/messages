@@ -30,5 +30,5 @@ submit = Submit
 task = Task
 register = Register
 login = Login
-GitHubLogin = Login
+GitHubLogin = Login via GitHub
 logout = Logout

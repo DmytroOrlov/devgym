@@ -25,7 +25,7 @@ class Application @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit ec:
 
   def logout = Action { request =>
     val redirect = Redirect(routes.Application.index)
-    request.session.get(user).fold(redirect.withNewSession) { _ =>
+    request.session.get(loginName).fold(redirect.withNewSession) { _ =>
       redirect
         .withNewSession
         .flashing(flashToUser -> messagesApi(logoutDone))

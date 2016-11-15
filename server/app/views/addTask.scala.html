@@ -6,7 +6,7 @@
 @(task: Form[AddTaskForm], testReport: Option[String] = None)(implicit flash: Flash, msg: Messages, session: Session)
 
 @mainFlashToUser(msg("addTask")) {
-    @session.get(controllers.user).fold {
+    @session.get(controllers.loginName).fold {
         <p>@msg("loginToAddTask")</p>
     } { _ =>
         @form(routes.AddTask.postNewTask()) {

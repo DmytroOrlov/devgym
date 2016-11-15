@@ -66,7 +66,8 @@ class GitHubUserController @Inject()(val messages: MessagesApi)(implicit ec: Exe
       token <- access(code)
       userInfo <- fetchUser(token) //TODO: save the entire userInfo model either as separate props in cookie or on server
     } yield {
-      Redirect(routes.Application.index).withSession(user -> userInfo.login)
+      Redirect(routes.Application.index).withSession(
+        loginName -> userInfo.login, userName -> userInfo.name.getOrElse(""), avatarUrl -> userInfo.avatar_url)
     }
   }
 }
