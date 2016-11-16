@@ -19,6 +19,7 @@
                     <li>
                         <a href="@routes.Application.logout()">
                             @session.get(userName).getOrElse(loginName) - @msg("logout")
+                            <img class="github-avatar" src=" @session.get(avatarUrl).getOrElse("")" alt="Avatar of @loginName"/>
                         </a>
                     </li>
                 }
