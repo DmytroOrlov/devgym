@@ -42,7 +42,6 @@ trait Json4sSupport {
 
       try {
         val decodedData: String = data.decodeString(charset.nioCharset.name)
-        println(s"data = $decodedData")
         serialization.read(decodedData)
       }
       catch {
