@@ -102,8 +102,6 @@ case class RegisterForm(name: String, password: String, verify: String)
 case class LoginForm(name: String, password: String)
 
 object UserController {
-  val flashToUser = "flashToUser"
-
   val name = "name"
   val password = "password"
   val verify = "verify"

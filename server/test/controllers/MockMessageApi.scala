@@ -26,7 +26,7 @@ class MockMessageApi extends MessagesApi {
 
   override def setLang(result: Result, lang: Lang): Result = ???
 
-  override def apply(key: String, args: Any*)(implicit lang: Lang): String = ""
+  override def apply(key: String, args: Any*)(implicit lang: Lang): String = key
 
   override def apply(keys: Seq[String], args: Any*)(implicit lang: Lang): String = ???
 

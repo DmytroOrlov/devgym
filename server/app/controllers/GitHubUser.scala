@@ -5,9 +5,12 @@ import akka.http.scaladsl.model.Uri.{Path, Query}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.google.inject.Inject
 import controllers.Response.AccessToken
+import GitHubUser._
+import play.api.i18n.MessagesApi
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.ExecutionContext
+import scala.util.control.NonFatal
 
 case class GUser(login: String, name: Option[String], avatar_url: String)
 
@@ -17,7 +20,7 @@ object Response {
 
 }
 
-class GitHubUser @Inject()(implicit ec: ExecutionContext)
+class GitHubUser @Inject()(val messagesApi: MessagesApi)(implicit ec: ExecutionContext)
   extends Controller with Json4sSupport with GitHubServer {
 
   def getLogin = Action { implicit request =>
@@ -37,14 +40,20 @@ class GitHubUser @Inject()(implicit ec: ExecutionContext)
 
     def fetchUser(token: String) = query(token, Path.Empty / "user").flatMap(response => Unmarshal(response).to[GUser])
 
-    for {
+    (for {
       token <- access(code)
       userInfo <- fetchUser(token)
     } yield {
       Redirect(routes.Application.index).withSession(
         loginName -> userInfo.login, userName -> userInfo.name.getOrElse(""), avatarUrl -> userInfo.avatar_url)
+    }) recover {
+      case NonFatal(e) => Redirect(routes.Application.index).flashing(flashToUser -> messagesApi(cannotLoginViaGitHub))
     }
   }
+}
+
+object GitHubUser {
+  val cannotLoginViaGitHub = "cannotLoginViaGitHub"
 }
 
 

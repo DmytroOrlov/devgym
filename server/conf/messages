@@ -23,6 +23,7 @@ nameRegistered = Name already registered, please choose another
 passwordsNotMatched = Passwords do not match
 nameOrPasswordsNotMatched = Name or password are incorrect
 loginToAddTask = Please login or register to add new DevGym task
+cannotLoginViaGitHub = Could not login via GitHub. Please try to Login via DevGym account
 DevGym = DevGym
 addTask = Add Task
 home = Home
