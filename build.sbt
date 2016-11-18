@@ -2,7 +2,7 @@ import sbt.Project.projectToRef
 
 val scalaV = "2.11.8"
 val scalatestV = "2.2.6"
-val akkaV = "2.4.12"
+val akkaHttpV = "2.4.11"
 
 lazy val commonSettings = Seq(scalaVersion := scalaV)
 
@@ -20,6 +20,7 @@ lazy val clients = Seq(client)
 lazy val UnitTest = config("unit") extend Test
 
 val monifuVer = "1.2"
+val akkaV = "2.4.12"
 
 lazy val server = (project in file("server"))
   .configs(UnitTest)
@@ -54,8 +55,8 @@ lazy val server = (project in file("server"))
       "org.scala-lang" % "scala-compiler" % scalaV,
       "org.scalatest" %% "scalatest" % scalatestV,
 
-      "com.typesafe.akka" %% "akka-http-core" % "2.4.11",
-      "com.typesafe.akka" %% "akka-http-experimental" % "2.4.11"
+      "com.typesafe.akka" %% "akka-http-core" % akkaHttpV,
+      "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV
     )
   )
 

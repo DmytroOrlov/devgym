@@ -137,4 +137,14 @@ import tag.RequireDB
       }
     }
   }
+
+  "GitHubUser" when {
+    "get login" should {
+      "redirect to github.com" in {
+        val Some(result) = route(app, FakeRequest(GET, "/githublogin"))
+        status(result) mustBe SEE_OTHER
+        redirectLocation(result).getOrElse("") must include ("github.com")
+      }
+    }
+  }
 }
