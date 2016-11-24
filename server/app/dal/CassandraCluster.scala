@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
-  private val hosts = conf.hosts
+  private lazy val hosts = conf.hosts
   lazy val cluster =
     Cluster.builder()
       .addContactPoints(hosts: _*)
