@@ -1,8 +1,10 @@
 package controllers
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.Uri.{Path, Query}
+import akka.stream.Materializer
 import controllers.Response.AccessToken
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
@@ -14,15 +16,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @DoNotDiscover class GitHubUserTest extends PlaySpec with ConfiguredApp {
+  private implicit lazy val s = app.actorSystem
+  private implicit lazy val m = app.materializer
 
   "GitHubUser" when {
     "github calls callback" should {
       "redirect to index having GitHub data in session" in {
         //given
         val gitHubUser = new GitHubUser(new MockMessageApi) {
-          override def getToken(code: String) = Marshal(AccessToken("toooooken")).to[HttpResponse]
+          override def getToken(code: String)(implicit s: ActorSystem, m: Materializer) = Marshal(AccessToken("toooooken")).to[HttpResponse]
 
-          override def query(token: String, path: Path, query: Query) =
+          override def query(token: String, path: Path, query: Query)(implicit s: ActorSystem, m: Materializer) =
             Marshal(GUser("alex", Some("Alexey"), "avatar/url")).to[HttpResponse]
         }
 
@@ -38,7 +42,7 @@ import scala.concurrent.Future
       "fails when token is not available" in {
         //given
         val gitHubUser = new GitHubUser(new MockMessageApi) {
-          override def getToken(code: String) = Future.failed(new RuntimeException)
+          override def getToken(code: String)(implicit s: ActorSystem, m: Materializer) = Future.failed(new RuntimeException)
         }
 
         //when
@@ -53,9 +57,9 @@ import scala.concurrent.Future
       "fails when user is not available" in {
         //given
         val gitHubUser = new GitHubUser(new MockMessageApi) {
-          override def getToken(code: String) = Marshal(AccessToken("toooooken")).to[HttpResponse]
+          override def getToken(code: String)(implicit s: ActorSystem, m: Materializer) = Marshal(AccessToken("toooooken")).to[HttpResponse]
 
-          override def query(token: String, path: Path, query: Query) = Future.failed(new RuntimeException)
+          override def query(token: String, path: Path, query: Query)(implicit s: ActorSystem, m: Materializer) = Future.failed(new RuntimeException)
         }
 
         //when

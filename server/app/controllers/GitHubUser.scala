@@ -2,9 +2,11 @@ package controllers
 
 import javax.inject.Inject
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.{Path, Query}
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.Materializer
 import controllers.GitHubUser._
 import controllers.Response.AccessToken
 import play.api.i18n.MessagesApi
@@ -21,7 +23,7 @@ object Response {
 
 }
 
-class GitHubUser @Inject()(val messagesApi: MessagesApi)(implicit ec: ExecutionContext)
+class GitHubUser @Inject()(val messagesApi: MessagesApi)(implicit ec: ExecutionContext, s: ActorSystem, m: Materializer)
   extends Controller with Json4sSupport with GitHubServer {
 
   def getLogin = Action { implicit request =>
