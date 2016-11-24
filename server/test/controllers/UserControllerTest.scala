@@ -3,7 +3,7 @@ package controllers
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import controllers.TestParams.fakeSession
-import dal.Dao
+import dal.UserDao
 import models.User
 import monifu.concurrent.Implicits.globalScheduler
 import org.scalamock.scalatest.MockFactory
@@ -40,7 +40,7 @@ import scala.concurrent.Future
     "login form" should {
       "authenticate registered user" in {
         //given
-        val dao = mock[Dao]
+        val dao = mock[UserDao]
         val userController = new UserController(dao, new MockMessageApi)
         val password = "testpassword"
         val userName = "testname"
@@ -66,7 +66,7 @@ import scala.concurrent.Future
     "registration form" should {
       "register new user" in {
         //given
-        val dao = mock[Dao]
+        val dao = mock[UserDao]
         val userController = new UserController(dao, new MockMessageApi)
         val userName = "testname"
         val password = "testpassword"
@@ -91,5 +91,5 @@ import scala.concurrent.Future
     }
   }
 
-  def controller = new UserController(mock[Dao], new MockMessageApi)
+  def controller = new UserController(mock[UserDao], new MockMessageApi)
 }

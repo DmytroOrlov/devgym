@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
   private val hosts = conf.hosts
-  private lazy val cluster =
+  lazy val cluster =
     Cluster.builder()
       .addContactPoints(hosts: _*)
       .withPort(conf.port)
@@ -24,6 +24,8 @@ class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: Applicatio
   def session: Session = cluster.connect(conf.keySpace)
 
   def stop() = toFutureUnit(cluster.closeAsync())
+
+  def keySpace = conf.keySpace
 
   Logger.info(s"Cassandra host to be used : '${hosts.mkString(",")}' with port:${conf.port}")
   appLifecycle.addStopHook(() => stop())
