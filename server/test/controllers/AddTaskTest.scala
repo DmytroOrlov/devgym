@@ -33,7 +33,7 @@ import scala.concurrent.Future
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
               "referenceSolution" -> "4", "suite" -> suiteWithTrait)
-            .withSession("username" -> "user1"))
+            .withSession(loginName -> "user1"))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")
@@ -52,7 +52,7 @@ import scala.concurrent.Future
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
               "referenceSolution" -> "4", "suite" -> "wrong traitkeyword")
-            .withSession("username" -> "user1"))
+            .withSession(loginName -> "user1"))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")
@@ -67,15 +67,15 @@ import scala.concurrent.Future
         val dao = mock[Dao]
         dao.addTask _ expects NewTask(scalaLang, "1", "2", "3", "4", suiteWithTrait, traitName) returns Future.failed(new RuntimeException("test exception"))
         //when
-        withAddTaskController(scalaTestRunner, dao)({ controller =>
+        withAddTaskController(scalaTestRunner, dao) { controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "1", "taskDescription" -> "2", "solutionTemplate" -> "3",
               "referenceSolution" -> "4", "suite" -> suiteWithTrait)
-            .withSession("username" -> "user1"))
+            .withSession(loginName -> "user1"))
           //then
           status(result) mustBe INTERNAL_SERVER_ERROR
-          contentAsString(result) must include( """class="error"></dd>""")
-        })
+          contentAsString(result) must include( s"""class="error">${AddTask.cannotAddTask}</dd>""")
+        }
       }
     }
     "post correct addTask" should {
@@ -107,7 +107,7 @@ import scala.concurrent.Future
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1",
               "solutionTemplate" -> "2", "referenceSolution" -> solution, "suite" -> badSuite)
-            .withSession("username" -> "user1"))
+            .withSession(loginName -> "user1"))
           //then
           status(result) mustBe BAD_REQUEST
           contentAsString(result) must include("id='errorReport'>")

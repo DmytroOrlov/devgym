@@ -3,3 +3,51 @@
     !Limitation: it won't work with runtime runner which is bassev on classpath
 
 2. Add Task with multiple functions to implement. For example: LinkedList or Stack
+
+
+// add this as new task for Arrays/Recursion
+import scala.collection.mutable.ArrayBuffer
+
+type IntBuff = scala.collection.mutable.ArrayBuffer[Int]
+def split(l: List[Int], l1: IntBuff, l2: IntBuff): Unit = {
+
+  def loop(l: List[Int], l1: IntBuff, l2: IntBuff, left: Boolean): Unit = {
+    l match {
+      case x :: xs if left => loop(xs, l1 += x, l2, !left)
+      case x :: xs if !left => loop(xs, l1, l2 += x, !left)
+      case Nil =>
+    }
+  }
+
+  loop(l, l1, l2, left = true)
+}
+
+def reduction(l: List[Int], a: Int, b: Int, c: Int, d: Int): Long = {
+  val l1, l2, l11, l12, l21, l22: IntBuff = ArrayBuffer()
+  split(l, l1, l2)
+  split(l1.toList, l11, l12)
+  split(l2.toList, l21, l22)
+
+  def sum(subList: List[Int], multiplier: Int, accum: Long = 0): Long = {
+    subList match {
+      case x :: xs => sum(xs, multiplier, accum + x * multiplier)
+      case Nil => accum
+    }
+  }
+  sum(l11.toList, a) + sum(l21.toList, b) + sum(l12.toList, c) + sum(l22.toList, d)
+}
+
+val l = List(1, 2, 3, 4, 5, 6, 7, 8, 9)
+           //A  B  C  D  A  B  C  D  A
+
+val l1, l2, l11, l12, l21, l22: IntBuff = ArrayBuffer()
+split(l, l1, l2)
+split(l1.toList, l11, l12)
+split(l2.toList, l21, l22)
+
+println(l11)
+println(l12)
+println(l21)
+println(l22)
+
+reduction(l, 1, 2, 3, 4)

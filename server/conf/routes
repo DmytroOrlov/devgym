@@ -22,3 +22,5 @@ POST    /register                   controllers.UserController.postRegister
 #Login
 GET     /login                      controllers.UserController.getLogin
 POST    /login                      controllers.UserController.postLogin
+GET     /githublogin                controllers.GitHubUser.getLogin
+GET     /githubback                 controllers.GitHubUser.githubCallback(code: String)

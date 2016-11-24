@@ -3,6 +3,6 @@
 @(title: String)(content: Html)(implicit flash: Flash, msg: Messages, session: Session)
 
 @main(title) {
-    <div class="flashToUser">@flash.get(controllers.UserController.flashToUser).getOrElse("")</div>
+    <div class="flashToUser">@flash.get(controllers.flashToUser).getOrElse("")</div>
     @content
 }
