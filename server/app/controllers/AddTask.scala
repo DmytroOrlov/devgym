@@ -2,8 +2,7 @@ package controllers
 
 import com.google.inject.Inject
 import controllers.AddTask._
-import controllers.UserController._
-import dal.Dao
+import dal.TaskDao
 import models.Language._
 import models.NewTask
 import monifu.concurrent.Scheduler
@@ -21,7 +20,7 @@ import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
-class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi)
+class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messagesApi: MessagesApi)
                        (implicit s: Scheduler) extends Controller with I18nSupport {
   val addTaskForm = Form {
     mapping(
@@ -73,6 +72,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
         }
 
         val checkTrait = Try(findTraitName(f.suite)).toFuture
+        //TODO: split error messages: 1) trait check; 2) cannot be saved
         checkTrait.flatMap { traitName =>
           addTaskIfValid(traitName)
         }.recover {

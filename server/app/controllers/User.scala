@@ -4,7 +4,7 @@ import java.security.MessageDigest
 
 import com.google.inject.Inject
 import controllers.UserController._
-import dal.Dao
+import dal.UserDao
 import models.User
 import play.api.Logger
 import play.api.data.Forms._
@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 import scala.util.control.NonFatal
 
-class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
+class UserController @Inject()(dao: UserDao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   val registerForm: Form[RegisterForm] = Form {
     mapping(
@@ -84,6 +84,7 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
         def passwordsMatch(userPassword: String, formPassword: String) = {
           userPassword == toHashSalt(formPassword, getSalt(userPassword))
         }
+
         dao.find(f.name).map {
           case Some(u) if passwordsMatch(u.password, f.password) =>
             Redirect(routes.Application.index)

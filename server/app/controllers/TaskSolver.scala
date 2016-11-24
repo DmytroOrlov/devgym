@@ -7,8 +7,7 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import com.google.inject.Inject
 import controllers.TaskSolver._
-import controllers.UserController._
-import dal.Dao
+import dal.TaskDao
 import models.{Language, Task}
 import monifu.concurrent.Scheduler
 import monifu.reactive.Observable
@@ -30,7 +29,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: Dao, val messagesApi: MessagesApi, cache: CacheApi)
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: TaskDao, val messagesApi: MessagesApi, cache: CacheApi)
                           (implicit system: ActorSystem, s: Scheduler, mat: Materializer) extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
