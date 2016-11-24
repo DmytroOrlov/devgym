@@ -1,8 +1,8 @@
 package controllers
 
 import java.security.MessageDigest
+import javax.inject.Inject
 
-import com.google.inject.Inject
 import controllers.UserController._
 import dal.Dao
 import models.User

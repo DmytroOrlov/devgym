@@ -1,8 +1,8 @@
 package controllers
 
-import com.google.inject.Inject
+import javax.inject.Inject
+
 import controllers.Application._
-import controllers.UserController._
 import dal.Dao
 import dal.Dao._
 import models.Language.scalaLang

@@ -1,11 +1,12 @@
 package controllers
 
+import javax.inject.Inject
+
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.{Path, Query}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.google.inject.Inject
+import controllers.GitHubUser._
 import controllers.Response.AccessToken
-import GitHubUser._
 import play.api.i18n.MessagesApi
 import play.api.mvc.{Action, Controller}
 
