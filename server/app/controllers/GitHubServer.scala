@@ -1,9 +1,11 @@
 package controllers
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.{Path, Query}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, Authorization, GenericHttpCredentials}
+import akka.stream.Materializer
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Future
@@ -15,7 +17,7 @@ trait GitHubServer {
   val clientSecret = config.getString("client-secret")
   val redirectUri = config.getString("uri") + "/githubback"
 
-  def getToken(code: String): Future[HttpResponse] = {
+  def getToken(code: String)(implicit s: ActorSystem, m: Materializer): Future[HttpResponse] = {
     Http()
       .singleRequest(
         HttpRequest(
@@ -31,7 +33,7 @@ trait GitHubServer {
         ))
   }
 
-  def query(token: String, path: Path, query: Query = Query.Empty): Future[HttpResponse] = {
+  def query(token: String, path: Path, query: Query = Query.Empty)(implicit s: ActorSystem, m: Materializer): Future[HttpResponse] = {
     Http().singleRequest(
       HttpRequest(
         uri = Uri(s"https://api.github.com").withPath(path).withQuery(query),
