@@ -4,7 +4,7 @@ import java.util.{Date, UUID}
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import dal.Dao
+import dal.TaskDao
 import models.Task
 import models.Language._
 import monifu.concurrent.Implicits.globalScheduler
@@ -28,7 +28,7 @@ import scala.reflect.ClassTag
     "getting available task to solve" should {
       "return template and task description" in {
         //given
-        val dao = mock[Dao]
+        val dao = mock[TaskDao]
         val description = "some description"
         val template = "some template"
         val year = new Date()
@@ -49,7 +49,7 @@ import scala.reflect.ClassTag
     "getting unavailable task to solve" should {
       "return to index page" in {
         //given
-        val dao = mock[Dao]
+        val dao = mock[TaskDao]
         val cache = mock[CacheApi]
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
         //when
@@ -64,7 +64,7 @@ import scala.reflect.ClassTag
     "getting task from unstable dao" should {
       "return to index page" in {
         //given
-        val dao = mock[Dao]
+        val dao = mock[TaskDao]
         val cache = mock[CacheApi]
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
         //when
@@ -79,7 +79,7 @@ import scala.reflect.ClassTag
     "getting task multiple times" should {
       "return data from cache previously calling db once" in {
         //given
-        val dao = stub[Dao]
+        val dao = stub[TaskDao]
         val cache = mock[CacheApi]
         val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
         val year = new Date()
@@ -107,7 +107,7 @@ import scala.reflect.ClassTag
     "getting task from unstable db" should {
       "not update cache unless db is stable again" in {
         //given
-        val dao = mock[Dao]
+        val dao = mock[TaskDao]
         val year = new Date()
         val timeuuid = new UUID(1, 1)
         val cache = mock[CacheApi]

@@ -1,0 +1,59 @@
+package dal
+
+import java.util.{Date, UUID}
+
+import com.google.inject.Inject
+import io.getquill.{CassandraAsyncContext, MappedEncoding, SnakeCase}
+import models.Language._
+import models.Task.yearAsOfJan1
+import models.{Language, NewTask, Task}
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
+
+trait TaskDao {
+  def addTask(task: NewTask): Future[Unit]
+
+  def getTasks(lang: Language, limit: Int, yearAgo: Int): Future[Iterable[Task]]
+
+  def getTask(year: Date, lang: Language.Language, timeuuid: UUID): Future[Option[Task]]
+}
+
+class TaskDaoImpl @Inject()(val ctx: CassandraAsyncContext[SnakeCase])(implicit ec: ExecutionContext) extends TaskDao {
+  implicit val encodeUUID = MappedEncoding[Language, String](_.toString)
+  implicit val decodeUUID = MappedEncoding[String, Language](Language.withName)
+
+  import ctx._
+
+  val lastTask = (year: Date, lang: Language, limit: Int) => quote {
+    query[Task]
+      .filter(t => t.year == lift(year))
+      .filter(t => t.lang == lift(lang))
+      .take(lift(limit))
+  }
+
+  val task = (year: Date, lang: Language, timeuuid: UUID) => quote {
+    query[Task]
+      .filter(t => t.year == lift(year))
+      .filter(t => t.lang == lift(lang))
+      .filter(t => t.timeuuid == lift(timeuuid))
+  }
+
+  def getTasks(lang: Language, limit: Int, yearAgo: Int): Future[List[Task]] = {
+    ctx.run(lastTask(yearAsOfJan1(yearAgo), lang, limit))
+  }
+
+  def getTask(year: Date, lang: Language, timeuuid: UUID): Future[Option[Task]] =
+    ctx.run(task(year, lang, timeuuid)).collect {
+      case x :: xs => Some(x)
+      case Nil => None
+    } recover {
+      case NonFatal(e) => None
+    }
+
+  val insertTask = (task: NewTask) => quote {
+    querySchema[NewTask]("task").insert(lift(task))
+  }
+
+  def addTask(task: NewTask): Future[Unit] = ctx.run(insertTask(task))
+}
