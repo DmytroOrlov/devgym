@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
-  private lazy val hosts = conf.hosts
+  private val hosts = conf.hosts
   private lazy val cluster =
     Cluster.builder()
       .addContactPoints(hosts: _*)
@@ -35,6 +35,6 @@ class CassandraConfig @Inject()(configuration: Configuration, environment: Envir
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
 
-  lazy val hosts: Seq[String] =
+  val hosts: Seq[String] =
     configuration.getStringSeq("devgym.db.cassandra.hosts").get
 }
