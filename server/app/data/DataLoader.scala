@@ -5,6 +5,8 @@ import dal.{CassandraCluster, CassandraConfig}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Logger, Play}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 object DataLoader extends App {
@@ -15,22 +17,26 @@ object DataLoader extends App {
 
   lazy val cassandraConfig = app.injector.instanceOf[CassandraConfig]
 
-  try {
-    getCluster match {
-      case Success(cluster) =>
-        val session = cluster.noKeySpaceSession
-        try {
-          Logger.info("CQL scripts import start...")
-          if (dropOptionEnabled(args)) dropKeySpace(cassandraConfig.keySpace, session)
-          executeScripts(block => session.execute(block))
-          Logger.info("CQL scripts import completed")
-        } finally {
-          session.close()
-          cluster.stop()
-        }
-      case Failure(e) => Logger.error(s"cassandra instance error: ${e.getMessage}")
-    }
-  } finally Play.stop(app)
+  Try {
+    val cluster = app.injector.instanceOf[CassandraCluster]
+    val session = cluster.noKeySpaceSession
+    Logger.info("CQL scripts import start...")
+    if (dropOptionEnabled(args)) dropKeySpace(cassandraConfig.keySpace, session)
+    executeScripts(block => session.execute(block))
+    Logger.info("CQL scripts import completed")
+    Await.ready(cluster.stop(), Duration.Inf)
+  } match {
+    case Success(_) =>
+      Play.stop(app)
+      System.exit(0)
+
+    case Failure(ex) =>
+      val msg = "an error occurred during evolutions run"
+      Logger.error(msg, ex)
+      System.err.println(msg)
+      ex.printStackTrace(System.err)
+      System.exit(1)
+  }
 
   private def dropOptionEnabled(args: Array[String]) = args.headOption.contains("drop")
 
@@ -39,8 +45,6 @@ object DataLoader extends App {
       case Success(_) => Logger.info("key space has been dropped")
       case Failure(e) => Logger.warn(s"drop of key space has been failed, error: ${e.getMessage}")
     }
-
-  private def getCluster = Try(app.injector.instanceOf[CassandraCluster])
 
   private def executeScripts(executor: String => Any) = {
     app.path.listFiles().filter(_.getName == scriptsPath).foreach(_.listFiles().sorted.foreach { f =>
