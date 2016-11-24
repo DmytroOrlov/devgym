@@ -8,9 +8,6 @@ import play.api.{Configuration, Environment, Logger}
 import util.FutureUtils.toFutureUnit
 
 import scala.concurrent.ExecutionContext
-import scala.sys.process._
-import scala.util.matching.Regex
-import scala.util.{Failure, Success, Try}
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
@@ -38,19 +35,6 @@ class CassandraConfig @Inject()(configuration: Configuration, environment: Envir
   val keySpace = config.getString("devgym.db.cassandra.keyspace")
   val port = config.getInt("devgym.db.cassandra.port")
 
-  lazy val hosts: Seq[String] = {
-    val hostsConf = "devgym.db.cassandra.hosts"
-
-    def hosts: Seq[String] = {
-      import scala.collection.JavaConversions._
-      config.getStringList(hostsConf)
-    }
-
-    val r = new Regex("""(\$\()([^)]*)(\))""", "$(", "command", ")")
-    hosts.map { host =>
-      Try(r.replaceAllIn(host, _.group("command").!!.trim))
-    }.collect {
-      case Success(h) => h
-    }
-  }
+  lazy val hosts: Seq[String] =
+    configuration.getStringSeq("devgym.db.cassandra.hosts").get
 }
