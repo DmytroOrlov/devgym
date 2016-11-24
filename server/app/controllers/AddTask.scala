@@ -1,8 +1,8 @@
 package controllers
 
-import com.google.inject.Inject
+import javax.inject.Inject
+
 import controllers.AddTask._
-import controllers.UserController._
 import dal.Dao
 import models.Language._
 import models.NewTask

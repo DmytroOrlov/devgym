@@ -2,12 +2,11 @@ package controllers
 
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
+import javax.inject.Inject
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import com.google.inject.Inject
 import controllers.TaskSolver._
-import controllers.UserController._
 import dal.Dao
 import models.{Language, Task}
 import monifu.concurrent.Scheduler

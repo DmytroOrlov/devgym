@@ -3,9 +3,9 @@ package dal
 import java.time.temporal.ChronoUnit
 import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.{Date, UUID}
+import javax.inject.Inject
 
 import com.datastax.driver.core.{ResultSet, Row, Session}
-import com.google.inject.Inject
 import dal.Dao._
 import models.Language._
 import models.{Language, NewTask, Task, User}

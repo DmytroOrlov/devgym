@@ -1,6 +1,8 @@
 package config
 
-import com.google.inject.{AbstractModule, Provides, Singleton}
+import javax.inject.Singleton
+
+import com.google.inject.{AbstractModule, Provides}
 import com.typesafe.config.Config
 import dal.{Dao, DaoImpl}
 import monifu.concurrent.Scheduler

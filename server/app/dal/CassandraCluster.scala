@@ -1,7 +1,8 @@
 package dal
 
+import javax.inject.{Inject, Singleton}
+
 import com.datastax.driver.core.{Cluster, Session}
-import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.Config
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment, Logger}
