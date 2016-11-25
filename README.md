@@ -1,6 +1,6 @@
 # DevGym
 
-### Cassandra in docker
+### Cassandra in Docker
 
 Start cassandra:
 ```sh
