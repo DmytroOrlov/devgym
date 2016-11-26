@@ -1,6 +1,6 @@
 package config
 
-import javax.inject.Singleton
+import javax.inject.{Named, Singleton}
 
 import com.google.inject.{AbstractModule, Provides}
 import com.typesafe.config.Config
@@ -10,6 +10,7 @@ import play.api.Configuration
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaTestRunner}
 
 import scala.concurrent.ExecutionContext
+import scala.util.Random
 
 class DevgymModule extends AbstractModule {
   override def configure() = {
@@ -25,4 +26,9 @@ class DevgymModule extends AbstractModule {
   @Provides
   @Singleton
   def config(c: Configuration): Config = c.underlying
+
+  @Provides
+  @Singleton
+  @Named("Secret")
+  def config(): String = "devgym_" + Random.nextInt(9999999)
 }
