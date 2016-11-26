@@ -13,8 +13,10 @@ trait UserDao {
   def find(userName: String): Future[Option[User]]
 }
 
-class UserDaoImpl @Inject()(val ctx: CassandraAsyncContext[SnakeCase])(implicit ec: ExecutionContext) extends UserDao {
-  import ctx._
+class UserDaoImpl @Inject()(val ctx: () => CassandraAsyncContext[SnakeCase])(implicit ec: ExecutionContext) extends UserDao {
+  lazy val db = ctx()
+
+  import db._
 
   val user = (userName: String) => quote {
     query[User]
@@ -22,7 +24,7 @@ class UserDaoImpl @Inject()(val ctx: CassandraAsyncContext[SnakeCase])(implicit 
   }
 
   def find(userName: String): Future[Option[User]] = {
-    ctx.run(user(userName)).collect {
+    db.run(user(userName)).collect {
       case x :: xs => Some(x)
       case Nil => None
     } recover {
@@ -35,6 +37,6 @@ class UserDaoImpl @Inject()(val ctx: CassandraAsyncContext[SnakeCase])(implicit 
   }
 
   def create(user: User): Future[Boolean] = {
-    ctx.run(insert(user)).map(_ => true)
+    db.run(insert(user)).map(_ => true)
   }
 }

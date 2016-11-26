@@ -19,11 +19,13 @@ trait TaskDao {
   def getTask(year: Date, lang: Language.Language, timeuuid: UUID): Future[Option[Task]]
 }
 
-class TaskDaoImpl @Inject()(val ctx: CassandraAsyncContext[SnakeCase])(implicit ec: ExecutionContext) extends TaskDao {
+class TaskDaoImpl @Inject()(val ctx: () => CassandraAsyncContext[SnakeCase])
+                           (implicit ec: ExecutionContext) extends TaskDao {
   implicit val encodeUUID = MappedEncoding[Language, String](_.toString)
   implicit val decodeUUID = MappedEncoding[String, Language](Language.withName)
+  lazy val db = ctx()
 
-  import ctx._
+  import db._
 
   val lastTask = (year: Date, lang: Language, limit: Int) => quote {
     query[Task]
@@ -39,21 +41,21 @@ class TaskDaoImpl @Inject()(val ctx: CassandraAsyncContext[SnakeCase])(implicit 
       .filter(t => t.timeuuid == lift(timeuuid))
   }
 
+  val insertTask = (task: NewTask) => quote {
+    querySchema[NewTask]("task").insert(lift(task))
+  }
+
   def getTasks(lang: Language, limit: Int, yearAgo: Int): Future[List[Task]] = {
-    ctx.run(lastTask(yearAsOfJan1(yearAgo), lang, limit))
+    db.run(lastTask(yearAsOfJan1(yearAgo), lang, limit))
   }
 
   def getTask(year: Date, lang: Language, timeuuid: UUID): Future[Option[Task]] =
-    ctx.run(task(year, lang, timeuuid)).collect {
+    db.run(task(year, lang, timeuuid)).collect {
       case x :: xs => Some(x)
       case Nil => None
     } recover {
       case NonFatal(e) => None
     }
 
-  val insertTask = (task: NewTask) => quote {
-    querySchema[NewTask]("task").insert(lift(task))
-  }
-
-  def addTask(task: NewTask): Future[Unit] = ctx.run(insertTask(task))
+  def addTask(task: NewTask): Future[Unit] = db.run(insertTask(task))
 }

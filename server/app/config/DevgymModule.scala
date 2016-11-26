@@ -30,6 +30,6 @@ class DevgymModule extends AbstractModule {
 
   @Provides
   @Singleton
-  def config(cluster: CassandraCluster): CassandraAsyncContext[SnakeCase] =
-    new CassandraAsyncContext[SnakeCase](cluster.cluster, cluster.keySpace, 100L)
+  def config(cassandra: CassandraCluster): () => CassandraAsyncContext[SnakeCase] =
+    () => new CassandraAsyncContext[SnakeCase](cassandra.cluster, cassandra.keySpace, 100L)
 }
