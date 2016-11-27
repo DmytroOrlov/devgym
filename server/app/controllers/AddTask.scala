@@ -11,7 +11,7 @@ import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{Action, Controller, Request}
 import service.reflection.DynamicSuiteExecutor
 import service.{StringBuilderRunner, _}
 import shared.model.TestStatus
@@ -33,11 +33,11 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: Dao, val messagesAp
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
-  def getAddTask = Action { implicit r =>
+  def getAddTask = Action { implicit request:  Request[_] =>
     Ok(views.html.addTask(addTaskForm))
   }
 
-  def postNewTask = Action.async { implicit request =>
+  def postNewTask = Action.async { implicit request: Request[_] =>
 
     def addTaskViewWithError(errorKey: String, message: String = "", ex: Option[Throwable] = None) = {
       ex.foreach(e => Logger.error(e.getMessage, e))

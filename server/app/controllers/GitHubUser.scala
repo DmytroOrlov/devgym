@@ -26,7 +26,7 @@ class GitHubUser @Inject()(val messagesApi: MessagesApi, @Named("Secret") secret
                           (implicit ec: ExecutionContext, s: ActorSystem, m: Materializer)
   extends Controller with Json4sSupport with GitHubServer {
 
-  def getLogin = Action { implicit request =>
+  def getLogin = Action {
     Redirect(Uri("https://github.com/login/oauth/authorize")
       .withQuery(Query(
         "client_id" -> clientId,
@@ -35,7 +35,7 @@ class GitHubUser @Inject()(val messagesApi: MessagesApi, @Named("Secret") secret
     )
   }
 
-  def githubCallback(code: String, state: String) = Action.async { implicit request =>
+  def githubCallback(code: String, state: String) = Action.async {
 
     def checkSecret(state: String) = {
       if (state == secret) Future.successful("Ok")

@@ -59,7 +59,7 @@ import scala.concurrent.Future
         //given
         val gitHubUser = new GitHubUser(new MockMessageApi, secret) {
           override def getToken(code: String)(implicit s: ActorSystem, m: Materializer) =
-            Future.failed(new RuntimeException)
+            Future.failed(new RuntimeException("test exception"))
         }
 
         //when
@@ -78,7 +78,7 @@ import scala.concurrent.Future
             Marshal(AccessToken("toooooken")).to[HttpResponse]
 
           override def query(token: String, path: Path, query: Query)(implicit s: ActorSystem, m: Materializer) =
-            Future.failed(new RuntimeException)
+            Future.failed(new RuntimeException("test exception"))
         }
 
         //when

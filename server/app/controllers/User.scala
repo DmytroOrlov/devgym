@@ -34,14 +34,14 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
     )(LoginForm.apply)(LoginForm.unapply)
   }
 
-  def getRegister = Action { implicit request =>
+  def getRegister = Action { implicit request:  Request[_] =>
     request.session.get(loginName).fold(Ok(views.html.register(registerForm))) { _ =>
       Redirect(routes.Application.index)
         .flashing(flashToUser -> messagesApi(alreadyRegistered))
     }
   }
 
-  def postRegister = Action.async { implicit request =>
+  def postRegister = Action.async { implicit request: Request[_] =>
     def nameBusy = BadRequest(views.html.register(registerForm.bindFromRequest
       .withError(name, messagesApi(nameRegistered))))
 
@@ -69,13 +69,13 @@ class UserController @Inject()(dao: Dao, val messagesApi: MessagesApi)(implicit 
     )
   }
 
-  def getLogin = Action { implicit request =>
+  def getLogin = Action { implicit request:  Request[_] =>
     request.session.get(loginName).fold(Ok(views.html.login(loginForm))) { _ =>
       Redirect(routes.Application.index).flashing(flashToUser -> messagesApi(alreadyLoggedin))
     }
   }
 
-  def postLogin = Action.async { implicit request =>
+  def postLogin = Action.async { implicit request:  Request[_] =>
     loginForm.bindFromRequest.fold(
       errorForm => {
         Future.successful(BadRequest(views.html.login(errorForm)))
