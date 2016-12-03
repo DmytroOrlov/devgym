@@ -44,13 +44,6 @@ lazy val serverLibraries = Seq(
 
 lazy val server = (project in file("server"))
   .enablePlugins(BuildInfoPlugin)
-  .settings(libraryDependencies ++= serverLibraries)
-  .configs(UnitTest)
-  .settings(inConfig(UnitTest)(Defaults.testTasks): _*)
-  .enablePlugins(PlayScala)
-  .aggregate(clients.map(projectToRef): _*)
-  .dependsOn(sharedJvm)
-  .settings(commonSettings ++ testSettings)
   .settings(
     buildInfoKeys := Seq(
       BuildInfoKey.map(exportedProducts in Runtime) {
@@ -58,8 +51,16 @@ lazy val server = (project in file("server"))
           ("sandbox", classFiles.map(_.data.toURI.toURL))
       },
       "myVal" -> 123),
-    buildInfoPackage := "buildinfo",
-
+    buildInfoPackage := "buildinfo"
+  )
+  .configs(UnitTest)
+  .settings(inConfig(UnitTest)(Defaults.testTasks): _*)
+  .enablePlugins(PlayScala)
+  .aggregate(clients.map(projectToRef): _*)
+  .dependsOn(sharedJvm)
+  .settings(commonSettings ++ testSettings)
+  .settings(libraryDependencies ++= serverLibraries)
+  .settings(
     includeFilter in(Assets, LessKeys.less) := "*.less",
     name := "devgym",
     version := "1.0-SNAPSHOT",
