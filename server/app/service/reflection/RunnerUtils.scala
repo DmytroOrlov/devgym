@@ -60,7 +60,7 @@ trait DynamicExecution extends SuiteExecution with SuiteToolbox {
     val suiteName = WithSuiteException(s"There is no Test Suite name to instantiate, code: $suite") {
       findSuitName(suite)
     }
-    val code = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
+    val code = s"$defaultImports;\n $suite; $patchedSolution;\n new $suiteName(new $userClass)"
     executionTestSuite(suite = tb.eval(tb.parse(code)).asInstanceOf[Suite], channel)
   }
 }

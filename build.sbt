@@ -1,3 +1,4 @@
+import sbt.Keys._
 import sbt.Project.projectToRef
 
 val scalaV = "2.11.8"
@@ -31,7 +32,7 @@ lazy val server = (project in file("server"))
   .settings(commonSettings ++ testSettings)
   .enablePlugins(BuildInfoPlugin)
   .settings(
-    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, "custom" -> 1234),
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, "custom" -> 123),
     buildInfoPackage := "security")
   .settings(
     includeFilter in(Assets, LessKeys.less) := "*.less",

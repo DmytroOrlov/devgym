@@ -1,15 +1,17 @@
 package service.reflection
 
-import java.net.URLClassLoader
+import java.net.{URL, URLClassLoader}
 
-//import buildinfo.BuildInfo
+class TaskClassLoader(parent: ClassLoader) extends {
+    //TODO: inject DevGym classes path by sbt ?
+    private val urls = List(new URL("file:server/target/scala-2.11/classes/")).toArray
+  } with URLClassLoader(urls, parent) {
 
-class TaskClassLoader(parent: ClassLoader) extends ClassLoader { // extends URLClassLoader(BuildInfo.server.toList.toArray, parent) {
   import TaskClassLoader._
 
   override def loadClass(name: String, resolve: Boolean): Class[_] = {
     if (forbiddenClasses.contains(name)) {
-      throw new IllegalArgumentException("This functionality is disabled")
+      throw new IllegalArgumentException(s"This class is disabled: $name")
     }
     super.loadClass(name, resolve)
   }
@@ -25,24 +27,20 @@ object TaskClassLoader {
   // The simplest way to deal with them is to not let them be instantiated in the first place.
 
   val miscClasses =
-    """java.io.ObjectInputStream
-      |java.io.ObjectOutputStream
-      |java.io.ObjectStreamField
-      |java.io.ObjectStreamClass
+    """java.io.ObjectStreamClass
       |java.util.logging.Logger
       |java.sql.DriverManager
       |javax.sql.rowset.serial.SerialJavaObject
+      |java.io.File
+      |java.io.FileInputStream
+      |java.io.FileOutputStream
     """.stripMargin.split("\n").toSet
 
   // a bit extreme, but see http://www.security-explorations.com/materials/se-2014-02-report.pdf
   val javaClasses =
-    """java.lang.Class
-      |java.lang.ClassLoader
-      |java.lang.Package
+    """java.lang.Package
       |java.lang.invoke.MethodHandleProxies
       |java.lang.reflect.Proxy
-      |java.lang.reflect.Constructor
-      |java.lang.reflect.Method
     """.stripMargin.split("\n").toSet
 
   val forbiddenClasses: Set[String] = javaClasses ++ miscClasses
