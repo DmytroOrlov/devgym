@@ -1,11 +1,6 @@
 package service.reflection
 
-import java.net.{URL, URLClassLoader}
-
-class TaskClassLoader(parent: ClassLoader) extends {
-    //TODO: inject DevGym classes path by sbt ?
-    private val urls = List(new URL("file:server/target/scala-2.11/classes/")).toArray
-  } with URLClassLoader(urls, parent) {
+class TaskClassLoader(parent: ClassLoader) extends ClassLoader(parent) {
 
   import TaskClassLoader._
 
@@ -33,15 +28,16 @@ object TaskClassLoader {
       |javax.sql.rowset.serial.SerialJavaObject
       |java.io.File
       |java.io.FileInputStream
-      |java.io.FileOutputStream
-    """.stripMargin.split("\n").toSet
+      |java.io.FileOutputStream"""
+      .stripMargin.split("\n").toSet
 
   // a bit extreme, but see http://www.security-explorations.com/materials/se-2014-02-report.pdf
   val javaClasses =
-    """java.lang.Package
-      |java.lang.invoke.MethodHandleProxies
+    """java.lang.invoke.MethodHandleProxies
       |java.lang.reflect.Proxy
-    """.stripMargin.split("\n").toSet
+      |java.lang.System
+      |java.lang.Thread"""
+      .stripMargin.split("\n").toSet
 
   val forbiddenClasses: Set[String] = javaClasses ++ miscClasses
 

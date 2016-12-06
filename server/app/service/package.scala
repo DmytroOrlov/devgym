@@ -1,12 +1,8 @@
-import service.reflection.TaskSecurityManager
 import shared.model.{TestResult, TestStatus}
 
 import scala.util.{Failure, Success, Try}
 
 package object service {
-  //TODO: check predefined SecurityManager before setup
-  System.setSecurityManager(new TaskSecurityManager())
-
   //scalatest keyword
   val testFailedMarker = "FAILED"
 

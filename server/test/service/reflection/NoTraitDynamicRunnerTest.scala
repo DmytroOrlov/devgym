@@ -6,7 +6,7 @@ import service.StringBuilderRunner
 
 import scala.util.Try
 
-class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution {
+class NoTraitDynamicRunnerTest extends FlatSpec with Matchers with CorrectSolution {
   behavior of "ScalaTestRunner for dynamic solution and suite code"
 
   val correctSuite =
@@ -40,6 +40,8 @@ class ScalaTestDynamicNoTraitRunnerTest extends FlatSpec with Matchers with Scal
   }
 
   it should "return success when correct solution is provided" in new ScalaTestRunner {
-    Try(StringBuilderRunner(execSuiteNoTrait(correctSolution, correctSuite))).isSuccess shouldBe true
+    private val res: Try[String] = Try(StringBuilderRunner(execSuiteNoTrait(correctSolution, correctSuite)))
+    res.failed.foreach(t => println(t))
+    res.isSuccess shouldBe true
   }
 }
