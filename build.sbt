@@ -30,10 +30,6 @@ lazy val server = (project in file("server"))
   .aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJvm)
   .settings(commonSettings ++ testSettings)
-  .enablePlugins(BuildInfoPlugin)
-  .settings(
-    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, "custom" -> 123),
-    buildInfoPackage := "security")
   .settings(
     includeFilter in(Assets, LessKeys.less) := "*.less",
     name := "devgym",
