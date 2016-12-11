@@ -15,7 +15,7 @@ import scala.util.control.NonFatal
 class Application @Inject()(dao: TaskDao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   def index = Action.async { implicit request: Request[_] =>
-    val tasks = dao.getTasks(scalaLang, lastCount, now)
+    val tasks = dao.getTasks(scalaLang, lastCount, Task.now)
     tasks
       .map(it => Ok(views.html.index(it)))
       .recover {
