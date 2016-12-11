@@ -1,6 +1,6 @@
 package config
 
-import javax.inject.Singleton
+import javax.inject.{Named, Singleton}
 
 import com.google.inject.{AbstractModule, Provides}
 import com.typesafe.config.Config
@@ -11,6 +11,7 @@ import play.api.Configuration
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaTestRunner}
 
 import scala.concurrent.ExecutionContext
+import scala.util.Random
 
 class DevgymModule extends AbstractModule {
   override def configure() = {
@@ -32,4 +33,7 @@ class DevgymModule extends AbstractModule {
   @Singleton
   def config(cassandra: CassandraCluster): () => CassandraAsyncContext[SnakeCase] =
     () => new CassandraAsyncContext[SnakeCase](cassandra.cluster, cassandra.keySpace, 100L)
+
+  @Named("Secret")
+  def config(): String = "devgym_" + Random.nextInt(9999999)
 }

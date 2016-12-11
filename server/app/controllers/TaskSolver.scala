@@ -19,7 +19,7 @@ import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.JsValue
 import play.api.libs.streams.ActorFlow
-import play.api.mvc.{Action, Controller, WebSocket}
+import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
 import shared.model.{Compiling, Line}
@@ -41,7 +41,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request =>
+  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request:  Request[_] =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
     val task = TryFuture(getCachedTask(year, lang, timeuuid))
