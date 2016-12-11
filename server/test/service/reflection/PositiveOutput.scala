@@ -11,6 +11,6 @@ abstract class PositiveOutput extends FlatSpec with Matchers with MockFactory {
   def suiteInstance: Suite
 
   it should "pass all tests for correct solution" in new SuiteExecution with SuiteToolbox {
-    StringBuilderRunner(executionTestSuite(suiteInstance, _)) shouldNot include regex failed
+    StringBuilderRunner(executionTestSuite(suiteInstance, _)) shouldNot include regex testFailedMarker
   }
 }

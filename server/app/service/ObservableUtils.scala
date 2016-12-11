@@ -30,9 +30,14 @@ object StringBuilderRunner {
   def apply(block: => (String => Unit) => String,
             testResult: Try[String] => Option[TestResult] = { _ => None })
            (implicit ec: ExecutionContext): String = {
+
     val sb = new StringBuilder
-    block(sb.append(_))
-    testResult(Success(sb.toString())).map(_.testStatus.toString).foreach(sb.append)
+    block(s => sb.append(s))
+
+    testResult(Success(sb.toString()))
+      .map(_.testStatus.toString)
+      .foreach(sb.append)
+
     sb.toString()
   }
 }

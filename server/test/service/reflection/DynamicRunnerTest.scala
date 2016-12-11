@@ -3,11 +3,10 @@ package service.reflection
 import monifu.concurrent.Implicits.globalScheduler
 import org.scalatest.FlatSpecLike
 import service.{StringBuilderRunner, _}
-import shared.model.TestResult
 
 import scala.util.Try
 
-class ScalaTestDynamicRunnerTest extends ScalaTestRunnerTest with FlatSpecLike {
+class DynamicRunnerTest extends RunnerTest with FlatSpecLike {
   behavior of "ScalaTestRunner for dynamic solution and suite code"
 
   val solutionTrait = "SleepInSolution"

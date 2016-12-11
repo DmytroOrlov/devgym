@@ -8,7 +8,7 @@ import shared.model.{TestResult, TestStatus}
 
 import scala.util.Try
 
-class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSolution {
+class RunnerTest extends FlatSpec with Matchers with CorrectSolution {
   behavior of "ScalaTestRunner"
   val incorrectSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {weekday || vacation}}"
 
@@ -43,6 +43,6 @@ class ScalaTestRunnerTest extends FlatSpec with Matchers with ScalaTestCorrectSo
   }
 }
 
-trait ScalaTestCorrectSolution {
+trait CorrectSolution {
   val correctSolution = "class A { def sleepIn(weekday: Boolean, vacation: Boolean): Boolean = {!weekday || vacation}}"
 }

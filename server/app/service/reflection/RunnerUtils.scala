@@ -48,7 +48,7 @@ trait SuiteToolbox {
   val tb = {
     import scala.reflect.runtime._
     import scala.tools.reflect.ToolBox
-    val cm = universe.runtimeMirror(getClass.getClassLoader)
+    val cm = universe.runtimeMirror(new TaskClassLoader(getClass.getClassLoader))
     cm.mkToolBox()
   }
 }
@@ -60,8 +60,8 @@ trait DynamicExecution extends SuiteExecution with SuiteToolbox {
     val suiteName = WithSuiteException(s"There is no Test Suite name to instantiate, code: $suite") {
       findSuitName(suite)
     }
-    val runningCode = s"$defaultImports; $suite; $patchedSolution; new $suiteName(new $userClass)"
-    executionTestSuite(suite = tb.eval(tb.parse(runningCode)).asInstanceOf[Suite], channel)
+    val code = s"$defaultImports;\n $suite; $patchedSolution;\n new $suiteName(new $userClass)"
+    executionTestSuite(suite = tb.eval(tb.parse(code)).asInstanceOf[Suite], channel)
   }
 }
 

@@ -19,7 +19,7 @@ class TestResultTest extends FlatSpec with Matchers {
 
   it should "return negative test result when report has failed cases" in {
     //given
-    val report = Success(s"some report is ${service.failed}")
+    val report = Success(s"some report is ${service.testFailedMarker}")
     //when
     val result = testResult(report)
     //then

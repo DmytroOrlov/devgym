@@ -1,3 +1,4 @@
+import sbt.Keys._
 import sbt.Project.projectToRef
 
 val scalaV = "2.11.8"
