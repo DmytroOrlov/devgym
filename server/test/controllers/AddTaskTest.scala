@@ -80,7 +80,7 @@ import scala.concurrent.Future
             .withSession(loginName -> "user1"))
           //then
           status(result) mustBe INTERNAL_SERVER_ERROR
-          contentAsString(result) must include( s"""class="error">${AddTask.cannotAddTask}</dd>""")
+          contentAsString(result) must include( s"""class="error">${AddTask.cannotAddTaskToDatabase}</dd>""")
         }
       }
     }

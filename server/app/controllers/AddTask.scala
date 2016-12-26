@@ -2,27 +2,37 @@ package controllers
 
 import javax.inject.Inject
 
+import akka.actor.ActorSystem
+import akka.stream.Materializer
 import controllers.AddTask._
 import dal.TaskDao
 import models.Language._
 import models.NewTask
 import monifu.concurrent.Scheduler
+import monifu.reactive.OverflowStrategy.DropOld
+import monifu.reactive.channels.PublishChannel
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.mvc.{Action, Controller, Request}
+import play.api.libs.json.JsValue
+import play.api.libs.streams.ActorFlow
+import play.api.mvc.{Action, Controller, Request, WebSocket}
+import service.meta.CodeParser
 import service.reflection.DynamicSuiteExecutor
 import service.{StringBuilderRunner, _}
-import shared.model.TestStatus
+import shared.model.{Compiling, SolutionTemplate, TestStatus}
 import util.TryFuture._
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
+import scala.util.matching.Regex
 import scala.util.{Success, Try}
 
 class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messagesApi: MessagesApi)
-                       (implicit s: Scheduler) extends Controller with I18nSupport {
+                       (implicit system: ActorSystem, s: Scheduler, mat: Materializer)
+  extends Controller with I18nSupport with JSONFormats {
+
   val addTaskForm = Form {
     mapping(
       taskName -> nonEmptyText,
@@ -33,7 +43,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
-  def getAddTask = Action { implicit request:  Request[_] =>
+  def getAddTask = Action { implicit request: Request[_] =>
     Ok(views.html.addTask(addTaskForm))
   }
 
@@ -55,16 +65,17 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
           val tR = testResult(Success(result))
 
           tR.testStatus match {
-            case TestStatus.Passed =>
+            case TestStatus.Passed | TestStatus.FailedByTest =>
               dao.addTask(NewTask(scalaLang, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
                 .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
                 .recover {
                   case NonFatal(e) => Logger.warn(e.getMessage, e)
                     InternalServerError {
-                      views.html.addTask(addTaskForm.bindFromRequest().withError(taskDescription, messagesApi(cannotAddTask)))
+                      views.html.addTask(addTaskForm.bindFromRequest()
+                        .withError(taskDescription, messagesApi(cannotAddTaskToDatabase)))
                     }
                 }
-            case TestStatus.Failed => Future {
+            case TestStatus.FailedByCompilation => Future {
               BadRequest {
                 addTaskViewWithError(cannotAddTaskOnCheck, tR.errorMessage)
               }
@@ -73,17 +84,37 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
         }
 
         val checkTrait = Try(findTraitName(f.suite)).toFuture
-        //TODO: split error messages: 1) trait check; 2) cannot be saved
-        checkTrait.flatMap { traitName =>
-          addTaskIfValid(traitName)
-        }.recover {
+
+        (for {
+          traitName <- checkTrait errorMsg addTaskErrorOnSolutionTrait
+          result <- addTaskIfValid(traitName) errorMsg cannotAddTaskToDatabase
+        } yield result).recover {
           case NonFatal(e) => BadRequest {
-            addTaskViewWithError(addTaskErrorOnSolutionTrait, "Task cannot be saved", Some(e))
+            addTaskViewWithError(e.getMessage, ex = Some(e))
           }
         }
       }
     )
   }
+
+  def getSolutionTemplate = WebSocket.accept { req =>
+    ActorFlow.actorRef[JsValue, JsValue] { out =>
+      SimpleWebSocketActor.props(out, (fromClient: JsValue) => {
+        val solution = (fromClient \ "solution").as[String]
+        val channel = PublishChannel[SolutionTemplate](DropOld(20))
+
+        Future {
+          val template = CodeParser.getSolutionTemplate(solution)
+          println(s"template:\n$template")
+          channel.pushNext(SolutionTemplate(template))
+        }
+
+        Future.successful(channel)
+      }
+      )
+    }
+  }
+
 }
 
 case class AddTaskForm(name: String, description: String, solutionTemplate: String, referenceSolution: String, suite: String)
@@ -94,12 +125,19 @@ object AddTask {
   val solutionTemplate = "solutionTemplate"
   val referenceSolution = "referenceSolution"
   val suite = "suite"
-  val cannotAddTask = "cannotAddTask"
+  val cannotAddTaskToDatabase = "cannotAddTaskToDatabase"
   val cannotAddTaskOnCheck = "cannotAddTaskOnCheck"
   val addTaskErrorOnSolutionTrait = "addTaskErrorOnSolutionTrait"
   val taskAdded = "taskAdded"
 
-  val traitDefPattern = """trait\s*([\w\$]*)""".r
+  val traitDefPattern: Regex = """trait\s*([\w\$]*)""".r
 
   def findTraitName(suite: String) = traitDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
+
+  implicit class ErrorMessageFuture[A](val future: Future[A]) extends AnyVal {
+    def errorMsg(messageKey: String)(implicit s: Scheduler): Future[A] = future.recoverWith {
+      case t: Throwable => Future.failed(new Exception(messageKey, t))
+    }
+  }
+
 }

@@ -1,23 +1,21 @@
-package client
+package controller
 
 import java.util.Date
 
+import client.SimpleWebSocketClient
 import common.CodeEditor
 import monifu.concurrent.Implicits.globalScheduler
-import monifu.reactive.Ack.Continue
 import monifu.reactive.OverflowStrategy.DropOld
-import monifu.reactive.{Ack, Observable, Observer, Subscriber}
+import monifu.reactive.{Observable, Subscriber}
 import org.scalajs.dom
-import org.scalajs.jquery.{JQuery, jQuery}
+import org.scalajs.jquery.jQuery
 import shared.model._
-import shared.view.SuiteReportUtil._
 
-import scala.concurrent.Future
 import scala.scalajs.js.Dynamic.{literal => obj}
 import scala.scalajs.js.{JSApp, JSON}
 
-object SubmitSolutionClient extends JSApp {
-  val loadingIcon = jQuery("#icon")
+object TaskSolver extends JSApp {
+  private val loadingIcon = jQuery("#icon")
   val editor = new CodeEditor("solution")
   var prevTimestamp = 0L
 
@@ -46,66 +44,12 @@ object SubmitSolutionClient extends JSApp {
       disableButton()
       loadingIcon.show()
       val testExecution = new TestExecution()
-      testExecution.subscribe(new Report(to, () => disableButton(false)))
-    }
-  }
-
-  final class Report(reportId: String, onCompleteCall: () => Unit) extends Observer[Event] {
-    val report = jQuery(s"#$reportId")
-    report.empty()
-
-    var compilationJustStarted = false
-
-    override def onNext(elem: Event): Future[Ack] = {
-      elem match {
-        case l: Line => processLine(l)
-        case tr: TestResult => processTestResult(tr)
-        case _: Compiling => processCompiling()
-        case _ => System.err.println(s"Event '$elem' is not supported")
-      }
-      Continue
-    }
-
-    private def processCompiling(): Unit = {
-      report.append("Compiling...")
-      compilationJustStarted = true
-    }
-
-    private def processTestResult(tr: TestResult) = {
-      cleanReportAreaIfNeeded()
-
-      val (message, cssClass) = tr.testStatus match {
-        case TestStatus.Passed => ("Test Passed!", "testPassed")
-        case TestStatus.Failed =>
-          val error = Option(tr.errorMessage).filter(_.nonEmpty).map(_ + "<br/>").getOrElse("")
-          (s"${error}Test Failed. Keep going!", "testFailed")
-      }
-      report.append(s"""<div class="$cssClass">$message</div>""")
-    }
-
-    private def processLine(l: Line): JQuery = {
-      val line = removeToolboxText(replaceMarkers(l.value))
-      cleanReportAreaIfNeeded()
-      report.append(s"""<div>$line</div>""")
-    }
-
-    private def cleanReportAreaIfNeeded(): Unit = {
-      if (compilationJustStarted) {
-        compilationJustStarted = false
-        report.html("<div class='result-output'>Result:</div>")
-      }
-    }
-
-    def onComplete() = {
-      loadingIcon.hide()
-      onCompleteCall()
-    }
-
-    def onError(ex: Throwable) = {
-      val m = s"${this.getClass.getName} $ex"
-      System.err.println(m)
-      report.append(m)
-      onCompleteCall()
+      testExecution.subscribe(new TaskSolverReport(
+        to,
+        () => {
+          disableButton(false)
+          loadingIcon.hide()
+        }))
     }
   }
 

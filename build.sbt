@@ -56,6 +56,7 @@ lazy val server = (project in file("server"))
 
       "org.scala-lang" % "scala-compiler" % scalaV,
       "org.scalatest" %% "scalatest" % scalatestV,
+      "org.scalameta" %% "scalameta" % "1.4.0",
 
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpV,
       "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV

@@ -13,12 +13,11 @@ package object service {
   def testResult(report: Try[String]): TestResult =
     report match {
       case Success(s) =>
-        val (status, error) =
-        //no need to send test result as error, even it is failed test.
-        //Improvement here is to introduce new TestStatus like FailedByTest, FailedByCompilation instead of ambiguous Failed
-          if (s.contains(testFailedMarker)) (TestStatus.Failed.toString, "")
-          else (TestStatus.Passed.toString, "")
-        TestResult(status, error)
-      case Failure(e) => TestResult(TestStatus.Failed.toString, e.getMessage)
+        val status =
+          if (s.contains(testFailedMarker)) TestStatus.FailedByTest
+          else TestStatus.Passed
+        TestResult(status.toString)
+      case Failure(e) =>
+        TestResult(TestStatus.FailedByCompilation.toString, e.getMessage)
     }
 }

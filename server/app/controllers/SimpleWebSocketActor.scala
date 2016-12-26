@@ -1,4 +1,4 @@
-package service
+package controllers
 
 import akka.actor._
 import monifu.concurrent.Scheduler
@@ -25,7 +25,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
 
       producer(json).map { o =>
         subscription += o.map(x => Json.toJson(x))
-          .timeout(timeout)
+//          .timeout(timeout) //TODO: do we need this timeout at all?
           .subscribe(
             jsValue => {
               out ! jsValue
@@ -36,7 +36,9 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
           )
         onSubscribe.foreach(out ! Json.toJson(_))
       }.onFailure {
-        case NonFatal(e) => context.stop(self)
+        case NonFatal(e) =>
+          println("receive error", e)
+          context.stop(self)
       }
   }
 
@@ -45,6 +47,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
   }
 
   override def postStop(): Unit = {
+    Logger.warn("actor has been stopped")
     subscription.cancel()
     out ! PoisonPill
   }

@@ -27,10 +27,13 @@ import util.TryFuture
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.util.control.NonFatal
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor, dao: TaskDao, val messagesApi: MessagesApi, cache: CacheApi)
-                          (implicit system: ActorSystem, s: Scheduler, mat: Materializer) extends Controller with I18nSupport with JSONFormats {
+class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor,
+                           dao: TaskDao, val messagesApi: MessagesApi, cache: CacheApi)
+                          (implicit system: ActorSystem, s: Scheduler, mat: Materializer)
+  extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
     mapping(
@@ -41,7 +44,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request:  Request[_] =>
+  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request: Request[_] =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
     val task = TryFuture(getCachedTask(year, lang, timeuuid))
@@ -85,10 +88,10 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }
 
     val suiteKey = (year, lang, timeuuid).toString()
+    val maybeTask = cache.get[Task](suiteKey)
 
-    val task = cache.get[Task](suiteKey)
-    task match {
-      case Some(_) => Future.successful(task)
+    maybeTask match {
+      case Some(_) => Future.successful(maybeTask)
       case None =>
         val f = getFromDb
         f.foreach {
@@ -100,7 +103,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   }
 
   /**
-    * it is an example of executing the loaded test classes into the classPath. We only parse solution text coming from a user
+    * it is an example of executing the test classes from the classPath. We only parse solution text coming from a user
     * Such approach is faster of course, than controllers.TaskSolver#taskStream().
     *
     * This approach can be used for predefined tests of DevGym platform to get better performance for demo tests.

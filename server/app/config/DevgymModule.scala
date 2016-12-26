@@ -34,6 +34,7 @@ class DevgymModule extends AbstractModule {
   def config(cassandra: CassandraCluster): () => CassandraAsyncContext[SnakeCase] =
     () => new CassandraAsyncContext[SnakeCase](cassandra.cluster, cassandra.keySpace, 100L)
 
+  @Provides
   @Named("Secret")
   def config(): String = "devgym_" + Random.nextInt(9999999)
 }

@@ -7,6 +7,7 @@ trait JSONFormats {
   private val lineFormat = Json.format[Line]
   private val testResultFormat = Json.format[TestResult]
   private val compilingFormat = Json.format[Compiling]
+  private val solutionTemplateFormat = Json.format[SolutionTemplate]
 
   implicit val eventFormat = new Format[Event] {
     def reads(json: JsValue): JsResult[Event] =
@@ -17,6 +18,8 @@ trait JSONFormats {
           testResultFormat.reads(json)
         case Compiling.name =>
           compilingFormat.reads(json)
+        case SolutionTemplate.name =>
+          solutionTemplateFormat.reads(json)
         case e =>
           JsError(JsPath \ "name", s"Event '$e' is not supported")
       }
@@ -29,6 +32,8 @@ trait JSONFormats {
           testResultFormat.writes(tr).as[JsObject]
         case c: Compiling =>
           compilingFormat.writes(c).as[JsObject]
+        case s: SolutionTemplate =>
+          solutionTemplateFormat.writes(s).as[JsObject]
       }
 
       Json.obj("name" -> event.name) ++ jsObject

@@ -7,7 +7,7 @@ sealed trait Event {
 }
 
 case class Line(value: String, timestamp: Long = System.currentTimeMillis()) extends Event {
-  val name = Line.name
+  val name: String = Line.name
 }
 
 object Line {
@@ -15,7 +15,7 @@ object Line {
 }
 
 case class TestResult(status: String, errorMessage: String = "", timestamp: Long = System.currentTimeMillis()) extends Event {
-  val name = TestResult.name
+  val name: String = TestResult.name
   val testStatus = TestStatus.withName(status)
 }
 
@@ -24,9 +24,17 @@ object TestResult {
 }
 
 case class Compiling(timestamp: Long = System.currentTimeMillis()) extends Event {
-  val name = Compiling.name
+  val name: String = Compiling.name
 }
 
 object Compiling {
   val name = "compiling"
+}
+
+case class SolutionTemplate(code: String, timestamp: Long = System.currentTimeMillis()) extends Event {
+  val name: String = SolutionTemplate.name
+}
+
+object SolutionTemplate {
+  val name = "solutionTemplate"
 }
