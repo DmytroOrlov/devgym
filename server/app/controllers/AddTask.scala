@@ -4,6 +4,7 @@ import javax.inject.Inject
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import controllers.AddTask._
 import dal.TaskDao
 import models.Language._
@@ -24,7 +25,7 @@ import service.{StringBuilderRunner, _}
 import shared.model.{Compiling, SolutionTemplate, TestStatus}
 import util.TryFuture._
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.util.control.NonFatal
 import scala.util.matching.Regex
 import scala.util.{Success, Try}
@@ -98,21 +99,11 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
   }
 
   def getSolutionTemplate = WebSocket.accept { req =>
-    ActorFlow.actorRef[JsValue, JsValue] { out =>
-      SimpleWebSocketActor.props(out, (fromClient: JsValue) => {
-        val solution = (fromClient \ "solution").as[String]
-        val channel = PublishChannel[SolutionTemplate](DropOld(20))
-
-        Future {
-          val template = CodeParser.getSolutionTemplate(solution)
-          println(s"template:\n$template")
-          channel.pushNext(SolutionTemplate(template))
-        }
-
-        Future.successful(channel)
-      }
-      )
-    }
+    val p = Promise[JsValue]()
+    Flow.fromSinkAndSource(
+      Sink.foreach { fromClient: JsValue => p.success(fromClient) },
+      Source.fromFuture(p.future)
+    )
   }
 
 }
