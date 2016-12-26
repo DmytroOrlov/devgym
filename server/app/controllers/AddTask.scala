@@ -16,7 +16,7 @@ import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsString, JsValue}
 import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service.meta.CodeParser
@@ -99,9 +99,14 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
   }
 
   def getSolutionTemplate = WebSocket.accept { req =>
+    def getTemplate(jsValue: JsValue) = {
+      val solution = (jsValue \ "solution").as[String]
+      JsString(CodeParser.getSolutionTemplate(solution))
+    }
+
     val p = Promise[JsValue]()
     Flow.fromSinkAndSource(
-      Sink.foreach { fromClient: JsValue => p.success(fromClient) },
+      Sink.foreach { fromClient: JsValue => p.success(getTemplate(fromClient)) },
       Source.fromFuture(p.future)
     )
   }
