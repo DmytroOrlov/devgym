@@ -58,11 +58,12 @@ object AddTask extends JSApp {
   val suiteEditorExample = new CodeEditor("suiteExample", readOnly = true, suiteExample)
 
   private val refSolutionChannel = PublishChannel[String](DropOld(2)).throttleWithTimeout(2 seconds)
-  refSolutionChannel.onSubscribe(new ReferenceSolutionObserver)
+  private val deriveSolutionTemplate = jQuery(s"#deriveSolutionTemplate")
 
   def main(): Unit = {
     jQuery(s"#$buttonId").click(copyValues _)
     referenceEditor.bindOnChangeHandler(referenceSolutionOnChange)
+    refSolutionChannel.onSubscribe(new ReferenceSolutionObserver)
   }
 
   private def copyValues() = {
@@ -72,8 +73,10 @@ object AddTask extends JSApp {
   }
 
   private def referenceSolutionOnChange() = {
-    println(referenceEditor.value)
-    refSolutionChannel.pushNext(referenceEditor.value)
+    if (deriveSolutionTemplate.is(":checked")) {
+      println(referenceEditor.value)
+      refSolutionChannel.pushNext(referenceEditor.value)
+    }
   }
 
   class ReferenceSolutionObserver extends Observer[String] {
