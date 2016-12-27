@@ -83,7 +83,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
         }
       }
     }
-    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).toReactive))
+    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).timeout(10.seconds).toReactive))
   }
 
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
