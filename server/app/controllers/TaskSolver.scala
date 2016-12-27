@@ -73,8 +73,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
           channel.pushComplete()
       }
     }
-    val source = Source.fromPublisher(channel.map(Json.toJson(_)).toReactive)
-    Flow.fromSinkAndSource(sink, source)
+    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).toReactive))
   }
 
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
