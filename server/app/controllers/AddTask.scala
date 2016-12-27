@@ -95,17 +95,11 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
     )
   }
 
-  def getSolutionTemplate = WebSocket.accept { req =>
-    def getTemplate(jsValue: JsValue) = {
-      val solution = (jsValue \ "solution").as[String]
-      Json.toJson(SolutionTemplate(CodeParser.getSolutionTemplate(solution)))
-    }
+  def getSolutionTemplate: WebSocket = WebSocket.accept { req =>
+    def getTemplate(jsValue: JsValue) =
+      Json.toJson(SolutionTemplate(CodeParser.getSolutionTemplate((jsValue \ "solution").as[String])))
 
-    val p = Promise[JsValue]()
-    Flow.fromSinkAndSource(
-      Sink.foreach { fromClient: JsValue => p.success(getTemplate(fromClient)) },
-      Source.fromFuture(p.future)
-    )
+    Flow[JsValue].map(getTemplate)
   }
 
 }
