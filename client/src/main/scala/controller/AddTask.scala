@@ -52,12 +52,9 @@ object AddTask extends JSApp {
   val suiteEditor = new CodeEditor(suiteId)
   val suiteEditorExample = new CodeEditor("suiteExample", readOnly = true, suiteExample)
 
-  val addTaskClient = new AddTaskClient(referenceEditor)
-
   def main(): Unit = {
     jQuery(s"#$buttonId").click(copyValues _)
     referenceEditor.bindOnChangeHandler(referenceSolutionChangeHandler)
-    addTaskClient.subscribe(new ReferenceTemplateObserver)
   }
 
   private def copyValues() = {
@@ -68,13 +65,15 @@ object AddTask extends JSApp {
 
   private def referenceSolutionChangeHandler() = {
     println(referenceEditor.value)
-    addTaskClient.sendSolutionCode(referenceEditor.value)
+    val addTaskClient = new AddTaskClient(referenceEditor, referenceEditor.value)
+    addTaskClient.subscribe(new ReferenceTemplateObserver)
+    //addTaskClient.sendSolutionCode(referenceEditor.value)
   }
 
   class ReferenceTemplateObserver extends Observer[Event] {
     override def onNext(elem: Event) = {
       println(s"received elem = $elem")
-      templateEditor.insert(elem)
+      templateEditor.setValue(elem)
       Continue
     }
 

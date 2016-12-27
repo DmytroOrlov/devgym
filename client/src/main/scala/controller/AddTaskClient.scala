@@ -15,15 +15,15 @@ import scala.language.postfixOps
 import scala.scalajs.js.Dynamic.{literal => obj}
 import scala.scalajs.js.JSON
 
-class AddTaskClient(editor: CodeEditor) {
+class AddTaskClient(editor: CodeEditor, solutionCode: String) {
   private val host = dom.window.location.host
   private val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
 
   private val client = new SimpleWebSocketClient(
     url = s"$protocol//$host/getSolutionTemplate",
     DropOld(20),
-    timeout = 60 minutes // TODO: pass None and avoid timeout for this scenario
-    //, throttleDuration = Some(2 seconds)
+    sendOnOpen = Some(obj("solution" -> solutionCode)),
+    timeout = 60 minutes // TODO: add possibility to pass None to disable timeout
   )
   private val source = client.collect { case AddTaskEvents(e) => e }
 
@@ -49,11 +49,11 @@ class AddTaskClient(editor: CodeEditor) {
   }
 
   def subscribe(subscriber: Observer[Event]) = {
-    source.subscribe(subscriber)
+    source.onSubscribe(subscriber)
   }
 
-  def sendSolutionCode(solution: String) = {
-    client.sendEvent(obj("solution" -> solution))
+  def sendSolutionCode(solutionCode: String) = {
+    client.sendEvent(obj("solution" -> solutionCode))
   }
 
 }
