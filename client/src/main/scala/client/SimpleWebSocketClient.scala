@@ -28,11 +28,12 @@ final class SimpleWebSocketClient(url: String,
 
     val (channel, webSocket: Option[WebSocket]) = try {
       val webSocket = new WebSocket(url)
-      thisWebSocket = Some(webSocket) //TODO: try to move socket creation to constructor
       createChannel(webSocket) -> Some(webSocket)
     } catch {
       case e: Throwable => Observable.error(e) -> None
     }
+
+    thisWebSocket = webSocket //TODO: try to move socket creation to constructor
 
     val source: Observable[String] = channel.timeout(timeout)
       .doOnCanceled(webSocket foreach closeConnection)

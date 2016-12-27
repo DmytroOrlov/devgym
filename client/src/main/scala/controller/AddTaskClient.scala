@@ -22,7 +22,7 @@ class AddTaskClient(editor: CodeEditor) {
   private val client = new SimpleWebSocketClient(
     url = s"$protocol//$host/getSolutionTemplate",
     DropOld(20),
-    timeout = 15 minutes
+    timeout = 60 minutes // TODO: pass None and avoid timeout for this scenario
     //, throttleDuration = Some(2 seconds)
   )
   private val source = client.collect { case AddTaskEvents(e) => e }

@@ -10,19 +10,16 @@ import dal.TaskDao
 import models.Language._
 import models.NewTask
 import monifu.concurrent.Scheduler
-import monifu.reactive.OverflowStrategy.DropOld
-import monifu.reactive.channels.PublishChannel
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.libs.json.{JsString, JsValue}
-import play.api.libs.streams.ActorFlow
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service.meta.CodeParser
 import service.reflection.DynamicSuiteExecutor
 import service.{StringBuilderRunner, _}
-import shared.model.{Compiling, SolutionTemplate, TestStatus}
+import shared.model.{SolutionTemplate, TestStatus}
 import util.TryFuture._
 
 import scala.concurrent.{Future, Promise}
@@ -101,7 +98,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
   def getSolutionTemplate = WebSocket.accept { req =>
     def getTemplate(jsValue: JsValue) = {
       val solution = (jsValue \ "solution").as[String]
-      JsString(CodeParser.getSolutionTemplate(solution))
+      Json.toJson(SolutionTemplate(CodeParser.getSolutionTemplate(solution)))
     }
 
     val p = Promise[JsValue]()

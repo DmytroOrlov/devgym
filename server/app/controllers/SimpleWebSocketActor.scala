@@ -24,8 +24,8 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
       context.become(next)
 
       producer(json).map { o =>
-        subscription += o.map(x => Json.toJson(x))
-//          .timeout(timeout) //TODO: do we need this timeout at all?
+        subscription += o.map(elem => Json.toJson(elem))
+          .timeout(timeout)
           .subscribe(
             jsValue => {
               out ! jsValue
@@ -37,7 +37,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
         onSubscribe.foreach(out ! Json.toJson(_))
       }.onFailure {
         case NonFatal(e) =>
-          println("receive error", e)
+          Logger.error("receive error", e)
           context.stop(self)
       }
   }
@@ -47,7 +47,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
   }
 
   override def postStop(): Unit = {
-    Logger.warn("actor has been stopped")
+    Logger.debug("actor has been stopped")
     subscription.cancel()
     out ! PoisonPill
   }
