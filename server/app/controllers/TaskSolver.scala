@@ -1,28 +1,28 @@
 package controllers
 
-import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 import javax.inject.Inject
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import controllers.TaskSolver._
 import dal.TaskDao
 import models.{Language, Task}
 import monifu.concurrent.Scheduler
-import monifu.reactive.Observable
 import org.scalatest.Suite
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.model.{Compiling, Line}
+import shared.model.Compiling
 import util.TryFuture
 
 import scala.concurrent.Future
@@ -55,30 +55,26 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }.recover { case NonFatal(e) => notFound }
   }
 
-  def taskStream = WebSocket.accept { req =>
-    ActorFlow.actorRef[JsValue, JsValue] { out =>
-      SimpleWebSocketActor.props(out, (fromClient: JsValue) => {
-        val prevTimestamp = (fromClient \ "prevTimestamp").as[Long]
-        val currentTimestamp = (fromClient \ "currentTimestamp").as[Long]
+  def taskStream: WebSocket = WebSocket.accept { req =>
+    val clientInputToTask: (JsValue) => Future[Task] = (clientInput: JsValue) => {
+      val solution = (clientInput \ "solution").as[String]
+      val year = (clientInput \ "year").as[Long]
+      val lang = (clientInput \ "lang").as[String]
+      val timeuuid = (clientInput \ "timeuuid").as[String]
 
-        if (Duration(currentTimestamp - prevTimestamp, TimeUnit.MILLISECONDS) < 1.seconds) {
-          Future(Observable(Line("Too many requests per second from the same client. Slow down")))
-        } else {
-          val solution = (fromClient \ "solution").as[String]
-          val year = (fromClient \ "year").as[Long]
-          val lang = (fromClient \ "lang").as[String]
-          val timeuuid = (fromClient \ "timeuuid").as[String]
-
-          val task = getCachedTask(year, lang, UUID.fromString(timeuuid))
-          task.map { t =>
-            if (t.isEmpty) throw new RuntimeException(s"Task is not available for a given solution: $solution")
-            ObservableRunner(executor(solution, t.get.suite, t.get.solutionTrait), service.testResult)
-          }
-        }
-      },
-        Some(Compiling())
-      )
+      getCachedTask(year, lang, UUID.fromString(timeuuid)).map {
+        case None =>
+          throw new RuntimeException(s"Task is not available for a given solution: $solution")
+        case Some(task) => task
+      }
     }
+
+    val taskToSource: (Task) => Source[JsValue, NotUsed] = (task: Task) => {
+      Source.fromPublisher(ObservableRunner(executor(solution, task.suite, task.solutionTrait), service.testResult)
+        .map(Json.toJson(_)).toReactive)
+    }
+
+    Flow.fromSinkAndSource(Sink.foreach(clientInput => ()), Source.empty[JsValue])
   }
 
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
