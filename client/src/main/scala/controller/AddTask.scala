@@ -3,9 +3,14 @@ package controller
 import common.CodeEditor
 import monifu.reactive.Ack.Continue
 import monifu.reactive.Observer
+import monifu.reactive.OverflowStrategy.DropOld
+import monifu.reactive.channels.PublishChannel
+import monifu.concurrent.Implicits.globalScheduler
 import org.scalajs.jquery._
 import shared.model.Event
 
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.scalajs.js.JSApp
 
 object AddTask extends JSApp {
@@ -52,9 +57,12 @@ object AddTask extends JSApp {
   val suiteEditor = new CodeEditor(suiteId)
   val suiteEditorExample = new CodeEditor("suiteExample", readOnly = true, suiteExample)
 
+  private val refSolutionChannel = PublishChannel[String](DropOld(2)).throttleWithTimeout(2 seconds)
+  refSolutionChannel.onSubscribe(new ReferenceSolutionObserver)
+
   def main(): Unit = {
     jQuery(s"#$buttonId").click(copyValues _)
-    referenceEditor.bindOnChangeHandler(referenceSolutionChangeHandler)
+    referenceEditor.bindOnChangeHandler(referenceSolutionOnChange)
   }
 
   private def copyValues() = {
@@ -63,11 +71,24 @@ object AddTask extends JSApp {
     jQuery(s"#$suiteId").value(suiteEditor.value)
   }
 
-  private def referenceSolutionChangeHandler() = {
+  private def referenceSolutionOnChange() = {
     println(referenceEditor.value)
-    val addTaskClient = new AddTaskClient(referenceEditor, referenceEditor.value)
-    addTaskClient.subscribe(new ReferenceTemplateObserver)
-    //addTaskClient.sendSolutionCode(referenceEditor.value)
+    refSolutionChannel.pushNext(referenceEditor.value)
+  }
+
+  class ReferenceSolutionObserver extends Observer[String] {
+    override def onNext(refSolution: String) = {
+      val addTaskClient = new AddTaskClient(refSolution)
+      addTaskClient.subscribe(new ReferenceTemplateObserver)
+      Continue
+    }
+
+    override def onError(ex: Throwable) = {
+      val m = s"${this.getClass.getName} $ex"
+      System.err.println(m)
+    }
+
+    override def onComplete() = println("complete stream for ReferenceSolution")
   }
 
   class ReferenceTemplateObserver extends Observer[Event] {

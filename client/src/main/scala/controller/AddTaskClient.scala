@@ -3,7 +3,6 @@ package controller
 import java.util.Date
 
 import client.SimpleWebSocketClient
-import common.CodeEditor
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.reactive.Observer
 import monifu.reactive.OverflowStrategy.DropOld
@@ -15,7 +14,7 @@ import scala.language.postfixOps
 import scala.scalajs.js.Dynamic.{literal => obj}
 import scala.scalajs.js.JSON
 
-class AddTaskClient(editor: CodeEditor, solutionCode: String) {
+class AddTaskClient(solutionCode: String) {
   private val host = dom.window.location.host
   private val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
 
@@ -51,9 +50,9 @@ class AddTaskClient(editor: CodeEditor, solutionCode: String) {
   def subscribe(subscriber: Observer[Event]) = {
     source.onSubscribe(subscriber)
   }
-
-  def sendSolutionCode(solutionCode: String) = {
-    client.sendEvent(obj("solution" -> solutionCode))
-  }
+//
+//  def sendSolutionCode(solutionCode: String) = {
+//    client.sendEvent(obj("solution" -> solutionCode))
+//  }
 
 }
