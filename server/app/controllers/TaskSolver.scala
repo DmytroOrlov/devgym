@@ -3,14 +3,15 @@ package controllers
 import java.util.{Date, UUID}
 import javax.inject.Inject
 
-import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import controllers.TaskSolver._
+import controllers.TaskSolver.{solution, _}
 import dal.TaskDao
 import models.{Language, Task}
 import monifu.concurrent.Scheduler
+import monifu.reactive.OverflowStrategy.DropOld
+import monifu.reactive.channels.PublishChannel
 import org.scalatest.Suite
 import play.api.Logger
 import play.api.cache.CacheApi
@@ -22,12 +23,13 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.model.Compiling
+import shared.model.{Compiling, Event, Line}
 import util.TryFuture
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.Try
 import scala.util.control.NonFatal
 
 class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor,
@@ -56,25 +58,23 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   }
 
   def taskStream: WebSocket = WebSocket.accept { req =>
-    val clientInputToTask: (JsValue) => Future[Task] = (clientInput: JsValue) => {
+    val channel: PublishChannel[Event] = PublishChannel[Event](DropOld(20))
+    val sink = Sink.foreach { clientInput: JsValue =>
       val solution = (clientInput \ "solution").as[String]
       val year = (clientInput \ "year").as[Long]
       val lang = (clientInput \ "lang").as[String]
       val timeuuid = (clientInput \ "timeuuid").as[String]
 
-      getCachedTask(year, lang, UUID.fromString(timeuuid)).map {
+      getCachedTask(year, lang, UUID.fromString(timeuuid)).foreach {
         case None =>
           throw new RuntimeException(s"Task is not available for a given solution: $solution")
-        case Some(task) => task
+        case Some(task) =>
+          channel.pushNext(service.testResult(Try(executor(solution, task.suite, task.solutionTrait)(s => channel.pushNext(Line(s))))))
+          channel.pushComplete()
       }
     }
-
-    val taskToSource: (Task) => Source[JsValue, NotUsed] = (task: Task) => {
-      Source.fromPublisher(ObservableRunner(executor(solution, task.suite, task.solutionTrait), service.testResult)
-        .map(Json.toJson(_)).toReactive)
-    }
-
-    Flow.fromSinkAndSource(Sink.foreach(clientInput => ()), Source.empty[JsValue])
+    val source = Source.fromPublisher(channel.map(Json.toJson(_)).toReactive)
+    Flow.fromSinkAndSource(sink, source)
   }
 
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
