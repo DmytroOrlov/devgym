@@ -1,5 +1,6 @@
 package controllers
 
+import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 import javax.inject.Inject
 
@@ -29,8 +30,8 @@ import util.TryFuture
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.Try
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor,
                            dao: TaskDao, val messagesApi: MessagesApi, cache: CacheApi)
@@ -60,17 +61,26 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
   def taskStream: WebSocket = WebSocket.accept { req =>
     val channel: PublishChannel[Event] = PublishChannel[Event](DropOld(20))
     val sink = Sink.foreach { clientInput: JsValue =>
-      val solution = (clientInput \ "solution").as[String]
-      val year = (clientInput \ "year").as[Long]
-      val lang = (clientInput \ "lang").as[String]
-      val timeuuid = (clientInput \ "timeuuid").as[String]
+      val prevTimestamp = (clientInput \ "prevTimestamp").as[Long]
+      val currentTimestamp = (clientInput \ "currentTimestamp").as[Long]
+      if (Duration(currentTimestamp - prevTimestamp, TimeUnit.MILLISECONDS) < 1.seconds) {
+        channel.pushNext(Line("Too many requests per second from the same client. Slow down"))
+        channel.pushComplete()
+      } else {
+        val solution = (clientInput \ "solution").as[String]
+        val year = (clientInput \ "year").as[Long]
+        val lang = (clientInput \ "lang").as[String]
+        val timeuuid = (clientInput \ "timeuuid").as[String]
 
-      getCachedTask(year, lang, UUID.fromString(timeuuid)).foreach {
-        case None =>
-          throw new RuntimeException(s"Task is not available for a given solution: $solution")
-        case Some(task) =>
-          channel.pushNext(service.testResult(Try(executor(solution, task.suite, task.solutionTrait)(s => channel.pushNext(Line(s))))))
-          channel.pushComplete()
+        getCachedTask(year, lang, UUID.fromString(timeuuid)).onComplete {
+          case Success(Some(task)) =>
+            channel.pushNext(service.testResult(Try(executor(solution, task.suite, task.solutionTrait)(s => channel.pushNext(Line(s))))))
+            channel.pushComplete()
+          case Success(None) =>
+            channel.endWithError(new RuntimeException(s"Task is not available for a given solution: $solution"))
+          case Failure(ex) =>
+            channel.endWithError(ex)
+        }
       }
     }
     Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).toReactive))
