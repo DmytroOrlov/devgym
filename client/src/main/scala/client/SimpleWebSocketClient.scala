@@ -45,23 +45,23 @@ final class SimpleWebSocketClient(url: String,
       case NonFatal(e) => Observable.error(e) -> ()
     }
 
-    val source = inbound.timeout(timeout)
+    inbound
+      .timeout(timeout)
       .doOnCanceled(closeConnection)
+      .onSubscribe(new Observer[String] {
+        def onNext(elem: String) = subscriber.onNext(elem)
 
-    source.onSubscribe(new Observer[String] {
-      def onNext(elem: String) = subscriber.onNext(elem)
+        def onError(ex: Throwable) = {
+          closeConnection()
+          scheduler.reportFailure(ex)
+          subscriber.onComplete()
+        }
 
-      def onError(ex: Throwable) = {
-        closeConnection()
-        scheduler.reportFailure(ex)
-        subscriber.onComplete()
-      }
-
-      def onComplete() = {
-        closeConnection()
-        subscriber.onComplete()
-      }
-    })
+        def onComplete() = {
+          closeConnection()
+          subscriber.onComplete()
+        }
+      })
   }
 }
 
