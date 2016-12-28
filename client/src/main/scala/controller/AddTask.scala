@@ -1,17 +1,18 @@
 package controller
 
-import common.CodeEditor
-import monifu.reactive.Ack.Continue
-import monifu.reactive.Observer
-import monifu.reactive.OverflowStrategy.DropOld
-import monifu.reactive.channels.PublishChannel
-import monifu.concurrent.Implicits.globalScheduler
-import org.scalajs.jquery._
-import shared.model.Event
+import java.util.Date
 
-import scala.concurrent.duration._
+import client.WebSocketClient
+import common.CodeEditor
+import monifu.concurrent.Implicits.globalScheduler
+import monifu.reactive.Ack.Continue
+import org.scalajs.jquery._
+import shared.model.{Event, SolutionTemplate}
+
 import scala.language.postfixOps
-import scala.scalajs.js.JSApp
+import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{literal => obj}
+import scala.scalajs.js.{JSApp, JSON}
 
 object AddTask extends JSApp {
   val solutionTemplateExample =
@@ -57,13 +58,20 @@ object AddTask extends JSApp {
   val suiteEditor = new CodeEditor(suiteId)
   val suiteEditorExample = new CodeEditor("suiteExample", readOnly = true, suiteExample)
 
-  private val refSolutionChannel = PublishChannel[String](DropOld(2)).throttleWithTimeout(2 seconds)
-  private val deriveSolutionTemplate = jQuery(s"#deriveSolutionTemplate")
+  private lazy val sendReferenceSolution: (String) => Unit = {
+    val ws = WebSocketClient("getSolutionTemplate")
+    ws.collect { case AddTaskEvents(elem) => elem }
+      .subscribe { elem =>
+        templateEditor.setValue(elem)
+        Continue
+      }
+    ws
+  }
+  private val deriveSolutionTemplate = jQuery("#deriveSolutionTemplate")
 
   def main(): Unit = {
     jQuery(s"#$buttonId").click(copyValues _)
     referenceEditor.bindOnChangeHandler(referenceSolutionOnChange)
-    refSolutionChannel.onSubscribe(new ReferenceSolutionObserver)
   }
 
   private def copyValues() = {
@@ -72,40 +80,27 @@ object AddTask extends JSApp {
     jQuery(s"#$suiteId").value(suiteEditor.value)
   }
 
-  private def referenceSolutionOnChange() = {
-    if (deriveSolutionTemplate.is(":checked")) {
-      println(referenceEditor.value)
-      refSolutionChannel.pushNext(referenceEditor.value)
+  private def referenceSolutionOnChange() =
+    if (deriveSolutionTemplate.is(":checked"))
+      sendReferenceSolution(js.JSON.stringify(obj("solution" -> referenceEditor.value)))
+}
+
+object AddTaskEvents {
+  def unapply(message: String): Option[Event] = {
+    val json = JSON.parse(message)
+
+    def getTimestamp = json.timestamp.asInstanceOf[Number].longValue()
+
+    json.name.asInstanceOf[String] match {
+      case SolutionTemplate.name => Some(SolutionTemplate(
+        code = json.code.asInstanceOf[String],
+        timestamp = getTimestamp
+      ))
+      case "error" =>
+        val errorType = json.`type`.asInstanceOf[String]
+        val message = json.message.asInstanceOf[String]
+        throw new RuntimeException(s"Server-side error thrown (${new Date(getTimestamp)}) - $errorType: $message")
+      case _ => None
     }
-  }
-
-  class ReferenceSolutionObserver extends Observer[String] {
-    override def onNext(refSolution: String) = {
-      val addTaskClient = new AddTaskClient(refSolution)
-      addTaskClient.subscribe(new ReferenceTemplateObserver)
-      Continue
-    }
-
-    override def onError(ex: Throwable) = {
-      val m = s"${this.getClass.getName} $ex"
-      System.err.println(m)
-    }
-
-    override def onComplete() = println("complete stream for ReferenceSolution")
-  }
-
-  class ReferenceTemplateObserver extends Observer[Event] {
-    override def onNext(elem: Event) = {
-      println(s"received elem = $elem")
-      templateEditor.setValue(elem)
-      Continue
-    }
-
-    override def onError(ex: Throwable) = {
-      val m = s"${this.getClass.getName} $ex"
-      System.err.println(m)
-    }
-
-    override def onComplete() = println("complete stream for ReferenceTemplate")
   }
 }
