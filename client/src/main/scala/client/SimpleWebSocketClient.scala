@@ -11,6 +11,7 @@ import org.scalajs.dom.{CloseEvent, ErrorEvent, Event, WebSocket}
 import scala.concurrent.duration._
 import scala.scalajs.js
 import scala.util.Try
+import scala.util.control.NonFatal
 
 final class SimpleWebSocketClient(url: String,
                                   os: Synchronous,
@@ -31,7 +32,7 @@ final class SimpleWebSocketClient(url: String,
 
     channel
   } catch {
-    case e: Throwable => Observable.error(e)
+    case NonFatal(e) => Observable.error(e)
   }
 
   def onSubscribe(subscriber: Subscriber[String]) = {
@@ -41,7 +42,7 @@ final class SimpleWebSocketClient(url: String,
       val webSocket = new WebSocket(url)
       createChannel(webSocket) -> (() => if (webSocket.readyState <= 1) Try(webSocket.close()))
     } catch {
-      case e: Throwable => Observable.error(e) -> ()
+      case NonFatal(e) => Observable.error(e) -> ()
     }
 
     val source = channel.timeout(timeout)
