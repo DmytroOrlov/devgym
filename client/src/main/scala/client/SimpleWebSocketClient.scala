@@ -10,6 +10,7 @@ import org.scalajs.dom.{CloseEvent, ErrorEvent, Event, WebSocket}
 
 import scala.concurrent.duration._
 import scala.scalajs.js
+import scala.util.Try
 
 final class SimpleWebSocketClient(url: String,
                                   os: Synchronous,
@@ -35,10 +36,8 @@ final class SimpleWebSocketClient(url: String,
 
   def onSubscribe(subscriber: Subscriber[String]) = {
     def closeConnection(webSocket: WebSocket) =
-      if (webSocket.readyState <= 1)
-        try webSocket.close() catch {
-          case _: Throwable => ()
-        }
+      if (webSocket.readyState <= 1) Try(webSocket.close())
+
     import subscriber.scheduler
 
     val (channel, webSocket: Option[WebSocket]) = try {
