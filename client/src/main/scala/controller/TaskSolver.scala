@@ -99,7 +99,7 @@ object TaskSolver extends JSApp {
         case "error" =>
           val errorType = json.`type`.asInstanceOf[String]
           val message = json.message.asInstanceOf[String]
-          throw SimpleWebSocketClient.Exception(s"Server-side error thrown (${new Date(getTimestamp)}) - $errorType: $message")
+          throw new RuntimeException(s"Server-side error thrown (${new Date(getTimestamp)}) - $errorType: $message")
         case _ => None
       }
     }
