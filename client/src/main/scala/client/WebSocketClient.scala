@@ -31,6 +31,7 @@ class WebSocketClient(url: String, timeout: Option[FiniteDuration]) extends Obse
     def inboundWrapper(webSocket: WebSocket) = try {
       val inbound = PublishChannel[String](DropOld(2))
       webSocket.onopen = (event: Event) => {
+        // todo close properly
         val outbound = PublishChannel[String](DropOld(2)).sample(Observable.intervalAtFixedRate(100.millis, 1.second))
         outbound.subscribe { e =>
           webSocket.send(e)

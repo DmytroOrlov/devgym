@@ -2,11 +2,10 @@ package controller
 
 import java.util.Date
 
-import client.SimpleWebSocketClient
+import client.WebSocketClient
 import common.CodeEditor
 import monifu.concurrent.Implicits.globalScheduler
 import monifu.reactive.{Observable, Subscriber}
-import org.scalajs.dom
 import org.scalajs.jquery.jQuery
 import shared.model._
 
@@ -59,17 +58,17 @@ object TaskSolver extends JSApp {
       val currentTimestamp = System.currentTimeMillis()
       val prevTimestampCopy = prevTimestamp
 
-      val source: Observable[Event] = new SimpleWebSocketClient(
-        url = "task-stream",
-        sendOnOpen = Some(js.JSON.stringify(obj(
+      val source: Observable[Event] = {
+        val ws = WebSocketClient(url = "task-stream", Some(15.seconds))
+        ws(js.JSON.stringify(obj(
           "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
           "lang" -> jQuery("#lang").`val`().asInstanceOf[String],
           "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String],
           "prevTimestamp" -> prevTimestampCopy,
-          "currentTimestamp" -> currentTimestamp))),
-        15.seconds
-      ).collect { case IsEvent(e) => e }
+          "currentTimestamp" -> currentTimestamp)))
+        ws.collect { case IsEvent(e) => e }
+      }
 
       (Observable(Line("Submitting...")) ++ source).onSubscribe(subscriber)
       prevTimestamp = currentTimestamp
