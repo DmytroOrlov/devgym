@@ -24,7 +24,7 @@ class TestResultTest extends FlatSpec with Matchers {
     val result = testResult(report)
     //then
     result.errorMessage should be (empty)
-    result.status shouldBe TestStatus.Failed.toString
+    result.status shouldBe TestStatus.FailedByTest.toString
   }
 
   it should "return negative test result when solution is not compilable" in {
@@ -35,6 +35,6 @@ class TestResultTest extends FlatSpec with Matchers {
     val result = testResult(report)
     //then
     result.errorMessage should be (error)
-    result.status shouldBe TestStatus.Failed.toString
+    result.status shouldBe TestStatus.FailedByCompilation.toString
   }
 }

@@ -48,7 +48,10 @@
                     </div>
                 </p>
             </div>
+
             @textarea(task(solutionTemplate), 'rows -> "10", 'cols -> "90")
+            <label for="deriveSolutionTemplate">Derive Solution Template</label>
+            <input type="checkbox" id="deriveSolutionTemplate" checked>
 
                 <!-- Test Suite -->
             <br/>
@@ -78,6 +81,6 @@
 
         <script type="text/javascript" src="@routes.Assets.versioned("client-fastopt.js")"></script>
         @codeEditor()
-        <script type="text/javascript" charset="utf-8">controller.AddTaskController().main();</script>
+        <script type="text/javascript" charset="utf-8">controller.AddTask().main();</script>
     }
 }

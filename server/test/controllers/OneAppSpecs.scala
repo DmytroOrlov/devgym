@@ -13,13 +13,8 @@ class OneAppSpecs extends Suites(
   new UserControllerTest,
   new GitHubUserTest
 ) with OneAppPerSuite {
+
   implicit override lazy val app = new GuiceApplicationBuilder()
     .configure(Map("ehcacheplugin" -> "disabled"))
-    .bindings(
-      new AbstractModule {
-        override def configure(): Unit =
-          bind(classOf[String]).annotatedWith(Names named "Secret").toInstance("devgym")
-      }
-    )
     .build()
 }
