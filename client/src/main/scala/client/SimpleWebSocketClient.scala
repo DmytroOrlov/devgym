@@ -8,19 +8,18 @@ import org.scalajs.dom.raw.MessageEvent
 import org.scalajs.dom.{CloseEvent, ErrorEvent, Event, WebSocket}
 
 import scala.concurrent.duration._
-import scala.scalajs.js
 import scala.util.Try
 import scala.util.control.NonFatal
 
 final class SimpleWebSocketClient(url: String,
-                                  sendOnOpen: => Option[js.Any] = None,
+                                  sendOnOpen: => Option[String] = None,
                                   timeout: FiniteDuration = 15.seconds) extends Observable[String] {
   def onSubscribe(subscriber: Subscriber[String]): Unit = {
     import subscriber.scheduler
 
     def inboundWrapper(webSocket: WebSocket) = try {
       val inbound = PublishChannel[String](DropOld(2))
-      webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(js.JSON.stringify(s)))
+      webSocket.onopen = (event: Event) => sendOnOpen.foreach(webSocket.send)
 
       webSocket.onerror = (event: ErrorEvent) =>
         inbound.pushError(SimpleWebSocketException(event.message))

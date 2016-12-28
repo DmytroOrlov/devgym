@@ -5,12 +5,12 @@ import java.util.Date
 import client.SimpleWebSocketClient
 import common.CodeEditor
 import monifu.concurrent.Implicits.globalScheduler
-import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive.{Observable, Subscriber}
 import org.scalajs.dom
 import org.scalajs.jquery.jQuery
 import shared.model._
 
+import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => obj}
 import scala.scalajs.js.{JSApp, JSON}
 
@@ -63,14 +63,13 @@ object TaskSolver extends JSApp {
 
       val source: Observable[Event] = new SimpleWebSocketClient(
         url = s"$protocol//$host/task-stream",
-        sendOnOpen = Some(obj(
+        sendOnOpen = Some(js.JSON.stringify(obj(
           "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
           "lang" -> jQuery("#lang").`val`().asInstanceOf[String],
           "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String],
           "prevTimestamp" -> prevTimestampCopy,
-          "currentTimestamp" -> currentTimestamp
-        ))
+          "currentTimestamp" -> currentTimestamp)))
       ).collect { case IsEvent(e) => e }
 
       (Observable(Line("Submitting...")) ++ source).onSubscribe(subscriber)
