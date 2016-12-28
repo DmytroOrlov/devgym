@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.scaladsl.Flow
 import controllers.AddTask._
 import dal.TaskDao
 import models.Language._
@@ -14,7 +14,7 @@ import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service.meta.CodeParser
 import service.reflection.DynamicSuiteExecutor
@@ -22,7 +22,7 @@ import service.{StringBuilderRunner, _}
 import shared.model.{SolutionTemplate, TestStatus}
 import util.TryFuture._
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Future
 import scala.util.control.NonFatal
 import scala.util.matching.Regex
 import scala.util.{Success, Try}
@@ -96,8 +96,13 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
   }
 
   def getSolutionTemplate: WebSocket = WebSocket.accept { req =>
-    def getTemplate(jsValue: JsValue) =
-      Json.toJson(SolutionTemplate(CodeParser.getSolutionTemplate((jsValue \ "solution").as[String])))
+    def getTemplate(jsValue: JsValue) = Json.toJson(
+      SolutionTemplate(
+        Try(CodeParser.getSolutionTemplate((jsValue \ "solution").as[String]))
+          .toOption
+          .getOrElse("can't parse code")
+      )
+    )
 
     Flow[JsValue].map(getTemplate)
   }
