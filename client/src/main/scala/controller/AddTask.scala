@@ -67,6 +67,7 @@ object AddTask extends JSApp {
       }
     ws
   }
+  private val deriveSolutionTemplate = jQuery("#deriveSolutionTemplate")
 
   def main(): Unit = {
     jQuery(s"#$buttonId").click(copyValues _)
@@ -80,7 +81,8 @@ object AddTask extends JSApp {
   }
 
   private def referenceSolutionOnChange() =
-    sendReferenceSolution(js.JSON.stringify(obj("solution" -> referenceEditor.value)))
+    if (deriveSolutionTemplate.is(":checked"))
+      sendReferenceSolution(js.JSON.stringify(obj("solution" -> referenceEditor.value)))
 }
 
 object AddTaskEvents {

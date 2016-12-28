@@ -50,9 +50,4 @@ class AddTaskClient(solutionCode: String) {
   def subscribe(subscriber: Observer[Event]) = {
     source.onSubscribe(subscriber)
   }
-//
-//  def sendSolutionCode(solutionCode: String) = {
-//    client.sendEvent(obj("solution" -> solutionCode))
-//  }
-
 }
