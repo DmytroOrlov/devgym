@@ -35,32 +35,29 @@ final class SimpleWebSocketClient(url: String,
   }
 
   def onSubscribe(subscriber: Subscriber[String]) = {
-    def closeConnection(webSocket: WebSocket) =
-      if (webSocket.readyState <= 1) Try(webSocket.close())
-
     import subscriber.scheduler
 
-    val (channel, webSocket: Option[WebSocket]) = try {
+    val (channel, closeConnection: (() => Unit)) = try {
       val webSocket = new WebSocket(url)
-      createChannel(webSocket) -> Some(webSocket)
+      createChannel(webSocket) -> (() => if (webSocket.readyState <= 1) Try(webSocket.close()))
     } catch {
-      case e: Throwable => Observable.error(e) -> None
+      case e: Throwable => Observable.error(e) -> ()
     }
 
     val source = channel.timeout(timeout)
-      .doOnCanceled(webSocket foreach closeConnection)
+      .doOnCanceled(closeConnection)
 
     source.onSubscribe(new Observer[String] {
       def onNext(elem: String) = subscriber.onNext(elem)
 
       def onError(ex: Throwable) = {
-        webSocket.foreach(closeConnection)
+        closeConnection()
         scheduler.reportFailure(ex)
         subscriber.onComplete()
       }
 
       def onComplete() = {
-        webSocket.foreach(closeConnection)
+        closeConnection()
         subscriber.onComplete()
       }
     })
