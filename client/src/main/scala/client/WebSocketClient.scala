@@ -83,7 +83,7 @@ object WebSocketClient {
   def apply(url: String): WebSocketClient = {
     val host = dom.window.location.host
     val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
-    new WebSocketClient(s"$protocol//$host/getSolutionTemplate")
+    new WebSocketClient(s"$protocol//$host/$url")
   }
 
   case class WebSocketClientException(msg: String) extends RuntimeException(msg)
