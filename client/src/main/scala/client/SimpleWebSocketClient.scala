@@ -38,14 +38,14 @@ final class SimpleWebSocketClient(url: String,
   def onSubscribe(subscriber: Subscriber[String]) = {
     import subscriber.scheduler
 
-    val (channel, closeConnection: (() => Unit)) = try {
+    val (inbound, closeConnection: (() => Unit)) = try {
       val webSocket = new WebSocket(url)
       createChannel(webSocket) -> (() => if (webSocket.readyState <= 1) Try(webSocket.close()))
     } catch {
       case NonFatal(e) => Observable.error(e) -> ()
     }
 
-    val source = channel.timeout(timeout)
+    val source = inbound.timeout(timeout)
       .doOnCanceled(closeConnection)
 
     source.onSubscribe(new Observer[String] {
