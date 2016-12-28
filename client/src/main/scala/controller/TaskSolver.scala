@@ -10,6 +10,7 @@ import org.scalajs.dom
 import org.scalajs.jquery.jQuery
 import shared.model._
 
+import scala.concurrent.duration._
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => obj}
 import scala.scalajs.js.{JSApp, JSON}
@@ -54,22 +55,20 @@ object TaskSolver extends JSApp {
   }
 
   final class TestExecution extends Observable[Event] {
-    def onSubscribe(subscriber: Subscriber[Event]) = {
-      val host = dom.window.location.host
-      val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
-
+    def onSubscribe(subscriber: Subscriber[Event]): Unit = {
       val currentTimestamp = System.currentTimeMillis()
       val prevTimestampCopy = prevTimestamp
 
       val source: Observable[Event] = new SimpleWebSocketClient(
-        url = s"$protocol//$host/task-stream",
+        url = "task-stream",
         sendOnOpen = Some(js.JSON.stringify(obj(
           "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
           "lang" -> jQuery("#lang").`val`().asInstanceOf[String],
           "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String],
           "prevTimestamp" -> prevTimestampCopy,
-          "currentTimestamp" -> currentTimestamp)))
+          "currentTimestamp" -> currentTimestamp))),
+        15.seconds
       ).collect { case IsEvent(e) => e }
 
       (Observable(Line("Submitting...")) ++ source).onSubscribe(subscriber)

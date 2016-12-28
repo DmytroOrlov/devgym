@@ -4,6 +4,7 @@ import client.SimpleWebSocketClient.SimpleWebSocketException
 import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive._
 import monifu.reactive.channels.PublishChannel
+import org.scalajs.dom
 import org.scalajs.dom.raw.MessageEvent
 import org.scalajs.dom.{CloseEvent, ErrorEvent, Event, WebSocket}
 
@@ -12,8 +13,8 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 final class SimpleWebSocketClient(url: String,
-                                  sendOnOpen: => Option[String] = None,
-                                  timeout: FiniteDuration = 15.seconds) extends Observable[String] {
+                                  sendOnOpen: => Option[String],
+                                  timeout: FiniteDuration) extends Observable[String] {
   def onSubscribe(subscriber: Subscriber[String]): Unit = {
     import subscriber.scheduler
 
@@ -63,6 +64,11 @@ final class SimpleWebSocketClient(url: String,
 }
 
 object SimpleWebSocketClient {
+  def apply(url: String, sendOnOpen: => Option[String], timeout: FiniteDuration): SimpleWebSocketClient = {
+    val host = dom.window.location.host
+    val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
+    new SimpleWebSocketClient(s"$protocol//$host/$url", sendOnOpen, timeout)
+  }
 
   case class SimpleWebSocketException(msg: String) extends RuntimeException(msg)
 
