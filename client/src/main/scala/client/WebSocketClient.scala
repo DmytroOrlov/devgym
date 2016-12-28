@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
-class WebSocketClient(url: String) extends Observable[String] with (String => Unit) {
+class WebSocketClient(url: String, timeout: Option[FiniteDuration]) extends Observable[String] with (String => Unit) {
   private val sendOnOpen = Promise[String => Unit]()
 
   def apply(message: String): Unit = {
@@ -60,7 +60,7 @@ class WebSocketClient(url: String) extends Observable[String] with (String => Un
       case NonFatal(e) => Observable.error(e) -> ()
     }
 
-    inbound
+    timeout.fold(inbound)(t => inbound.timeout(t))
       .doOnCanceled(closeConnection)
       .onSubscribe(new Observer[String] {
         def onNext(elem: String) = subscriber.onNext(elem)
@@ -80,10 +80,10 @@ class WebSocketClient(url: String) extends Observable[String] with (String => Un
 }
 
 object WebSocketClient {
-  def apply(url: String): WebSocketClient = {
+  def apply(url: String, timeout: Option[FiniteDuration] = None): WebSocketClient = {
     val host = dom.window.location.host
     val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
-    new WebSocketClient(s"$protocol//$host/$url")
+    new WebSocketClient(s"$protocol//$host/$url", timeout)
   }
 
   case class WebSocketClientException(msg: String) extends RuntimeException(msg)
