@@ -63,7 +63,6 @@ object TaskSolver extends JSApp {
 
       val source: Observable[Event] = new SimpleWebSocketClient(
         url = s"$protocol//$host/task-stream",
-        DropOld(20),
         sendOnOpen = Some(obj(
           "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,

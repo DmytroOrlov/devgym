@@ -1,7 +1,7 @@
 package client
 
 import client.SimpleWebSocketClient.SimpleWebSocketException
-import monifu.reactive.OverflowStrategy.Synchronous
+import monifu.reactive.OverflowStrategy.DropOld
 import monifu.reactive._
 import monifu.reactive.channels.PublishChannel
 import org.scalajs.dom.raw.MessageEvent
@@ -13,14 +13,13 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 final class SimpleWebSocketClient(url: String,
-                                  os: Synchronous,
                                   sendOnOpen: => Option[js.Any] = None,
                                   timeout: FiniteDuration = 15.seconds) extends Observable[String] {
   def onSubscribe(subscriber: Subscriber[String]): Unit = {
     import subscriber.scheduler
 
     def inboundWrapper(webSocket: WebSocket) = try {
-      val inbound = PublishChannel[String](os)
+      val inbound = PublishChannel[String](DropOld(2))
       webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(js.JSON.stringify(s)))
 
       webSocket.onerror = (event: ErrorEvent) =>
