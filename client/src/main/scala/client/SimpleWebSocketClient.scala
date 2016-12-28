@@ -1,7 +1,6 @@
 package client
 
 import client.SimpleWebSocketClient.SimpleWebSocketException
-import monifu.concurrent.Scheduler
 import monifu.reactive.OverflowStrategy.Synchronous
 import monifu.reactive._
 import monifu.reactive.channels.PublishChannel
@@ -17,30 +16,30 @@ final class SimpleWebSocketClient(url: String,
                                   os: Synchronous,
                                   sendOnOpen: => Option[js.Any] = None,
                                   timeout: FiniteDuration = 15.seconds) extends Observable[String] {
-  private def createChannel(webSocket: WebSocket)(implicit s: Scheduler) = try {
-    val channel = PublishChannel[String](os)
-    webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(js.JSON.stringify(s)))
-
-    webSocket.onerror = (event: ErrorEvent) =>
-      channel.pushError(SimpleWebSocketException(event.message))
-
-    webSocket.onclose = (event: CloseEvent) =>
-      channel.pushComplete()
-
-    webSocket.onmessage = (event: MessageEvent) =>
-      channel.pushNext(event.data.asInstanceOf[String])
-
-    channel
-  } catch {
-    case NonFatal(e) => Observable.error(e)
-  }
-
-  def onSubscribe(subscriber: Subscriber[String]) = {
+  def onSubscribe(subscriber: Subscriber[String]): Unit = {
     import subscriber.scheduler
+
+    def inboundWrapper(webSocket: WebSocket) = try {
+      val inbound = PublishChannel[String](os)
+      webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(js.JSON.stringify(s)))
+
+      webSocket.onerror = (event: ErrorEvent) =>
+        inbound.pushError(SimpleWebSocketException(event.message))
+
+      webSocket.onclose = (event: CloseEvent) =>
+        inbound.pushComplete()
+
+      webSocket.onmessage = (event: MessageEvent) =>
+        inbound.pushNext(event.data.asInstanceOf[String])
+
+      inbound
+    } catch {
+      case NonFatal(e) => Observable.error(e)
+    }
 
     val (inbound, closeConnection: (() => Unit)) = try {
       val webSocket = new WebSocket(url)
-      createChannel(webSocket) -> (() => if (webSocket.readyState <= 1) Try(webSocket.close()))
+      inboundWrapper(webSocket) -> (() => if (webSocket.readyState <= 1) Try(webSocket.close()))
     } catch {
       case NonFatal(e) => Observable.error(e) -> ()
     }
