@@ -8,22 +8,37 @@ import org.scalajs.dom.raw.MessageEvent
 import org.scalajs.dom.{CloseEvent, ErrorEvent, Event, WebSocket}
 
 import scala.concurrent.duration._
-import scala.language.postfixOps
 import scala.scalajs.js
-import scala.scalajs.js.Any
 
 final class SimpleWebSocketClient(url: String,
                                   os: Synchronous,
                                   sendOnOpen: => Option[js.Any] = None,
-                                  timeout: FiniteDuration = 15.seconds,
-                                  throttleDuration: Option[FiniteDuration] = None) extends Observable[String] {
+                                  timeout: FiniteDuration = 15.seconds) extends Observable[String] {
   self =>
+  private def createChannel(webSocket: WebSocket)(implicit s: Scheduler) = try {
+    val channel = PublishChannel[String](os)
+    webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(js.JSON.stringify(s)))
 
-  private var thisWebSocket: Option[WebSocket] = None
+    webSocket.onerror = (event: ErrorEvent) =>
+      channel.pushError(SimpleWebSocketClient.Exception(event.message))
 
-  def webSocket: Option[WebSocket] = thisWebSocket
+    webSocket.onclose = (event: CloseEvent) =>
+      channel.pushComplete()
+
+    webSocket.onmessage = (event: MessageEvent) =>
+      channel.pushNext(event.data.asInstanceOf[String])
+
+    channel
+  } catch {
+    case e: Throwable => Observable.error(e)
+  }
 
   def onSubscribe(subscriber: Subscriber[String]) = {
+    def closeConnection(webSocket: WebSocket)(implicit s: Scheduler) =
+      if (webSocket.readyState <= 1)
+        try webSocket.close() catch {
+          case _: Throwable => ()
+        }
     import subscriber.scheduler
 
     val (channel, webSocket: Option[WebSocket]) = try {
@@ -33,9 +48,7 @@ final class SimpleWebSocketClient(url: String,
       case e: Throwable => Observable.error(e) -> None
     }
 
-    thisWebSocket = webSocket //TODO: try to move socket creation to constructor
-
-    val source: Observable[String] = channel.timeout(timeout)
+    val source = channel.timeout(timeout)
       .doOnCanceled(webSocket foreach closeConnection)
 
     source.onSubscribe(new Observer[String] {
@@ -52,39 +65,6 @@ final class SimpleWebSocketClient(url: String,
         subscriber.onComplete()
       }
     })
-  }
-
-  private def closeConnection(webSocket: WebSocket)(implicit s: Scheduler) = {
-    if (webSocket.readyState <= 1)
-      try webSocket.close() catch {
-        case _: Throwable => ()
-      }
-  }
-
-  private def createChannel(webSocket: WebSocket)(implicit s: Scheduler) = try {
-    val channel = {
-      val simpleChannel = PublishChannel[String](os)
-      throttleDuration.map(d => simpleChannel.throttleWithTimeout(d)).getOrElse(simpleChannel)
-    }
-
-    webSocket.onopen = (event: Event) => sendOnOpen.foreach(sendEvent)
-
-    webSocket.onerror = (event: ErrorEvent) =>
-      channel.pushError(SimpleWebSocketClient.Exception(event.message))
-
-    webSocket.onclose = (event: CloseEvent) =>
-      channel.pushComplete()
-
-    webSocket.onmessage = (event: MessageEvent) =>
-      channel.pushNext(event.data.asInstanceOf[String])
-
-    channel
-  } catch {
-    case e: Throwable => Observable.error(e)
-  }
-
-  def sendEvent(s: Any) = {
-    webSocket.foreach(ws => ws.send(js.JSON.stringify(s)))
   }
 }
 
