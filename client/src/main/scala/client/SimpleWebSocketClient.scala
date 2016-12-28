@@ -1,5 +1,6 @@
 package client
 
+import client.SimpleWebSocketClient.SimpleWebSocketException
 import monifu.concurrent.Scheduler
 import monifu.reactive.OverflowStrategy.Synchronous
 import monifu.reactive._
@@ -19,7 +20,7 @@ final class SimpleWebSocketClient(url: String,
     webSocket.onopen = (event: Event) => sendOnOpen.foreach(s => webSocket.send(js.JSON.stringify(s)))
 
     webSocket.onerror = (event: ErrorEvent) =>
-      channel.pushError(SimpleWebSocketClient.Exception(event.message))
+      channel.pushError(SimpleWebSocketException(event.message))
 
     webSocket.onclose = (event: CloseEvent) =>
       channel.pushComplete()
@@ -69,6 +70,6 @@ final class SimpleWebSocketClient(url: String,
 
 object SimpleWebSocketClient {
 
-  case class Exception(msg: String) extends RuntimeException(msg)
+  case class SimpleWebSocketException(msg: String) extends RuntimeException(msg)
 
 }
