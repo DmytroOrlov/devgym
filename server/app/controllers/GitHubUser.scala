@@ -1,38 +1,36 @@
 package controllers
 
+import java.nio.file.Paths
 import javax.inject.{Inject, Named}
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.Uri
-import akka.http.scaladsl.model.Uri.{Path, Query}
-import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.Materializer
 import controllers.GitHubUser._
-import controllers.Response.AccessToken
 import play.api.Logger
 import play.api.i18n.MessagesApi
+import play.api.libs.json.Json
+import play.api.libs.ws.WSClient
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 case class GUser(login: String, name: Option[String], avatar_url: String)
-
-object Response {
-  case class AccessToken(access_token: String)
-}
+case class AccessToken(access_token: String)
 
 class GitHubUser @Inject()(val messagesApi: MessagesApi, @Named("Secret") secret: String)
-                          (implicit ec: ExecutionContext, s: ActorSystem, m: Materializer)
-  extends Controller with Json4sSupport with GitHubServer {
+                          (implicit ec: ExecutionContext, ws: WSClient)
+  extends Controller with GitHubServer {
+
+  private implicit val guserReads = Json.reads[GUser]
+  private implicit val tokenReads = Json.reads[AccessToken]
 
   def getLogin = Action {
-    Redirect(Uri("https://github.com/login/oauth/authorize")
-      .withQuery(Query(
+    Redirect(ws.url("https://github.com/login/oauth/authorize")
+      .withQueryString(
         "client_id" -> clientId,
         "state" -> secret
-      )).toString()
-    )
+      )
+      .uri
+      .toString)
   }
 
   def githubCallback(code: String, state: String) = Action.async {
@@ -42,11 +40,13 @@ class GitHubUser @Inject()(val messagesApi: MessagesApi, @Named("Secret") secret
       else Future.failed(new RuntimeException("GitHub 'state' value is not recognized"))
     }
 
-    def access(code: String) = {
-      getToken(code).flatMap(response => Unmarshal(response).to[AccessToken].map(_.access_token))
+    def access(code: String): Future[String] = {
+      getToken(code).map(response => response.json.validate[AccessToken].asOpt.get.access_token)
     }
 
-    def fetchUser(token: String) = query(token, Path.Empty / "user").flatMap(response => Unmarshal(response).to[GUser])
+    def fetchUser(token: String) =
+      query(token, Paths.get("user"))
+        .map(response => response.json.validate[GUser].asOpt.get)
 
     (for {
       _ <- checkSecret(state)
