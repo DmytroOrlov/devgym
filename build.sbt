@@ -42,6 +42,8 @@ lazy val server = (project in file("server"))
       (baseDirectory.value / "test" / "tests" * "*").get map
         (x => x -> ("test/tests/" + x.getName)),
 
+    resourceDirectory in Test := baseDirectory.value / "test-resources",
+
     libraryDependencies ++= Seq(
       cache,
       ws,
