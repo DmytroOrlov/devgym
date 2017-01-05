@@ -23,6 +23,8 @@ lazy val UnitTest = config("unit") extend Test
 val monifuVer = "1.2"
 val akkaV = "2.4.12"
 
+lazy val loadData = taskKey[Unit]("Custom task to load data.")
+
 lazy val server = (project in file("server"))
   .configs(UnitTest)
   .settings(inConfig(UnitTest)(Defaults.testTasks): _*)
@@ -37,6 +39,8 @@ lazy val server = (project in file("server"))
     testOptions in UnitTest += Tests.Argument("-l", "RequireDB"),
     scalaJSProjects := clients,
     pipelineStages := Seq(scalaJSProd, gzip),
+
+    fullRunTask(loadData, Compile, "data.DataLoader"),
 
     mappings in Universal ++=
       (baseDirectory.value / "test" / "tests" * "*").get map
