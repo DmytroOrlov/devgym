@@ -49,7 +49,7 @@ lazy val server = (project in file("server"))
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
       "org.monifu" %% "monifu" % monifuVer,
       "org.json4s" %% "json4s-native" % "3.4.0",
-      "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2"
+      "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.2"
         exclude("org.xerial.snappy", "snappy-java")
         exclude("com.google.guava", "guava"),
       "io.getquill" %% "quill-cassandra" % "1.0.0",
@@ -72,7 +72,7 @@ lazy val client = (project in file("client"))
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-      "be.doeraene" %%% "scalajs-jquery" % "0.9.0",
+      "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
       "org.monifu" %%% "monifu" % monifuVer
     )
   )
@@ -86,5 +86,3 @@ lazy val sharedJs = shared.js
 
 // loads the Play project at sbt startup
 onLoad in Global := (Command.process("project server", _: State)) compose (onLoad in Global).value
-
-scalaJSUseRhino in Global := false // please install nodejs
