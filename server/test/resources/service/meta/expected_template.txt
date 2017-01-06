@@ -1,0 +1,14 @@
+class MaxOccurrenceInArray extends MaxOccurrenceInArraySolution {
+  def maxOccurrence(uniqueNum: Int, a: Array[Int]): Int = {
+    
+  } 
+ 
+  def method2() = {
+    
+  } 
+ 
+  def method3(i: Float): Long = {
+    
+  } 
+ 
+}

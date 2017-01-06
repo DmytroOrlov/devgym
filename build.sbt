@@ -44,11 +44,11 @@ lazy val server = (project in file("server"))
 
     libraryDependencies ++= Seq(
       cache,
+      ws,
 
       "org.webjars" % "jquery" % "2.2.4",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
       "org.monifu" %% "monifu" % monifuVer,
-      "org.json4s" %% "json4s-native" % "3.4.0",
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.0.2"
         exclude("org.xerial.snappy", "snappy-java")
         exclude("com.google.guava", "guava"),
@@ -56,10 +56,7 @@ lazy val server = (project in file("server"))
 
       "org.scala-lang" % "scala-compiler" % scalaV,
       "org.scalatest" %% "scalatest" % scalatestV,
-      "org.scalameta" %% "scalameta" % "1.4.0",
-
-      "com.typesafe.akka" %% "akka-http-core" % akkaHttpV,
-      "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV
+      "org.scalameta" %% "scalameta" % "1.4.0"
     )
   )
 

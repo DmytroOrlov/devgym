@@ -1,13 +1,12 @@
 package controllers
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.Uri.{Path, Query}
-import akka.stream.Materializer
-import controllers.Response.AccessToken
+import java.nio.file.Path
+
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
+import play.api.libs.json.{JsObject, JsString}
+import play.api.libs.ws.{WSClient, WSResponse}
 import play.api.mvc.Result
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -15,21 +14,33 @@ import play.api.test.Helpers._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@DoNotDiscover class GitHubUserTest extends PlaySpec with ConfiguredApp {
+@DoNotDiscover class GitHubUserTest extends PlaySpec with ConfiguredApp with MockFactory {
   private implicit lazy val s = app.actorSystem
   private implicit lazy val m = app.materializer
+  private implicit lazy val ws = mock[WSClient]
   val secret = "secret"
+  val accessToken = Map("access_token" -> JsString("toooken"))
 
   "GitHubUser" when {
     "github calls callback" should {
       "redirect to index having GitHub data in session" in {
         //given
         val gitHubUser = new GitHubUser(new MockMessageApi, secret) {
-          override def getToken(code: String)(implicit s: ActorSystem, m: Materializer) =
-            Marshal(AccessToken("toooooken")).to[HttpResponse]
+          override def getToken(code: String)(implicit ws: WSClient) = {
+            val response = mock[WSResponse]
+            response.json _ expects() returns JsObject(accessToken)
+            Future.successful(response)
+          }
 
-          override def query(token: String, path: Path, query: Query)(implicit s: ActorSystem, m: Materializer) =
-            Marshal(GUser("alex", Some("Alexey"), "avatar/url")).to[HttpResponse]
+          override def query(token: String, path: Path)(implicit ws: WSClient) = {
+            val response = mock[WSResponse]
+            response.json _ expects() returns JsObject(Map(
+              "login" -> JsString("alex"),
+              "name" -> JsString("Alexey"),
+              "avatar_url" -> JsString("avatar/url")
+            ))
+            Future.successful(response)
+          }
         }
 
         //when
@@ -58,7 +69,7 @@ import scala.concurrent.Future
       "fails when token is not available" in {
         //given
         val gitHubUser = new GitHubUser(new MockMessageApi, secret) {
-          override def getToken(code: String)(implicit s: ActorSystem, m: Materializer) =
+          override def getToken(code: String)(implicit ws: WSClient) =
             Future.failed(new RuntimeException("test exception"))
         }
 
@@ -74,10 +85,13 @@ import scala.concurrent.Future
       "fails when user is not available" in {
         //given
         val gitHubUser = new GitHubUser(new MockMessageApi, secret) {
-          override def getToken(code: String)(implicit s: ActorSystem, m: Materializer) =
-            Marshal(AccessToken("toooooken")).to[HttpResponse]
+          override def getToken(code: String)(implicit ws: WSClient) = {
+            val response = mock[WSResponse]
+            response.json _ expects() returns JsObject(accessToken)
+            Future.successful(response)
+          }
 
-          override def query(token: String, path: Path, query: Query)(implicit s: ActorSystem, m: Materializer) =
+          override def query(token: String, path: Path)(implicit ws: WSClient): Future[WSResponse] =
             Future.failed(new RuntimeException("test exception"))
         }
 
@@ -93,6 +107,6 @@ import scala.concurrent.Future
   }
 
   def gitHubCallback(gitHubUser: GitHubUser): Future[Result] = {
-    gitHubUser.githubCallback("somecode", "secret")(FakeRequest(GET, "ignore"))
+    gitHubUser.githubCallback("somecode", secret)(FakeRequest(GET, "ignore"))
   }
 }
