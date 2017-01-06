@@ -1,7 +1,8 @@
 package controller
 
-import monifu.reactive.Ack.Continue
-import monifu.reactive.{Ack, Observer}
+import monix.execution.Ack
+import monix.execution.Ack.Continue
+import monix.reactive.Observer
 import org.scalajs.jquery.{JQuery, jQuery}
 import shared.model._
 import shared.view.SuiteReportUtil.{removeToolboxText, replaceMarkers}
@@ -59,8 +60,8 @@ final class TaskSolverReport(reportId: String, onCompleteCall: () => Unit) exten
   }
 
   def onError(ex: Throwable) = {
-      val m = s"${this.getClass.getName} $ex"
-      System.err.println(m)
+    val m = s"${this.getClass.getName} $ex"
+    System.err.println(m)
     report.append(m)
     onCompleteCall()
   }

@@ -1,10 +1,10 @@
 package controllers
 
 import akka.actor._
-import monifu.concurrent.Scheduler
-import monifu.concurrent.cancelables.CompositeCancelable
-import monifu.reactive.Ack.Continue
-import monifu.reactive.Observable
+import monix.execution.Ack.Continue
+import monix.execution.Scheduler
+import monix.execution.cancelables.CompositeCancelable
+import monix.reactive.Observable
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json, Writes}
 import shared.model.Event
@@ -25,7 +25,7 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
 
       producer(json).map { o =>
         subscription += o.map(elem => Json.toJson(elem))
-          .timeout(timeout)
+          // .timeout(timeout)
           .subscribe(
             jsValue => {
               out ! jsValue

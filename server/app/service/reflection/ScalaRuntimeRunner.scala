@@ -1,6 +1,6 @@
 package service.reflection
 
-import monifu.concurrent.Scheduler
+import monix.execution.Scheduler
 import org.scalatest.Suite
 
 trait RuntimeSuiteExecutor {

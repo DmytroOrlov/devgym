@@ -1,6 +1,6 @@
 package service.reflection
 
-import monifu.concurrent.Implicits.globalScheduler
+import monix.execution.Scheduler.Implicits.global
 import org.scalatest.{FlatSpec, Matchers}
 import service.StringBuilderRunner
 

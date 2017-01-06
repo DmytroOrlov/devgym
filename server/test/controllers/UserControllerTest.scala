@@ -5,7 +5,7 @@ import akka.stream.ActorMaterializer
 import controllers.TestParams.fakeSession
 import dal.UserDao
 import models.User
-import monifu.concurrent.Implicits.globalScheduler
+import monix.execution.Scheduler.Implicits.global
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.play.{ConfiguredApp, PlaySpec}

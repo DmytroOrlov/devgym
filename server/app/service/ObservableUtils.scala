@@ -1,8 +1,7 @@
 package service
 
-import monifu.concurrent.Scheduler
-import monifu.reactive.OverflowStrategy.DropOld
-import monifu.reactive.channels.PublishChannel
+import monix.execution.{Cancelable, Scheduler}
+import monix.reactive.{Observable, OverflowStrategy}
 import shared.model.{Event, Line, TestResult}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -12,17 +11,17 @@ object ObservableRunner {
 
   def apply(block: => (String => Unit) => String,
             testResult: Try[String] => TestResult)
-           (implicit s: Scheduler): PublishChannel[Event] = {
+           (implicit s: Scheduler): Observable[Event] = {
 
-    val channel = PublishChannel[Event](DropOld(20))
+    Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
+      def pushTestResult(result: Try[String]) = {
+        downstream.onNext(testResult(result))
+        downstream.onComplete()
+      }
 
-    def pushTestResult(result: Try[String]) = {
-      channel.pushNext(testResult(result))
-      channel.pushComplete()
+      Future(block(s => downstream.onNext(Line(s)))).onComplete(pushTestResult)
+      Cancelable.empty
     }
-
-    Future(block(s => channel.pushNext(Line(s)))).onComplete(pushTestResult)
-    channel
   }
 }
 

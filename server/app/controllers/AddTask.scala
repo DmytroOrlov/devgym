@@ -9,12 +9,12 @@ import controllers.AddTask._
 import dal.TaskDao
 import models.Language._
 import models.NewTask
-import monifu.concurrent.Scheduler
+import monix.execution.Scheduler
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
-import play.api.libs.json.{JsString, JsValue, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service.meta.CodeParser
 import service.reflection.DynamicSuiteExecutor

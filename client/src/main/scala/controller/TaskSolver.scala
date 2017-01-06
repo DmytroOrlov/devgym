@@ -4,12 +4,13 @@ import java.util.Date
 
 import client.WebSocketClient
 import common.CodeEditor
-import monifu.concurrent.Implicits.globalScheduler
-import monifu.reactive.{Observable, Subscriber}
+import monix.execution.Cancelable
+import monix.execution.Scheduler.Implicits.global
+import monix.reactive.Observable
+import monix.reactive.observers.Subscriber
 import org.scalajs.jquery.jQuery
 import shared.model._
 
-import scala.concurrent.duration._
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{literal => obj}
 import scala.scalajs.js.{JSApp, JSON}
@@ -54,13 +55,12 @@ object TaskSolver extends JSApp {
   }
 
   final class TestExecution extends Observable[Event] {
-    def onSubscribe(subscriber: Subscriber[Event]): Unit = {
+    def unsafeSubscribeFn(subscriber: Subscriber[Event]): Cancelable = {
       val currentTimestamp = System.currentTimeMillis()
       val prevTimestampCopy = prevTimestamp
 
       val source: Observable[Event] = {
-        val ws = WebSocketClient(url = "task-stream", Some(15.seconds))
-        ws(js.JSON.stringify(obj(
+        val ws = WebSocketClient.singleMessage(url = "task-stream", message = js.JSON.stringify(obj(
           "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
           "lang" -> jQuery("#lang").`val`().asInstanceOf[String],
@@ -69,9 +69,9 @@ object TaskSolver extends JSApp {
           "currentTimestamp" -> currentTimestamp)))
         ws.collect { case IsEvent(e) => e }
       }
-
-      (Observable(Line("Submitting...")) ++ source).onSubscribe(subscriber)
+      val cancelable = (Observable(Line("Submitting...")) ++ source).subscribe(subscriber)
       prevTimestamp = currentTimestamp
+      cancelable
     }
   }
 

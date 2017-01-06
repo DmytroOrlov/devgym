@@ -1,10 +1,9 @@
 package service.reflection
 
-import monifu.concurrent.Implicits.globalScheduler
+import monix.execution.Scheduler.Implicits.global
 import org.scalatest.{FlatSpec, Matchers, Suite}
-import service.StringBuilderRunner
 import service._
-import shared.model.{TestResult, TestStatus}
+import shared.model.TestStatus
 
 import scala.util.Try
 
@@ -15,7 +14,7 @@ class RunnerTest extends FlatSpec with Matchers with CorrectSolution {
   it should "return success when correct solution is provided" in {
     val report = getReport(correctSolution)
     report.isSuccess shouldBe true
-    report.get should include (TestStatus.Passed.toString)
+    report.get should include(TestStatus.Passed.toString)
   }
 
   it should "return success when compilable solution is provided" in {

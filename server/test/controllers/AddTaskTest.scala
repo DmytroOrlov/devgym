@@ -5,8 +5,8 @@ import akka.stream.ActorMaterializer
 import dal.TaskDao
 import models.Language._
 import models.NewTask
-import monifu.concurrent.Implicits.globalScheduler
-import monifu.concurrent.Scheduler
+import monix.execution.Scheduler
+import monix.execution.Scheduler.Implicits.global
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
@@ -66,7 +66,7 @@ import scala.concurrent.Future
         (scalaTestRunner.apply(_: String, _: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", suiteWithTrait, traitName, *, *)
         val dao = mock[TaskDao]
 
-        dao.addTask _ expects where (  (t: NewTask) =>
+        dao.addTask _ expects where((t: NewTask) =>
           t.name == "1" && t.description == "2" && t.solutionTemplate == "3" && t.referenceSolution == "4"
             && t.suite == suiteWithTrait
             && t.solutionTrait == traitName
@@ -91,7 +91,7 @@ import scala.concurrent.Future
         (scalaTestRunner.apply(_: String, _: String, _: String)(_: String => Unit)(_: Scheduler)) expects("4", suiteWithTrait, traitName, *, *)
         val dao = mock[TaskDao]
 
-        dao.addTask _ expects where (  (t: NewTask) =>
+        dao.addTask _ expects where((t: NewTask) =>
           t.name == "1" && t.description == "2" && t.solutionTemplate == "3" && t.referenceSolution == "4"
             && t.suite == suiteWithTrait
             && t.solutionTrait == traitName

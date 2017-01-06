@@ -10,9 +10,8 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import controllers.TaskSolver.{solution, _}
 import dal.TaskDao
 import models.{Language, Task}
-import monifu.concurrent.Scheduler
-import monifu.reactive.OverflowStrategy.DropOld
-import monifu.reactive.channels.PublishChannel
+import monix.execution.{Cancelable, Scheduler}
+import monix.reactive.{Observable, OverflowStrategy}
 import org.scalatest.Suite
 import play.api.Logger
 import play.api.cache.CacheApi
@@ -24,11 +23,11 @@ import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.model.{Compiling, Event, Line}
+import shared.model.{Compiling, Event, Line, TestResult}
 import util.TryFuture
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise}
 import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -58,32 +57,46 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
     }.recover { case NonFatal(e) => notFound }
   }
 
-  def taskStream: WebSocket = WebSocket.accept { req =>
-    val channel: PublishChannel[Event] = PublishChannel[Event](DropOld(20))
-    val sink = Sink.foreach { clientInput: JsValue =>
-      val prevTimestamp = (clientInput \ "prevTimestamp").as[Long]
-      val currentTimestamp = (clientInput \ "currentTimestamp").as[Long]
-      if (Duration(currentTimestamp - prevTimestamp, TimeUnit.MILLISECONDS) < 1.seconds) {
-        channel.pushNext(Line("Too many requests per second from the same client. Slow down"))
-        channel.pushComplete()
-      } else {
-        val solution = (clientInput \ "solution").as[String]
-        val year = (clientInput \ "year").as[Long]
-        val lang = (clientInput \ "lang").as[String]
-        val timeuuid = (clientInput \ "timeuuid").as[String]
+  def taskStream: WebSocket = WebSocket.accept { _ =>
+    val clientInputPromise = Promise[JsValue]()
+    val channel: Observable[Event] =
+      Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
+        clientInputPromise.future.onComplete {
+          case Success(clientInput) =>
+            val prevTimestamp = (clientInput \ "prevTimestamp").as[Long]
+            val currentTimestamp = (clientInput \ "currentTimestamp").as[Long]
+            if (Duration(currentTimestamp - prevTimestamp, TimeUnit.MILLISECONDS) < 1.seconds) {
+              downstream.onNext(Line("Too many requests per second from the same client. Slow down"))
+              downstream.onComplete()
+            } else {
+              val solution = (clientInput \ "solution").as[String]
+              val year = (clientInput \ "year").as[Long]
+              val lang = (clientInput \ "lang").as[String]
+              val timeuuid = (clientInput \ "timeuuid").as[String]
 
-        getCachedTask(year, lang, UUID.fromString(timeuuid)).onComplete {
-          case Success(Some(task)) =>
-            channel.pushNext(service.testResult(Try(executor(solution, task.suite, task.solutionTrait)(s => channel.pushNext(Line(s))))))
-            channel.pushComplete()
-          case Success(None) =>
-            channel.endWithError(new RuntimeException(s"Task is not available for a given solution: $solution"))
-          case Failure(ex) =>
-            channel.endWithError(ex)
+              getCachedTask(year, lang, UUID.fromString(timeuuid)).onComplete {
+                case Success(Some(task)) =>
+                  val block: (String => Unit) => String = executor(solution, task.suite, task.solutionTrait)
+                  val testResult: Try[String] => TestResult = service.testResult
+
+                  def pushTestResult(result: Try[String]) = {
+                    downstream.onNext(testResult(result))
+                    downstream.onComplete()
+                  }
+
+                  Future(block(s => downstream.onNext(Line(s)))).onComplete(pushTestResult)
+                case Success(None) =>
+                  downstream.onError(new RuntimeException(s"Task is not available for a given solution: $solution"))
+                case Failure(ex) =>
+                  downstream.onError(ex)
+              }
+            }
+          case Failure(ex) => downstream.onError(ex)
         }
+        Cancelable.empty
       }
-    }
-    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).timeout(10.seconds).toReactive))
+    val sink = Sink.foreach[JsValue](js => clientInputPromise.trySuccess(js))
+    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)) /*.timeout(10.seconds)*/ .toReactivePublisher))
   }
 
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
