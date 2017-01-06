@@ -3,7 +3,6 @@ import sbt.Project.projectToRef
 
 val scalaV = "2.11.8"
 val scalatestV = "2.2.6"
-val akkaHttpV = "2.4.11"
 
 lazy val commonSettings = Seq(scalaVersion := scalaV)
 
