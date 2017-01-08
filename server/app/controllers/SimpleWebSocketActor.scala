@@ -25,7 +25,6 @@ class SimpleWebSocketActor[T <: Event : Writes](out: ActorRef, producer: JsValue
 
       producer(json).map { o =>
         subscription += o.map(elem => Json.toJson(elem))
-          // .timeout(timeout)
           .subscribe(
             jsValue => {
               out ! jsValue
