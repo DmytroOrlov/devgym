@@ -96,7 +96,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
         Cancelable.empty
       }
     val sink = Sink.foreach[JsValue](js => clientInputPromise.trySuccess(js))
-    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)) /*.timeout(10.seconds)*/ .toReactivePublisher))
+    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).toReactivePublisher))
   }
 
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
