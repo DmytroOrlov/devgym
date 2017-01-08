@@ -34,7 +34,7 @@ import scala.util.{Failure, Success, Try}
 
 class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor,
                            dao: TaskDao, val messagesApi: MessagesApi, cache: CacheApi)
-                          (implicit system: ActorSystem, s: Scheduler, mat: Materializer)
+                          (implicit system: ActorSystem, scheduler: Scheduler, mat: Materializer)
   extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
