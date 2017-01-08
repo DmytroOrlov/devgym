@@ -19,7 +19,7 @@ class WebSocketClient private(url: String, messages: Either[String, () => Observ
 
   def unsafeSubscribeFn(subscriber: Subscriber[String]): Cancelable = {
     val inbound: Observable[String] =
-      Observable.create[String](OverflowStrategy.DropOld(2)) { downstream =>
+      Observable.create[String](OverflowStrategy.DropOld(100)) { downstream =>
         val cancelOutbound = SingleAssignmentCancelable()
 
         try {
