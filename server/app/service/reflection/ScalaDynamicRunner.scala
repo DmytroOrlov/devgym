@@ -1,6 +1,6 @@
 package service.reflection
 
-import monifu.concurrent.Scheduler
+import monix.execution.Scheduler
 
 trait DynamicSuiteExecutor {
   def apply(solution: String, suite: String, solutionTrait: String)

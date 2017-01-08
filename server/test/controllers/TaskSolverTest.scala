@@ -5,9 +5,9 @@ import java.util.{Date, UUID}
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import dal.TaskDao
-import models.Task
 import models.Language._
-import monifu.concurrent.Implicits.globalScheduler
+import models.Task
+import monix.execution.Scheduler.Implicits.global
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.DoNotDiscover
 import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
@@ -39,7 +39,7 @@ import scala.reflect.ClassTag
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         dao.getTask _ expects(year, scalaLang, timeuuid) returns Future.successful(Some(replyTask))
-        (cache.set(_: String, _:Any, _:Duration)) expects(*, *, *)
+        (cache.set(_: String, _: Any, _: Duration)) expects(*, *, *)
         val result = taskSolver.getTask(year.getTime, scalaLang.toString, timeuuid)(FakeRequest(GET, "ignore"))
         //then
         status(result) mustBe OK
@@ -141,4 +141,5 @@ import scala.reflect.ClassTag
   }
 
   abstract class TestExecutor extends RuntimeSuiteExecutor with DynamicSuiteExecutor {}
+
 }

@@ -6,7 +6,7 @@ import com.google.inject.{AbstractModule, Provides}
 import com.typesafe.config.Config
 import dal._
 import io.getquill.{CassandraAsyncContext, SnakeCase}
-import monifu.concurrent.Scheduler
+import monix.execution.Scheduler
 import play.api.Configuration
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaTestRunner}
 

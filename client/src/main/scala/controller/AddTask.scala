@@ -4,8 +4,10 @@ import java.util.Date
 
 import client.WebSocketClient
 import common.CodeEditor
-import monifu.concurrent.Implicits.globalScheduler
-import monifu.reactive.Ack.Continue
+import monix.execution.Ack.Continue
+import monix.execution.Scheduler.Implicits.global
+import monix.execution.cancelables.BooleanCancelable
+import monix.reactive.{Observable, OverflowStrategy}
 import org.scalajs.jquery._
 import shared.model.{Event, SolutionTemplate}
 
@@ -58,31 +60,31 @@ object AddTask extends JSApp {
   val suiteEditor = new CodeEditor(suiteId)
   val suiteEditorExample = new CodeEditor("suiteExample", readOnly = true, suiteExample)
 
-  private lazy val sendReferenceSolution: (String) => Unit = {
-    val ws = WebSocketClient("getSolutionTemplate")
-    ws.collect { case AddTaskEvents(elem) => elem }
+  private val deriveSolutionTemplate = jQuery("#deriveSolutionTemplate")
+
+  def main(): Unit = {
+    def copyValues = {
+      jQuery(s"#$solutionTemplateId").value(templateEditor.value)
+      jQuery(s"#$referenceSolutionId").value(referenceEditor.value)
+      jQuery(s"#$suiteId").value(suiteEditor.value)
+    }
+
+    jQuery(s"#$buttonId").click(copyValues)
+    WebSocketClient.reconnecting(
+      url = "getSolutionTemplate",
+      messages = () => Observable.create[String](OverflowStrategy.DropOld(2)) { downstream =>
+        val c = BooleanCancelable()
+        referenceEditor.bindOnChangeHandler(() =>
+          if (!c.isCanceled && deriveSolutionTemplate.is(":checked"))
+            downstream.onNext(js.JSON.stringify(obj("solution" -> referenceEditor.value))))
+        c
+      })
+      .collect { case AddTaskEvents(elem) => elem }
       .subscribe { elem =>
         templateEditor.setValue(elem)
         Continue
       }
-    ws
   }
-  private val deriveSolutionTemplate = jQuery("#deriveSolutionTemplate")
-
-  def main(): Unit = {
-    jQuery(s"#$buttonId").click(copyValues _)
-    referenceEditor.bindOnChangeHandler(referenceSolutionOnChange)
-  }
-
-  private def copyValues() = {
-    jQuery(s"#$solutionTemplateId").value(templateEditor.value)
-    jQuery(s"#$referenceSolutionId").value(referenceEditor.value)
-    jQuery(s"#$suiteId").value(suiteEditor.value)
-  }
-
-  private def referenceSolutionOnChange() =
-    if (deriveSolutionTemplate.is(":checked"))
-      sendReferenceSolution(js.JSON.stringify(obj("solution" -> referenceEditor.value)))
 }
 
 object AddTaskEvents {

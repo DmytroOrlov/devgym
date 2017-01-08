@@ -1,6 +1,6 @@
 package service.reflection
 
-import monifu.concurrent.Implicits.globalScheduler
+import monix.execution.Scheduler.Implicits.global
 import org.scalatest.FlatSpecLike
 import service.{StringBuilderRunner, _}
 
@@ -52,7 +52,7 @@ class DynamicRunnerTest extends RunnerTest with FlatSpecLike {
   val runner = new ScalaDynamicRunner() {}
 
   override def getReport(solution: String, check: Boolean = false) = {
-    val testResultOpt  = (r: Try[String]) => Option(service.testResult(r))
+    val testResultOpt = (r: Try[String]) => Option(service.testResult(r))
     val unchecked = Try(StringBuilderRunner(runner(solution, correctSuite, solutionTrait), testResultOpt))
     if (check) unchecked.check
     else unchecked

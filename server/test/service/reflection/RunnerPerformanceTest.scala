@@ -1,11 +1,11 @@
 package service.reflection
 
-import monifu.concurrent.Implicits.globalScheduler
+import monix.execution.Scheduler.Implicits.global
 import org.scalameter.{Key, Warmer, _}
 import org.scalatest.{FlatSpec, Matchers, Suite}
 import service.StringBuilderRunner
-import tag.PerfTests
 import shared.model.TestStatus
+import tag.PerfTests
 
 import scala.language.reflectiveCalls
 import scala.util.Try
@@ -82,6 +82,7 @@ class RunnerPerformanceTest extends FlatSpec with Matchers {
 
   def runPerformanceTest(executor: ((String) => Unit) => String, testName: String): Unit = {
     def testReport(executor: ((String) => Unit) => String) = Try(StringBuilderRunner(executor))
+
     //when
     val result = service.testResult(testReport(executor))
     println(s"${result.status} ${result.errorMessage}")

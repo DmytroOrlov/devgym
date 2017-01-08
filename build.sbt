@@ -3,7 +3,6 @@ import sbt.Project.projectToRef
 
 val scalaV = "2.11.8"
 val scalatestV = "2.2.6"
-val akkaHttpV = "2.4.11"
 
 lazy val commonSettings = Seq(scalaVersion := scalaV)
 
@@ -20,7 +19,7 @@ lazy val clients = Seq(client)
 
 lazy val UnitTest = config("unit") extend Test
 
-val monifuVer = "1.2"
+val monixV = "2.1.2"
 val akkaV = "2.4.12"
 
 lazy val server = (project in file("server"))
@@ -48,7 +47,7 @@ lazy val server = (project in file("server"))
 
       "org.webjars" % "jquery" % "2.2.4",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
-      "org.monifu" %% "monifu" % monifuVer,
+      "io.monix" %% "monix" % monixV,
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.2"
         exclude("org.xerial.snappy", "snappy-java")
         exclude("com.google.guava", "guava"),
@@ -70,7 +69,7 @@ lazy val client = (project in file("client"))
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.1",
       "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
-      "org.monifu" %%% "monifu" % monifuVer
+      "io.monix" %%% "monix" % monixV
     )
   )
 
