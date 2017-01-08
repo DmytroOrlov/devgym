@@ -9,7 +9,7 @@ INSERT INTO devgym.task (
   suite,
   solution_trait
 ) VALUES (
-  '2017-01-01 00:00:00 UTC',
+  '2016-01-01 00:00:00 UTC',
   'scalaLang',
   94268893-4d29-11e6-ac46-f58bd8d3766a,
   'Rotate array by k steps forward',

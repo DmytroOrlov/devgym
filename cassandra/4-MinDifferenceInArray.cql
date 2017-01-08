@@ -9,7 +9,7 @@ INSERT INTO devgym.task (
   suite,
   solution_trait
 ) VALUES (
-  '2017-01-01 00:00:00 UTC',
+  '2016-01-01 00:00:00 UTC',
   'scalaLang',
   467530b0-e3b1-11e5-aa86-091830ac5256,
   'Min difference in array',

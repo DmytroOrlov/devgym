@@ -9,7 +9,7 @@ INSERT INTO devgym.task (
   suite,
   solution_trait
 ) VALUES (
-  '2017-01-01 00:00:00 UTC',
+  '2016-01-01 00:00:00 UTC',
   'scalaLang',
   d09d48c4-4d2b-11e6-ac46-f58bd8d3766a,
   'Reverse words in a string',

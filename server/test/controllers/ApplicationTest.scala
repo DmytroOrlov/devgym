@@ -116,7 +116,7 @@ import tag.RequireDB
   "TaskSolver" when {
     "get the available task" should {
       "result with form" taggedAs RequireDB in {
-        val year = LocalDate.of(2017, 1, 1)
+        val year = LocalDate.of(2016, 1, 1)
         val instant = year.atStartOfDay().atZone(ZoneOffset.UTC).toInstant
 
         val Some(result) = route(app,
