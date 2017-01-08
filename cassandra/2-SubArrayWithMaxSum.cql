@@ -9,7 +9,7 @@ INSERT INTO devgym.task (
   suite,
   solution_trait
 ) VALUES (
-  '2016-01-01 00:00:00 UTC',
+  '2017-01-01 00:00:00 UTC',
   'scalaLang',
   9894cd10-ce12-11e5-8ee9-091830ac5256,
   'Array of max sum',
