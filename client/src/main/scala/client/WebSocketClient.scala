@@ -54,9 +54,9 @@ class WebSocketClient(url: String, timeout: Option[FiniteDuration]) extends Obse
       case NonFatal(e) => Observable.error(e)
     }
 
-    val (inbound, closeConnection: (() => Any)) = try {
+    val (inbound, closeConnection: (() => Unit)) = try {
       val webSocket = new WebSocket(url)
-      inboundWrapper(webSocket) -> (() => if (webSocket.readyState <= 1) Try(webSocket.close()))
+      inboundWrapper(webSocket) -> (() => if (webSocket.readyState <= 1) Try(webSocket.close()): Unit)
     } catch {
       case NonFatal(e) => Observable.error(e) -> (() => ())
     }
