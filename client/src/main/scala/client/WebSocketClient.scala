@@ -3,7 +3,7 @@ package client
 import client.WebSocketClient.SocketException
 import monix.execution.Ack.{Continue, Stop}
 import monix.execution.cancelables.SingleAssignmentCancelable
-import monix.execution.{Ack, Cancelable}
+import monix.execution.{Ack, Cancelable, FutureUtils}
 import monix.reactive.observers.Subscriber
 import monix.reactive.{Observable, OverflowStrategy}
 import org.scalajs.dom
@@ -36,7 +36,7 @@ class WebSocketClient private(url: String, messages: Either[String, () => Observ
               implicit val s = subscriber.scheduler
               cancelOutbound := ms().subscribe({ m =>
                 webSocket.send(m)
-                Continue
+                FutureUtils.delayedResult(1.second)(Continue)
               }, _ => closeConnection(), closeConnection)
           }
           webSocket.onerror = (event: ErrorEvent) => {
