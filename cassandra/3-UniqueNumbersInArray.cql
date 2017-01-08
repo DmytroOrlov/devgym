@@ -9,7 +9,7 @@ INSERT INTO devgym.task (
   suite,
   solution_trait
 ) VALUES (
-  '2016-01-01 00:00:00 UTC',
+  '2017-01-01 00:00:00 UTC',
   'scalaLang',
   915b6150-d90f-11e5-aa5b-091830ac5256,
   'Unique numbers in Array',
