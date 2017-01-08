@@ -1,32 +1,34 @@
 package service
 
-import monix.execution.{Cancelable, Scheduler}
+import monix.eval.Task
+import monix.execution.Scheduler
 import monix.reactive.{Observable, OverflowStrategy}
 import shared.model.{Event, Line, TestResult}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.{Success, Try}
 
 object ObservableRunner {
 
-  def apply(block: => (String => Unit) => String,
-            testResult: Try[String] => TestResult)
+  def apply(block: => (String => Unit) => Unit,
+            nextAndComplete: PushResult => (CheckNext, OnBlockComplete))
            (implicit s: Scheduler): Observable[Event] = {
 
     Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
-      def pushTestResult(result: Try[String]) = {
-        downstream.onNext(testResult(result))
+      val (checkNext, onBlockComplete) = nextAndComplete { testResult =>
+        downstream.onNext(testResult)
         downstream.onComplete()
       }
-
-      Future(block(s => downstream.onNext(Line(s)))).onComplete(pushTestResult)
-      Cancelable.empty
+      Task(block { next =>
+        downstream.onNext(Line(next))
+        checkNext(next)
+      }).runAsync(onBlockComplete)
     }
   }
 }
 
 object StringBuilderRunner {
-  def apply(block: => (String => Unit) => String,
+  def apply(block: (String => Unit) => Unit,
             testResult: Try[String] => Option[TestResult] = { _ => None })
            (implicit ec: ExecutionContext): String = {
 

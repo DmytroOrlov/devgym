@@ -6,7 +6,7 @@ import org.scalatest.Suite
 trait RuntimeSuiteExecutor {
   def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef], solution: String)
            (channel: String => Unit)
-           (implicit s: Scheduler): String
+           (implicit s: Scheduler): Unit
 }
 
 trait ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with SuiteToolbox {
@@ -15,7 +15,7 @@ trait ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with S
     */
   def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef], solution: String)
            (channel: String => Unit)
-           (implicit s: Scheduler): String = {
+           (implicit s: Scheduler): Unit = {
     val solutionInstance = createSolutionInstance(solution, solutionTrait)
     executionTestSuite(suiteClass.getConstructor(solutionTrait).newInstance(solutionInstance), channel)
   }

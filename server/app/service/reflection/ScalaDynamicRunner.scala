@@ -5,7 +5,7 @@ import monix.execution.Scheduler
 trait DynamicSuiteExecutor {
   def apply(solution: String, suite: String, solutionTrait: String)
            (channel: String => Unit)
-           (implicit s: Scheduler): String
+           (implicit s: Scheduler): Unit
 }
 
 trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
@@ -15,7 +15,7 @@ trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
     */
   def apply(solution: String, suite: String, solutionTrait: String)
            (channel: String => Unit)
-           (implicit s: Scheduler): String = {
+           (implicit s: Scheduler): Unit = {
 
     classDefPattern.findFirstIn(solution)
       //TODO: replace exception message to messageKey

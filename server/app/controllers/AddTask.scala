@@ -18,14 +18,13 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service.meta.CodeParser
 import service.reflection.DynamicSuiteExecutor
-import service.{StringBuilderRunner, _}
-import shared.model.{SolutionTemplate, TestStatus}
+import shared.model.{Event, SolutionTemplate, TestResult, TestStatus}
 import util.TryFuture._
 
 import scala.concurrent.Future
+import scala.util.Try
 import scala.util.control.NonFatal
 import scala.util.matching.Regex
-import scala.util.{Success, Try}
 
 class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messagesApi: MessagesApi)
                        (implicit system: ActorSystem, s: Scheduler, mat: Materializer)
@@ -58,26 +57,32 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
       },
       f => {
         def addTaskIfValid(traitName: String) = {
-          val testResultOpt = (r: Try[String]) => Option(service.testResult(r))
-          val result = StringBuilderRunner(executor(f.referenceSolution, f.suite, traitName), testResultOpt)
-          val tR = testResult(Success(result))
+          var testResult: Option[Event] = None
+          val (checkNext, onBlockComplete) = service.test(r => testResult = Some(r))
 
-          tR.testStatus match {
-            case TestStatus.Passed | TestStatus.FailedByTest =>
-              dao.addTask(NewTask(scalaLang, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
-                .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
-                .recover {
-                  case NonFatal(e) => Logger.warn(e.getMessage, e)
-                    InternalServerError {
-                      views.html.addTask(addTaskForm.bindFromRequest()
-                        .withError(taskDescription, messagesApi(cannotAddTaskToDatabase)))
-                    }
-                }
-            case TestStatus.FailedByCompilation => Future {
-              BadRequest {
-                addTaskViewWithError(cannotAddTaskOnCheck, tR.errorMessage)
-              }
+          val block: (String => Unit) => Unit = executor(f.referenceSolution, f.suite, traitName)
+          val blockRes = Try(block(checkNext))
+          onBlockComplete(blockRes)
+
+          def serverError = InternalServerError {
+            views.html.addTask(addTaskForm.bindFromRequest()
+              .withError(taskDescription, messagesApi(cannotAddTaskToDatabase)))
+          }
+
+          testResult match {
+            case Some(t: TestResult) => t.testStatus match {
+              case TestStatus.Passed | TestStatus.FailedByTest =>
+                dao.addTask(NewTask(scalaLang, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
+                  .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))
+                  .recover {
+                    case NonFatal(e) =>
+                      Logger.warn(e.getMessage, e)
+                      serverError
+                  }
+              case TestStatus.FailedByCompilation =>
+                Future.successful(BadRequest(addTaskViewWithError(cannotAddTaskOnCheck, t.errorMessage)))
             }
+            case _ => Future.successful(serverError)
           }
         }
 

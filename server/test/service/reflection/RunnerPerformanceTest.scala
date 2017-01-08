@@ -81,7 +81,7 @@ class RunnerPerformanceTest extends FlatSpec with Matchers {
     """.stripMargin
 
   def runPerformanceTest(executor: ((String) => Unit) => String, testName: String): Unit = {
-    def testReport(executor: ((String) => Unit) => String) = Try(StringBuilderRunner(executor))
+    def testReport(executor: ((String) => Unit) => Unit) = Try(StringBuilderRunner(executor))
 
     //when
     val result = service.testResult(testReport(executor))

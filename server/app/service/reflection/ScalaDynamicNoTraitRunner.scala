@@ -9,7 +9,7 @@ trait ScalaDynamicNoTraitRunner extends DynamicExecution {
     */
   def execSuiteNoTrait(solution: String, suite: String)
                       (channel: String => Unit)
-                      (implicit s: Scheduler): String = {
+                      (implicit s: Scheduler): Unit = {
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass ")
     executeDynamic(suite, patchedSolution, channel)
   }
