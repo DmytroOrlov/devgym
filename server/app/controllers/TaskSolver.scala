@@ -78,7 +78,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
 
               getCachedTask(year, lang, UUID.fromString(timeuuid)).onComplete {
                 case Success(Some(task)) =>
-                  val (checkNext, onBlockComplete) = service.test { testResult =>
+                  val (checkNext, onBlockComplete) = service.testAsync { testResult =>
                     downstream.onNext(testResult)
                     downstream.onComplete()
                   }
@@ -141,7 +141,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
           Future.successful(ObservableRunner(executor(
             Class.forName(suiteClass).asInstanceOf[Class[Suite]],
             Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
-            solution), service.test))
+            solution), service.testAsync))
         } catch {
           case NonFatal(e) => Future.failed(e)
         },

@@ -57,12 +57,10 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
       },
       f => {
         def addTaskIfValid(traitName: String) = {
-          var testResult: Option[Event] = None
-          val (checkNext, onBlockComplete) = service.test(r => testResult = Some(r))
+          val (checkNext, getTestResult) = service.testSync
 
           val block: (String => Unit) => Unit = executor(f.referenceSolution, f.suite, traitName)
-          val blockRes = Try(block(checkNext))
-          onBlockComplete(blockRes)
+          val testResult: Event = getTestResult(block(checkNext))
 
           def serverError = InternalServerError {
             views.html.addTask(addTaskForm.bindFromRequest()
@@ -70,7 +68,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
           }
 
           testResult match {
-            case Some(t: TestResult) => t.testStatus match {
+            case t: TestResult => t.testStatus match {
               case TestStatus.Passed | TestStatus.FailedByTest =>
                 dao.addTask(NewTask(scalaLang, f.name, f.description, f.solutionTemplate, f.referenceSolution, f.suite, traitName))
                   .map(_ => Redirect(routes.AddTask.getAddTask).flashing(flashToUser -> messagesApi(taskAdded)))

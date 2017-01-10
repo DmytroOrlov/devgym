@@ -14,11 +14,19 @@ package object service {
 
   type CheckNext = (String) => Unit
 
-  type OnBlockComplete = (Try[Unit]) => Unit
-
   type PushResult = (Event) => Unit
 
-  def test(pushResult: PushResult): (CheckNext, OnBlockComplete) = {
+  type OnBlockComplete = Try[Unit] => Unit
+
+  def testSync: (CheckNext, (=> Unit) => Event) = {
+    val (checkNext, testResultFromTry) = testAsync(identity)
+
+    def getTestResult(block: => Unit) = testResultFromTry(Try(block))
+
+    checkNext -> getTestResult _
+  }
+
+  def testAsync[A](pushResult: (Event) => A): (CheckNext, Try[Unit] => A) = {
     def isFailed(line: String): Boolean = line.startsWith(red) && line.contains("*** FAILED ***")
 
     def testResult(blockRes: Try[Unit], failedByTest: => Boolean): TestResult = blockRes match {

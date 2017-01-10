@@ -11,11 +11,11 @@ import scala.util.{Success, Try}
 object ObservableRunner {
 
   def apply(block: => (String => Unit) => Unit,
-            nextAndComplete: PushResult => (CheckNext, OnBlockComplete))
+            testAsync: PushResult => (CheckNext, OnBlockComplete))
            (implicit s: Scheduler): Observable[Event] = {
 
     Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
-      val (checkNext, onBlockComplete) = nextAndComplete { testResult =>
+      val (checkNext, onBlockComplete) = testAsync { testResult =>
         downstream.onNext(testResult)
         downstream.onComplete()
       }
