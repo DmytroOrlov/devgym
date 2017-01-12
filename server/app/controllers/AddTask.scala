@@ -19,7 +19,6 @@ import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service.meta.CodeParser
 import service.reflection.DynamicSuiteExecutor
 import shared.model.{Event, SolutionTemplate, TestResult, TestStatus}
-import util.TryFuture._
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -84,7 +83,7 @@ class AddTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: TaskDao, val
           }
         }
 
-        val checkTrait = Try(findTraitName(f.suite)).toFuture
+        val checkTrait = Future.fromTry(Try(findTraitName(f.suite)))
 
         (for {
           traitName <- checkTrait errorMsg addTaskErrorOnSolutionTrait
