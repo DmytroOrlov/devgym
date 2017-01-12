@@ -3,13 +3,9 @@ package service
 import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.{Observable, OverflowStrategy}
-import shared.model.{Event, Line, TestResult}
-
-import scala.concurrent.ExecutionContext
-import scala.util.{Success, Try}
+import shared.model.{Event, Line}
 
 object ObservableRunner {
-
   def apply(block: => (String => Unit) => Unit,
             testAsync: PushResult => (CheckNext, OnBlockComplete))
            (implicit s: Scheduler): Observable[Event] = {
@@ -24,21 +20,5 @@ object ObservableRunner {
         checkNext(next)
       }).runAsync(onBlockComplete)
     }
-  }
-}
-
-object StringBuilderRunner {
-  def apply(block: (String => Unit) => Unit,
-            testResult: Try[String] => Option[TestResult] = { _ => None })
-           (implicit ec: ExecutionContext): String = {
-
-    val sb = new StringBuilder
-    block(s => sb.append(s))
-
-    testResult(Success(sb.toString()))
-      .map(_.testStatus.toString)
-      .foreach(sb.append)
-
-    sb.toString()
   }
 }
