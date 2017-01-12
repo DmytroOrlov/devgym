@@ -26,14 +26,6 @@ trait SuiteExecution {
   }
 }
 
-object WithSuiteException {
-  def apply[B](msg: String)(block: => B): B =
-    try block catch {
-      case e: SuiteException => throw e
-      case NonFatal(e) => throw SuiteException(msg, Some(e))
-    }
-}
-
 trait SuiteToolbox {
   val userClass = "UserSolution"
   val classDefPattern = """class\s*([\w\$]*)""".r
@@ -50,12 +42,8 @@ trait DynamicExecution extends SuiteExecution with SuiteToolbox {
   private def findSuitName(suite: String) = classDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
 
   def executeDynamic(suite: String, patchedSolution: String, channel: String => Unit): Unit = {
-    val suiteName = WithSuiteException(s"There is no Test Suite name to instantiate, code: $suite") {
-      findSuitName(suite)
-    }
+    val suiteName = findSuitName(suite)
     val code = s"$defaultImports;\n $suite; $patchedSolution;\n new $suiteName(new $userClass)"
     executionTestSuite(suite = tb.eval(tb.parse(code)).asInstanceOf[Suite], channel)
   }
 }
-
-case class SuiteException(msg: String, e: Option[Throwable] = None) extends RuntimeException(msg)

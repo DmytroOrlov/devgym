@@ -22,7 +22,7 @@ class ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
 
     classDefPattern.findFirstIn(solution)
       //TODO: replace exception message to messageKey
-      .orElse(throw SuiteException(s"There is no class definition in solution code: $solution"))
+      .orElse(throw new RuntimeException(s"There is no class definition in solution code: $solution"))
     //TODO: user may already provide extends from solutionTrait, so we may add redundant extends which will validation
     val patchedSolution = classDefPattern.replaceFirstIn(solution, s"class $userClass extends $solutionTrait ")
     executeDynamic(suite, patchedSolution, channel)
