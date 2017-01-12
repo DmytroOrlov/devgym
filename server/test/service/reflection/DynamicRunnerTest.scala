@@ -2,7 +2,7 @@ package service.reflection
 
 import monix.execution.Scheduler.Implicits.global
 import org.scalatest.FlatSpecLike
-import service.{StringBuilderRunner, _}
+import service.StringBuilderRunner
 
 import scala.util.Try
 
@@ -49,14 +49,7 @@ class DynamicRunnerTest extends RunnerTest with FlatSpecLike {
             solution.sleepIn(false, false) shouldBe true
           }""".stripMargin
 
-  val runner = new ScalaDynamicRunner() {}
-
-  override def getReport(solution: String, check: Boolean = false) = {
-    val testResultOpt = (r: Try[String]) => Option(service.testResult(r))
-    val unchecked = Try(StringBuilderRunner(runner(solution, correctSuite, solutionTrait), testResultOpt))
-    if (check) unchecked.check
-    else unchecked
-  }
+  val runner = new ScalaDynamicRunner()
 
   it should "return failure when suite does not have a class name" in {
     Try(StringBuilderRunner(runner(correctSolution, noSuiteName, solutionTrait))).isFailure shouldBe true

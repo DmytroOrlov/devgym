@@ -80,6 +80,7 @@ class RunnerPerformanceTest extends FlatSpec with Matchers {
       }
     """.stripMargin
 
+/*
   def runPerformanceTest(executor: ((String) => Unit) => String, testName: String): Unit = {
     def testReport(executor: ((String) => Unit) => Unit) = Try(StringBuilderRunner(executor))
 
@@ -114,4 +115,5 @@ class RunnerPerformanceTest extends FlatSpec with Matchers {
       solution
     ), "ScalaTest runtime suite with trait")
   }
+*/
 }
