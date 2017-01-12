@@ -8,7 +8,7 @@ import scala.util.Try
 
 class DynamicRunnerSecurityTest extends FlatSpec with Matchers {
 
-  val runner = new ScalaDynamicRunner() {}
+  val runner = new ScalaDynamicRunner()
 
   val solutionTrait = "SleepInSolution"
 
