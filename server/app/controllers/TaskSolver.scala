@@ -33,7 +33,7 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
-class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecutor,
+class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecutor: RuntimeSuiteExecutor,
                            dao: TaskDao, val messagesApi: MessagesApi, cache: CacheApi)
                           (implicit system: ActorSystem, scheduler: Scheduler, mat: Materializer)
   extends Controller with I18nSupport with JSONFormats {
@@ -82,7 +82,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
                     downstream.onNext(testResult)
                     downstream.onComplete()
                   }
-                  val block: (String => Unit) => Unit = executor(solution, task.suite, task.solutionTrait)
+                  val block: (String => Unit) => Unit = dynamicExecutor(solution, task.suite, task.solutionTrait)
                   cancelable := monix.eval.Task(block { next =>
                     downstream.onNext(Line(next))
                     checkNext(next)
@@ -138,7 +138,7 @@ class TaskSolver @Inject()(executor: RuntimeSuiteExecutor with DynamicSuiteExecu
           val suiteClass = "tasktest.SubArrayWithMaxSumTest"
           val solutionTrait = "tasktest.SubArrayWithMaxSumSolution"
           val solution = (fromClient \ "solution").as[String]
-          Future.successful(ObservableRunner(executor(
+          Future.successful(ObservableRunner(runtimeExecutor(
             Class.forName(suiteClass).asInstanceOf[Class[Suite]],
             Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
             solution), service.testAsync))

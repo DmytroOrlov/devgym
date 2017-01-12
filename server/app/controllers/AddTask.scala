@@ -26,7 +26,7 @@ import scala.util.Try
 import scala.util.control.NonFatal
 import scala.util.matching.Regex
 
-class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messagesApi: MessagesApi)
+class AddTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: TaskDao, val messagesApi: MessagesApi)
                        (implicit system: ActorSystem, s: Scheduler, mat: Materializer)
   extends Controller with I18nSupport with JSONFormats {
 
@@ -59,7 +59,7 @@ class AddTask @Inject()(executor: DynamicSuiteExecutor, dao: TaskDao, val messag
         def addTaskIfValid(traitName: String) = {
           val (checkNext, getTestResult) = service.testSync
 
-          val block: (String => Unit) => Unit = executor(f.referenceSolution, f.suite, traitName)
+          val block: (String => Unit) => Unit = dynamicExecutor(f.referenceSolution, f.suite, traitName)
           val testResult: Event = getTestResult(block(checkNext))
 
           def serverError = InternalServerError {
