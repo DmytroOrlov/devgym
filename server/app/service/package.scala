@@ -8,10 +8,6 @@ package object service {
   //scalatest keyword
   val testFailedMarker = "FAILED"
 
-  implicit class RichRunnerString(val output: Try[String]) extends AnyVal {
-    def check = output.filter(!_.contains(testFailedMarker))
-  }
-
   type CheckNext = (String) => Unit
 
   type PushResult = (Event) => Unit
