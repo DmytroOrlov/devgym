@@ -1,5 +1,7 @@
 package service.reflection
 
+import javax.inject.Singleton
+
 import monix.execution.Scheduler
 import org.scalatest.Suite
 
@@ -9,7 +11,8 @@ trait RuntimeSuiteExecutor {
            (implicit s: Scheduler): Unit
 }
 
-trait ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with SuiteToolbox {
+@Singleton
+class ScalaRuntimeRunner extends RuntimeSuiteExecutor with SuiteExecution with SuiteToolbox {
   /**
     * Runs suite loaded in runtime with dynamic solution
     */

@@ -8,7 +8,7 @@ import dal._
 import io.getquill.{CassandraAsyncContext, SnakeCase}
 import monix.execution.Scheduler
 import play.api.Configuration
-import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaTestRunner}
+import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaDynamicRunner, ScalaRuntimeRunner}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Random
@@ -17,8 +17,8 @@ class DevgymModule extends AbstractModule {
   override def configure() = {
     bind(classOf[TaskDao]) to classOf[TaskDaoImpl]
     bind(classOf[UserDao]) to classOf[UserDaoImpl]
-    bind(classOf[RuntimeSuiteExecutor]) to classOf[ScalaTestRunner]
-    bind(classOf[DynamicSuiteExecutor]) to classOf[ScalaTestRunner]
+    bind(classOf[RuntimeSuiteExecutor]) to classOf[ScalaRuntimeRunner]
+    bind(classOf[DynamicSuiteExecutor]) to classOf[ScalaDynamicRunner]
   }
 
   @Provides

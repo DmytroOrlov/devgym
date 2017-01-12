@@ -1,5 +1,7 @@
 package service.reflection
 
+import javax.inject.Singleton
+
 import monix.execution.Scheduler
 
 trait DynamicSuiteExecutor {
@@ -8,7 +10,8 @@ trait DynamicSuiteExecutor {
            (implicit s: Scheduler): Unit
 }
 
-trait ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
+@Singleton
+class ScalaDynamicRunner extends DynamicSuiteExecutor with DynamicExecution {
 
   /**
     * Runs dynamic solution and dynamic suite

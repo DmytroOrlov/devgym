@@ -12,7 +12,7 @@ import org.scalatest.DoNotDiscover
 import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
 import play.api.test.Helpers._
 import play.api.test._
-import service.reflection.{DynamicSuiteExecutor, ScalaTestRunner}
+import service.reflection.DynamicSuiteExecutor
 
 import scala.concurrent.Future
 
