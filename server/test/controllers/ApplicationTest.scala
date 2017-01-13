@@ -130,7 +130,7 @@ import tag.RequireDB
     }
     "get the unavailable task" should {
       "result BadRequest with Error" in {
-        val Some(result) = route(app, FakeRequest(GET, s"/task/scalaLang/${new Date().getTime}/${new UUID(1, 1)}"))
+        val Some(result) = route(app, FakeRequest(GET, s"/task/scalaLang/${new Date().getTime}/00000000-0000-1000-0000-000000000000"))
 
         status(result) mustBe SEE_OTHER
         flash(result).get("flashToUser").get must be("Task does not exist")

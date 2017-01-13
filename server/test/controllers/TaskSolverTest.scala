@@ -69,7 +69,7 @@ import scala.reflect.ClassTag
         val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
-        (dao.getTask _).expects(*, *, *).throwing(new RuntimeException)
+        (dao.getTask _).expects(*, *, *).returns(Future.failed(new RuntimeException))
         val result = taskSolver.getTask(1, scalaLang.toString, new UUID(1, 1))(FakeRequest(GET, "ignore"))
         //then
         status(result) mustBe SEE_OTHER

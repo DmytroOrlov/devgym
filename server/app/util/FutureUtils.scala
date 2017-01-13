@@ -3,7 +3,7 @@ package util
 import java.util.concurrent.Executor
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 
 object FutureUtils {
@@ -38,11 +38,4 @@ object FutureUtils {
     def execute(command: Runnable): Unit = executonContext.execute(command)
   }
 
-}
-
-object TryFuture {
-  def apply[A](block: => Future[A]): Future[A] = Try(block) match {
-    case Success(s) => s
-    case Failure(f) => Future.failed(f)
-  }
 }

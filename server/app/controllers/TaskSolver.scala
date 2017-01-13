@@ -25,7 +25,6 @@ import play.api.mvc.{Action, Controller, Request, WebSocket}
 import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
 import shared.model.{Compiling, Event, Line}
-import util.TryFuture
 
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
@@ -50,7 +49,7 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
   def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request: Request[_] =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
-    val task = TryFuture(getCachedTask(year, lang, timeuuid))
+    val task = getCachedTask(year, lang, timeuuid)
     task.map {
       case Some(t) => Ok(views.html.task(t.name, t.description,
         solutionForm.fill(SolutionForm(t.solutionTemplate, year, lang, timeuuid.toString))))
@@ -104,7 +103,7 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
     def getFromDb: Future[Option[Task]] = {
       Logger.debug(s"getting task from db: $year, $lang, $timeuuid")
-      TryFuture(dao.getTask(new Date(year), Language.withName(lang), timeuuid))
+      dao.getTask(new Date(year), Language.withName(lang), timeuuid)
     }
 
     val suiteKey = (year, lang, timeuuid).toString()
