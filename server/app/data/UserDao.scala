@@ -1,18 +1,22 @@
 package data
 
-import com.google.inject.Inject
+import javax.inject.Singleton
+
+import com.google.inject.{ImplementedBy, Inject}
 import io.getquill.{CassandraAsyncContext, SnakeCase}
 import models.User
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
+@ImplementedBy(classOf[UserDaoImpl])
 trait UserDao {
   def create(user: User): Future[Boolean]
 
   def find(userName: String): Future[Option[User]]
 }
 
+@Singleton
 class UserDaoImpl @Inject()(val ctx: CassandraAsyncContextImpl)(implicit ec: ExecutionContext) extends UserDao {
   val db = ctx
 

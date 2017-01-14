@@ -11,7 +11,7 @@ import controllers.TaskSolver.{solution, _}
 import data.TaskDao
 import models.{Language, Task}
 import monix.execution.FutureUtils.extensions._
-import monix.execution.Scheduler
+import monix.execution.Scheduler.Implicits.global
 import monix.execution.cancelables.AssignableCancelable
 import monix.reactive.{Observable, OverflowStrategy}
 import org.scalatest.Suite
@@ -21,7 +21,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, Controller, Request, WebSocket}
+import play.api.mvc.{Action, Controller, WebSocket}
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
 import shared.model.{Event, Line}
 
@@ -33,7 +33,7 @@ import scala.util.{Failure, Success}
 
 class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecutor: RuntimeSuiteExecutor,
                            dao: TaskDao, val messagesApi: MessagesApi, cache: CacheApi)
-                          (implicit system: ActorSystem, scheduler: Scheduler, mat: Materializer)
+                          (implicit system: ActorSystem, mat: Materializer)
   extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {

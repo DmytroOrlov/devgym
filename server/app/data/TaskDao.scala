@@ -1,9 +1,10 @@
 package data
 
 import java.util.{Date, UUID}
+import javax.inject.Singleton
 
-import com.google.inject.Inject
-import io.getquill.{CassandraAsyncContext, MappedEncoding, SnakeCase}
+import com.google.inject.{ImplementedBy, Inject}
+import io.getquill.MappedEncoding
 import models.Language._
 import models.Task.yearAsOfJan1
 import models.{Language, NewTask, Task}
@@ -11,6 +12,7 @@ import models.{Language, NewTask, Task}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
+@ImplementedBy(classOf[TaskDaoImpl])
 trait TaskDao {
   def addTask(task: NewTask): Future[Unit]
 
@@ -19,6 +21,7 @@ trait TaskDao {
   def getTask(year: Date, lang: Language.Language, timeuuid: UUID): Future[Option[Task]]
 }
 
+@Singleton
 class TaskDaoImpl @Inject()(val ctx: CassandraAsyncContextImpl)
                            (implicit ec: ExecutionContext) extends TaskDao {
   implicit val encodeUUID = MappedEncoding[Language, String](_.toString)

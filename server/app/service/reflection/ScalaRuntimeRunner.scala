@@ -2,9 +2,11 @@ package service.reflection
 
 import javax.inject.Singleton
 
+import com.google.inject.ImplementedBy
 import monix.execution.Scheduler
 import org.scalatest.Suite
 
+@ImplementedBy(classOf[ScalaRuntimeRunner])
 trait RuntimeSuiteExecutor {
   def apply(suiteClass: Class[Suite], solutionTrait: Class[AnyRef], solution: String)
            (channel: String => Unit)

@@ -1,32 +1,9 @@
-import javax.inject.{Named, Singleton}
+import com.google.inject.AbstractModule
+import com.google.inject.name.Names.named
 
-import com.google.inject.{AbstractModule, Provides}
-import com.typesafe.config.Config
-import data._
-import monix.execution.Scheduler
-import play.api.Configuration
-import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaDynamicRunner, ScalaRuntimeRunner}
-
-import scala.concurrent.ExecutionContext
-import scala.util.Random
+import scala.util.Random.nextInt
 
 class Module extends AbstractModule {
-  override def configure() = {
-    bind(classOf[TaskDao]) to classOf[TaskDaoImpl]
-    bind(classOf[UserDao]) to classOf[UserDaoImpl]
-    bind(classOf[RuntimeSuiteExecutor]) to classOf[ScalaRuntimeRunner]
-    bind(classOf[DynamicSuiteExecutor]) to classOf[ScalaDynamicRunner]
-  }
-
-  @Provides
-  @Singleton
-  def config(ec: ExecutionContext): Scheduler = Scheduler(ec)
-
-  @Provides
-  @Singleton
-  def config(c: Configuration): Config = c.underlying
-
-  @Provides
-  @Named("Secret")
-  def config(): String = "devgym_" + Random.nextInt(9999999)
+  override def configure() =
+    bind(classOf[String]).annotatedWith(named("Secret")) toInstance "devgym_" + nextInt(9999999)
 }
