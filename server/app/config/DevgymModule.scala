@@ -4,8 +4,7 @@ import javax.inject.{Named, Singleton}
 
 import com.google.inject.{AbstractModule, Provides}
 import com.typesafe.config.Config
-import dal._
-import io.getquill.{CassandraAsyncContext, SnakeCase}
+import data._
 import monix.execution.Scheduler
 import play.api.Configuration
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaDynamicRunner, ScalaRuntimeRunner}
@@ -28,11 +27,6 @@ class DevgymModule extends AbstractModule {
   @Provides
   @Singleton
   def config(c: Configuration): Config = c.underlying
-
-  @Provides
-  @Singleton
-  def config(cassandra: CassandraCluster): CassandraAsyncContext[SnakeCase] =
-    new CassandraAsyncContext[SnakeCase](cassandra.cluster, cassandra.keySpace, 100L)
 
   @Provides
   @Named("Secret")

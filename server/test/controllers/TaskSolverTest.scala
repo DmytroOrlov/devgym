@@ -4,7 +4,7 @@ import java.util.{Date, UUID}
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import dal.TaskDao
+import data.TaskDao
 import models.Language._
 import models.Task
 import monix.execution.Scheduler.Implicits.global

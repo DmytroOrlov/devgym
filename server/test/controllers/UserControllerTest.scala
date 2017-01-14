@@ -3,7 +3,7 @@ package controllers
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import controllers.TestParams.fakeSession
-import dal.UserDao
+import data.UserDao
 import models.User
 import monix.execution.Scheduler.Implicits.global
 import org.scalamock.scalatest.MockFactory

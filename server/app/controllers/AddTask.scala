@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.Flow
 import controllers.AddTask._
-import dal.TaskDao
+import data.TaskDao
 import models.Language._
 import models.NewTask
 import monix.execution.Scheduler

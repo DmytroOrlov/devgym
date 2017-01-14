@@ -8,7 +8,7 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import controllers.TaskSolver.{solution, _}
-import dal.TaskDao
+import data.TaskDao
 import models.{Language, Task}
 import monix.execution.Scheduler
 import monix.execution.cancelables.AssignableCancelable

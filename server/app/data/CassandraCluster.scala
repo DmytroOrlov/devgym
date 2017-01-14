@@ -4,6 +4,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.datastax.driver.core.{Cluster, Session}
 import com.typesafe.config.Config
+import io.getquill.{CassandraAsyncContext, SnakeCase}
 import play.api.inject.ApplicationLifecycle
 import play.api.{Configuration, Environment, Logger}
 import util.FutureUtils.toFutureUnit
@@ -11,21 +12,25 @@ import util.FutureUtils.toFutureUnit
 import scala.concurrent.ExecutionContext
 
 @Singleton
+class CassandraAsyncContextImpl @Inject()(cassandra: CassandraCluster, conf: CassandraConfig)
+  extends CassandraAsyncContext[SnakeCase](cassandra.cluster, conf.keySpace, 100L)
+
+@Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
 
   import conf._
 
-  val cluster =
+  private[data] val cluster =
     Cluster.builder()
       .addContactPoints(hosts: _*)
-      .withPort(conf.port)
+      .withPort(port)
       .build()
 
   private[data] def noKeySpaceSession: Session = cluster.connect()
 
-  def stop() = toFutureUnit(cluster.closeAsync())
+  private[data] def stop() = toFutureUnit(cluster.closeAsync())
 
-  Logger.info(s"Cassandra host to be used : '${hosts.mkString(",")}' with port:${conf.port}")
+  Logger.info(s"Cassandra host to be used: '${hosts.mkString(",")}' with port:$port")
   appLifecycle.addStopHook(() => stop())
 }
 

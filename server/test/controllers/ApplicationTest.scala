@@ -1,30 +1,24 @@
 package controllers
 
 import java.time.{LocalDate, ZoneOffset}
-import java.util.{Date, UUID}
+import java.util.Date
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import controllers.TestParams.fakeSession
-import org.scalatest.DoNotDiscover
+import org.scalatest.{CompositeStatus, Status, Args, DoNotDiscover}
 import org.scalatestplus.play._
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers._
 import play.api.test._
 import tag.RequireDB
 
-@DoNotDiscover class ApplicationTest extends PlaySpec with ConfiguredApp {
+@DoNotDiscover
+class ApplicationTest extends PlaySpec with ConfiguredApp {
   implicit val system = ActorSystem()
   implicit val mat = ActorMaterializer()
 
   "Application" when {
-    "get root" should {
-      "result with index" taggedAs RequireDB in {
-        val Some(result) = route(app, FakeRequest(GET, "/"))
-        status(result) mustBe OK
-        contentAsString(result) must (include("/task") and include("/addTask") and include("/register")
-          and include( """<a href="/task/"""))
-      }
-    }
     "get logout" should {
       "redirect" in {
         val Some(result) = route(app, FakeRequest(GET, "/logout"))
@@ -113,6 +107,37 @@ import tag.RequireDB
     }
   }
 
+  "GitHubUser" when {
+    "get login" should {
+      "redirect to github.com" in {
+        val Some(result) = route(app, FakeRequest(GET, "/githublogin"))
+        status(result) mustBe SEE_OTHER
+        redirectLocation(result).getOrElse("") must include("github.com")
+      }
+    }
+  }
+}
+
+class ApplicationRequireDBTest extends PlaySpec with OneAppPerSuite {
+  override def run(testName: Option[String], args: Args): Status = {
+    if(expectedTestCount(args.filter) > 0) super.run(testName, args) else new CompositeStatus(Set.empty)
+  }
+  implicit override lazy val app = new GuiceApplicationBuilder()
+    .configure(Map("ehcacheplugin" -> "disabled"))
+    .build()
+  implicit val system = ActorSystem()
+  implicit val mat = ActorMaterializer()
+
+  "Application" when {
+    "get root" should {
+      "result with index" taggedAs RequireDB in {
+        val Some(result) = route(app, FakeRequest(GET, "/"))
+        status(result) mustBe OK
+        contentAsString(result) must (include("/task") and include("/addTask") and include("/register")
+          and include( """<a href="/task/"""))
+      }
+    }
+  }
   "TaskSolver" when {
     "get the available task" should {
       "result with form" taggedAs RequireDB in {
@@ -129,21 +154,11 @@ import tag.RequireDB
       }
     }
     "get the unavailable task" should {
-      "result BadRequest with Error" in {
+      "redirect to index with Error" taggedAs RequireDB in {
         val Some(result) = route(app, FakeRequest(GET, s"/task/scalaLang/${new Date().getTime}/00000000-0000-1000-0000-000000000000"))
 
         status(result) mustBe SEE_OTHER
         flash(result).get("flashToUser").get must be("Task does not exist")
-      }
-    }
-  }
-
-  "GitHubUser" when {
-    "get login" should {
-      "redirect to github.com" in {
-        val Some(result) = route(app, FakeRequest(GET, "/githublogin"))
-        status(result) mustBe SEE_OTHER
-        redirectLocation(result).getOrElse("") must include ("github.com")
       }
     }
   }

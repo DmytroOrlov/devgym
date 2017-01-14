@@ -19,7 +19,7 @@ trait TaskDao {
   def getTask(year: Date, lang: Language.Language, timeuuid: UUID): Future[Option[Task]]
 }
 
-class TaskDaoImpl @Inject()(val ctx: CassandraAsyncContext[SnakeCase])
+class TaskDaoImpl @Inject()(val ctx: CassandraAsyncContextImpl)
                            (implicit ec: ExecutionContext) extends TaskDao {
   implicit val encodeUUID = MappedEncoding[Language, String](_.toString)
   implicit val decodeUUID = MappedEncoding[String, Language](Language.withName)

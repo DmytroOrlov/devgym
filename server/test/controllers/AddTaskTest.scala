@@ -2,7 +2,7 @@ package controllers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import dal.TaskDao
+import data.TaskDao
 import models.Language._
 import models.NewTask
 import monix.execution.Scheduler
@@ -16,7 +16,8 @@ import service.reflection.{DynamicSuiteExecutor, ScalaDynamicRunner}
 
 import scala.concurrent.Future
 
-@DoNotDiscover class AddTaskTest extends PlaySpec with MockFactory with ConfiguredApp {
+@DoNotDiscover
+class AddTaskTest extends PlaySpec with MockFactory with ConfiguredApp {
   val suiteWithTrait = "trait ST"
   val traitName = "ST"
   implicit val system = ActorSystem()
