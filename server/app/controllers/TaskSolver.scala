@@ -12,6 +12,7 @@ import data.TaskDao
 import models.{Language, Task}
 import monix.execution.Scheduler
 import monix.execution.cancelables.AssignableCancelable
+import monix.execution.FutureUtils.extensions._
 import monix.reactive.{Observable, OverflowStrategy}
 import org.scalatest.Suite
 import play.api.Logger
@@ -62,7 +63,7 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
     val channel: Observable[Event] =
       Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
         val cancelable = AssignableCancelable.single()
-        clientInputPromise.future.onComplete {
+        clientInputPromise.future.timeout(1.second).onComplete {
           case Success(clientInput) =>
             val prevTimestamp = (clientInput \ "prevTimestamp").as[Long]
             val currentTimestamp = (clientInput \ "currentTimestamp").as[Long]
