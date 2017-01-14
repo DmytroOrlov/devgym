@@ -1,4 +1,4 @@
-package dal
+package data
 
 import javax.inject.{Inject, Singleton}
 
@@ -12,20 +12,18 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class CassandraCluster @Inject()(conf: CassandraConfig, appLifecycle: ApplicationLifecycle)(implicit executor: ExecutionContext) {
-  private val hosts = conf.hosts
+
+  import conf._
+
   val cluster =
     Cluster.builder()
       .addContactPoints(hosts: _*)
       .withPort(conf.port)
       .build()
 
-  def noKeySpaceSession: Session = cluster.connect()
-
-  def session: Session = cluster.connect(conf.keySpace)
+  private[data] def noKeySpaceSession: Session = cluster.connect()
 
   def stop() = toFutureUnit(cluster.closeAsync())
-
-  def keySpace = conf.keySpace
 
   Logger.info(s"Cassandra host to be used : '${hosts.mkString(",")}' with port:${conf.port}")
   appLifecycle.addStopHook(() => stop())

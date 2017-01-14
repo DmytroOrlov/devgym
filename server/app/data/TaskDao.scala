@@ -1,4 +1,4 @@
-package dal
+package data
 
 import java.util.{Date, UUID}
 

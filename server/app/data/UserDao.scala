@@ -1,4 +1,4 @@
-package dal
+package data
 
 import com.google.inject.Inject
 import io.getquill.{CassandraAsyncContext, SnakeCase}
