@@ -1,4 +1,4 @@
-package dal
+package data
 
 import com.google.inject.Inject
 import io.getquill.{CassandraAsyncContext, SnakeCase}
@@ -13,8 +13,8 @@ trait UserDao {
   def find(userName: String): Future[Option[User]]
 }
 
-class UserDaoImpl @Inject()(val ctx: () => CassandraAsyncContext[SnakeCase])(implicit ec: ExecutionContext) extends UserDao {
-  lazy val db = ctx()
+class UserDaoImpl @Inject()(val ctx: CassandraAsyncContextImpl)(implicit ec: ExecutionContext) extends UserDao {
+  val db = ctx
 
   import db._
 

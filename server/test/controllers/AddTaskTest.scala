@@ -2,7 +2,7 @@ package controllers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import dal.TaskDao
+import data.TaskDao
 import models.Language._
 import models.NewTask
 import monix.execution.Scheduler
@@ -12,11 +12,12 @@ import org.scalatest.DoNotDiscover
 import org.scalatestplus.play.{ConfiguredApp, PlaySpec}
 import play.api.test.Helpers._
 import play.api.test._
-import service.reflection.{DynamicSuiteExecutor, ScalaTestRunner}
+import service.reflection.{DynamicSuiteExecutor, ScalaDynamicRunner}
 
 import scala.concurrent.Future
 
-@DoNotDiscover class AddTaskTest extends PlaySpec with MockFactory with ConfiguredApp {
+@DoNotDiscover
+class AddTaskTest extends PlaySpec with MockFactory with ConfiguredApp {
   val suiteWithTrait = "trait ST"
   val traitName = "ST"
   implicit val system = ActorSystem()
@@ -115,7 +116,7 @@ import scala.concurrent.Future
         val badSuite = "import org.scalatest.{FlatSpec, Matchers}\n\nclass SubArrayWithMaxSumTest(solution: SubArrayWithMaxSumSolution) extends FlatSpec with Matchers {\n  behavior of \"SubArrayWithMaxSum\"\n\n  it should \"return max sum sub array within given array\" in {\n    solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, -5, 4)) should be(Array(4, -1, 2, 1))\n    solution.apply(Array(-2, 1, -3, 4, -1, 2, 1, 5, 4)) should be(Array(4, -1, 2, 1, 5, 4))\n    solution.apply(Array(2, -1, 0, 0, 0, 0, 1)) should be(Array(2))\n  }\n\n  it should \"return the whole array when given array has only positive numbers\" in {\n    solution.apply(Array(2, 1, 3, 4, 1, 2, 1, 5, 4)) should be(Array(2, 1, 3, 4, 1, 2, 1, 5, 4))\n  }\n\n  it should \"return max sum sub array when given array contains only negative numbers\" in {\n    solution.apply(Array(-2, -1, -3, -4, -1, -2, -1, -5, -4)) should be(Array(-1))\n    solution.apply(Array(-2, -3, -3, -4, -6, -2, -6, -5, -1)) should be(Array(-2))\n  }\n}\n\ntrait SubArrayWithMaxSumSolution {\n  def apply(a: Array[Int]): Array[Int]\n}"
         val dao = stub[TaskDao]
         //when
-        withAddTaskController(new ScalaTestRunner, dao)({ controller =>
+        withAddTaskController(new ScalaDynamicRunner, dao)({ controller =>
           val result = controller.postNewTask(FakeRequest("POST", "ignore")
             .withFormUrlEncodedBody("taskName" -> "0", "taskDescription" -> "1",
               "solutionTemplate" -> "2", "referenceSolution" -> solution, "suite" -> badSuite)

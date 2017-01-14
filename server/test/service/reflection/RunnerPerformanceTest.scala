@@ -3,12 +3,10 @@ package service.reflection
 import monix.execution.Scheduler.Implicits.global
 import org.scalameter.{Key, Warmer, _}
 import org.scalatest.{FlatSpec, Matchers, Suite}
-import service.StringBuilderRunner
-import shared.model.TestStatus
+import shared.model.{TestResult, TestStatus}
 import tag.PerfTests
 
 import scala.language.reflectiveCalls
-import scala.util.Try
 
 class RunnerPerformanceTest extends FlatSpec with Matchers {
   val standardConfig = config(
@@ -80,18 +78,20 @@ class RunnerPerformanceTest extends FlatSpec with Matchers {
       }
     """.stripMargin
 
-  def runPerformanceTest(executor: ((String) => Unit) => String, testName: String): Unit = {
-    def testReport(executor: ((String) => Unit) => String) = Try(StringBuilderRunner(executor))
+  def runPerformanceTest(executor: ((String) => Unit) => Unit, testName: String): Unit = {
+    //when
+    def testReport(): Unit = {
+      val (checkNext, getTestResult) = service.testSync
+      getTestResult(executor(checkNext)) match {
+        case result: TestResult =>
+          //then
+          result.testStatus shouldBe TestStatus.Passed
+        case _ => fail()
+      }
+    }
 
     //when
-    val result = service.testResult(testReport(executor))
-    println(s"${result.status} ${result.errorMessage}")
-    //then
-    result.testStatus should be(TestStatus.Passed)
-
-    //when
-    val time = standardConfig measure testReport(executor)
-    println(s"$testName: time = $time")
+    val time = standardConfig measure testReport()
     //then
     time.value.asInstanceOf[Double] should be <= 1000d
   }
@@ -101,13 +101,13 @@ class RunnerPerformanceTest extends FlatSpec with Matchers {
   }
 
   it should "execute test suite with solution trait within 1 second" taggedAs PerfTests in {
-    val dynamicRunnerWithTrait = new ScalaDynamicRunner() {}
+    val dynamicRunnerWithTrait = new ScalaDynamicRunner()
     runPerformanceTest(executor = dynamicRunnerWithTrait(solution, suite, "MaxOccurrenceInArraySolution"),
       "ScalaTest dynamic with trait")
   }
 
   it should "execute test suite with suite class and solution trait from classpath within 1 second" taggedAs PerfTests in {
-    val runtimeRunner = new ScalaRuntimeRunner() {}
+    val runtimeRunner = new ScalaRuntimeRunner()
     runPerformanceTest(executor = runtimeRunner(
       Class.forName("tasktest.MaxOccurrenceInArrayTest").asInstanceOf[Class[Suite]],
       Class.forName("tasktest.MaxOccurrenceInArraySolution").asInstanceOf[Class[AnyRef]],

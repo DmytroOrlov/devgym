@@ -1,7 +1,6 @@
 package data
 
 import com.datastax.driver.core.Session
-import dal.{CassandraCluster, CassandraConfig}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Logger, Play}
 

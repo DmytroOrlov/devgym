@@ -4,7 +4,7 @@ import java.util.{Date, UUID}
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import dal.TaskDao
+import data.TaskDao
 import models.Language._
 import models.Task
 import monix.execution.Scheduler.Implicits.global
@@ -35,7 +35,7 @@ import scala.reflect.ClassTag
         val timeuuid = new UUID(1, 1)
         val replyTask = Task(year, scalaLang, timeuuid, "array", description, template, "ref", "test suite", "solution trait")
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         dao.getTask _ expects(year, scalaLang, timeuuid) returns Future.successful(Some(replyTask))
@@ -51,7 +51,7 @@ import scala.reflect.ClassTag
         //given
         val dao = mock[TaskDao]
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         (dao.getTask _).expects(*, *, *).returning(Future.successful(None))
@@ -66,10 +66,10 @@ import scala.reflect.ClassTag
         //given
         val dao = mock[TaskDao]
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
-        (dao.getTask _).expects(*, *, *).throwing(new RuntimeException)
+        (dao.getTask _).expects(*, *, *).returns(Future.failed(new RuntimeException))
         val result = taskSolver.getTask(1, scalaLang.toString, new UUID(1, 1))(FakeRequest(GET, "ignore"))
         //then
         status(result) mustBe SEE_OTHER
@@ -81,7 +81,7 @@ import scala.reflect.ClassTag
         //given
         val dao = stub[TaskDao]
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
         val year = new Date()
         val timeuuid = new UUID(1, 1)
         val task = Task(year, scalaLang, timeuuid, "name", "descr", "template", "reference", "suite", "solution trait")
@@ -111,7 +111,7 @@ import scala.reflect.ClassTag
         val year = new Date()
         val timeuuid = new UUID(1, 1)
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[TestExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
         val task = Task(year, scalaLang, timeuuid, "name", "descr", "template", "reference", "suite", "solution trait")
 
         //when
@@ -139,7 +139,4 @@ import scala.reflect.ClassTag
       }
     }
   }
-
-  abstract class TestExecutor extends RuntimeSuiteExecutor with DynamicSuiteExecutor {}
-
 }

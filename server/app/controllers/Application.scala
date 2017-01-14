@@ -3,7 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import controllers.Application._
-import dal.TaskDao
+import data.TaskDao
 import models.Language.scalaLang
 import models.Task
 import play.api.i18n.{I18nSupport, MessagesApi}

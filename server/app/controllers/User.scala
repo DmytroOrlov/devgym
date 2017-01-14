@@ -4,7 +4,7 @@ import java.security.MessageDigest
 import javax.inject.Inject
 
 import controllers.UserController._
-import dal.UserDao
+import data.UserDao
 import models.User
 import play.api.Logger
 import play.api.data.Forms._

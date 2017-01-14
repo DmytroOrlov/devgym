@@ -2,7 +2,7 @@ package client
 
 import client.WebSocketClient.SocketException
 import monix.execution.Ack.{Continue, Stop}
-import monix.execution.cancelables.SingleAssignmentCancelable
+import monix.execution.cancelables.AssignableCancelable
 import monix.execution.{Ack, Cancelable, FutureUtils}
 import monix.reactive.observers.Subscriber
 import monix.reactive.{Observable, OverflowStrategy}
@@ -20,7 +20,7 @@ class WebSocketClient private(url: String, messages: Either[String, () => Observ
   def unsafeSubscribeFn(subscriber: Subscriber[String]): Cancelable = {
     val inbound: Observable[String] =
       Observable.create[String](OverflowStrategy.DropOld(100)) { downstream =>
-        val cancelOutbound = SingleAssignmentCancelable()
+        val cancelOutbound = AssignableCancelable.single()
 
         try {
           val webSocket = new WebSocket(url)

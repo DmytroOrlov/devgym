@@ -25,9 +25,7 @@ class FutureUtilsTest extends WordSpec with MockFactory with ScalaFutures with M
         val explosion = toFuture(service.submit(new Callable[Explosion]() {
           override def call() = futureResult()
         }))
-        whenReady(explosion) {
-          _ mustBe result
-        }
+        explosion.futureValue mustBe result
       }
     }
     "failure" should {
@@ -38,9 +36,7 @@ class FutureUtilsTest extends WordSpec with MockFactory with ScalaFutures with M
         val explosion = toFuture(service.submit(new Callable[Explosion]() {
           override def call() = resultException()
         }))
-        whenReady(explosion.failed) {
-          _ mustBe a[Exception]
-        }
+        explosion.failed.futureValue mustBe a[Exception]
       }
     }
   }
