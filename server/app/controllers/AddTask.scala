@@ -39,11 +39,11 @@ class AddTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: TaskDao, val
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
-  def getAddTask = Action { implicit request: Request[_] =>
+  def getAddTask = Action { implicit request =>
     Ok(views.html.addTask(addTaskForm))
   }
 
-  def postNewTask = Action.async { implicit request: Request[_] =>
+  def postNewTask = Action.async { implicit request =>
 
     def addTaskViewWithError(errorKey: String, message: String = "", ex: Option[Throwable] = None) = {
       ex.foreach(e => Logger.error(e.getMessage, e))

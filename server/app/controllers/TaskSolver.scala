@@ -45,7 +45,7 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request: Request[_] =>
+  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
     val task = getCachedTask(year, lang, timeuuid)

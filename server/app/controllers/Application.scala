@@ -14,7 +14,7 @@ import scala.util.control.NonFatal
 
 class Application @Inject()(dao: TaskDao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
-  def index = Action.async { implicit request: Request[_] =>
+  def index = Action.async { implicit request =>
     val tasks = dao.getTasks(scalaLang, lastCount, Task.now)
     tasks
       .map(it => Ok(views.html.index(it)))
@@ -23,7 +23,7 @@ class Application @Inject()(dao: TaskDao, val messagesApi: MessagesApi)(implicit
       }
   }
 
-  def logout = Action { implicit request: Request[_] =>
+  def logout = Action { implicit request =>
     val redirect = Redirect(routes.Application.index)
     request.session.get(loginName).fold(redirect.withNewSession) { _ =>
       redirect
