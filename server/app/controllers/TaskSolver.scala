@@ -130,7 +130,7 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
     *
     * @return WebSocket
     */
-  def runtimeTaskStream = WebSocket.accept { req =>
+  def runtimeTaskStream = WebSocket.accept { _ =>
     ActorFlow.actorRef[JsValue, JsValue] { out =>
       SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
         try {
