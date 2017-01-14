@@ -1,5 +1,3 @@
-package config
-
 import javax.inject.{Named, Singleton}
 
 import com.google.inject.{AbstractModule, Provides}
@@ -12,7 +10,7 @@ import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor, ScalaDyna
 import scala.concurrent.ExecutionContext
 import scala.util.Random
 
-class DevgymModule extends AbstractModule {
+class Module extends AbstractModule {
   override def configure() = {
     bind(classOf[TaskDao]) to classOf[TaskDaoImpl]
     bind(classOf[UserDao]) to classOf[UserDaoImpl]
