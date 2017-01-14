@@ -10,9 +10,9 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import controllers.TaskSolver.{solution, _}
 import data.TaskDao
 import models.{Language, Task}
+import monix.execution.FutureUtils.extensions._
 import monix.execution.Scheduler
 import monix.execution.cancelables.AssignableCancelable
-import monix.execution.FutureUtils.extensions._
 import monix.reactive.{Observable, OverflowStrategy}
 import org.scalatest.Suite
 import play.api.Logger
@@ -21,11 +21,9 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.streams.ActorFlow
 import play.api.mvc.{Action, Controller, Request, WebSocket}
-import service._
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.model.{Compiling, Event, Line}
+import shared.model.{Event, Line}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
@@ -132,22 +130,35 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
     * @return WebSocket
     */
   def runtimeTaskStream = WebSocket.accept { _ =>
-    ActorFlow.actorRef[JsValue, JsValue] { out =>
-      SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
-        try {
-          val suiteClass = "tasktest.SubArrayWithMaxSumTest"
-          val solutionTrait = "tasktest.SubArrayWithMaxSumSolution"
-          val solution = (fromClient \ "solution").as[String]
-          Future.successful(ObservableRunner(runtimeExecutor(
-            Class.forName(suiteClass).asInstanceOf[Class[Suite]],
-            Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
-            solution), service.testAsync))
-        } catch {
-          case NonFatal(e) => Future.failed(e)
-        },
-        Some(Compiling())
-      )
-    }
+    val clientInputPromise = Promise[JsValue]()
+    val channel: Observable[Event] =
+      Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
+        val cancelable = AssignableCancelable.single()
+        clientInputPromise.future.timeout(1.second).onComplete {
+            case Success(fromClient) =>
+              val (checkNext, onBlockComplete) = service.testAsync { testResult =>
+                downstream.onNext(testResult)
+                downstream.onComplete()
+              }
+              cancelable := monix.eval.Task {
+                val suiteClass = "tasktest.SubArrayWithMaxSumTest"
+                val solutionTrait = "tasktest.SubArrayWithMaxSumSolution"
+                val solution = (fromClient \ "solution").as[String]
+                val block: (String => Unit) => Unit = runtimeExecutor(
+                  Class.forName(suiteClass).asInstanceOf[Class[Suite]],
+                  Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
+                  solution)
+                block { next =>
+                  downstream.onNext(Line(next))
+                  checkNext(next)
+                }
+              }.runAsync(onBlockComplete)
+            case Failure(ex) => downstream.onError(ex)
+          }
+        cancelable
+      }
+    val sink = Sink.foreach[JsValue](js => clientInputPromise.trySuccess(js))
+    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).toReactivePublisher))
   }
 }
 
