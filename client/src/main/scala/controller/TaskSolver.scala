@@ -67,13 +67,13 @@ object TaskSolver extends JSApp {
         val cancelable = BooleanCancelable(() => xhr.abort())
         val url = "task-stream"
         xhr.open("POST", s"$protocol//$host/$url", async = true)
-        xhr.responseType = "moz-chunked-text"
+        var responseLength = 0
         xhr.onprogress = { (e: ProgressEvent) =>
-          val resp = xhr.response.asInstanceOf[String]
           val jsonStart = """{"name":"""
-          resp.split(jsonStart)
+          xhr.responseText.substring(responseLength).split(jsonStart)
             .filterNot(_.isEmpty)
             .foreach(s => downstream.onNext(jsonStart + s))
+          responseLength = xhr.responseText.length
         }
         xhr.onload = (e: dom.Event) => downstream.onComplete()
         xhr.onerror = (e: dom.Event) => downstream.onComplete()
