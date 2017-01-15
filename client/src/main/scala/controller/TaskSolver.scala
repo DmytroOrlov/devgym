@@ -10,6 +10,7 @@ import monix.reactive.observers.Subscriber
 import monix.reactive.{Observable, OverflowStrategy}
 import org.scalajs.dom
 import org.scalajs.dom.XMLHttpRequest
+import org.scalajs.dom.raw.ProgressEvent
 import org.scalajs.jquery.jQuery
 import shared.model._
 
@@ -63,13 +64,14 @@ object TaskSolver extends JSApp {
 
       val source: Observable[Event] = Observable.create[String](OverflowStrategy.DropOld(100)) { downstream =>
         val xhr = new XMLHttpRequest()
+        val cancelable = BooleanCancelable(() => xhr.abort())
         val url = "task-stream"
         xhr.open("POST", s"$protocol//$host/$url", async = true)
-        var responseLength = 0
-        xhr.onprogress = { (e: dom.Event) =>
-          val resp = xhr.responseText
-          downstream.onNext(resp.drop(responseLength))
-          responseLength = resp.length
+        xhr.responseType = "moz-chunked-text"
+        xhr.onprogress = { (e: ProgressEvent) =>
+          val resp = xhr.response.asInstanceOf[String]
+          println(resp)
+          downstream.onNext(resp)
         }
         xhr.onload = (e: dom.Event) => downstream.onComplete()
         xhr.onerror = (e: dom.Event) => downstream.onComplete()
@@ -81,7 +83,7 @@ object TaskSolver extends JSApp {
           "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String],
           "prevTimestamp" -> prevTimestampCopy,
           "currentTimestamp" -> currentTimestamp)))
-        Cancelable.empty
+        cancelable
       }.collect { case IsEvent(e) => e }
       val cancelable = (Observable(Line("Submitting...")) ++ source).subscribe(subscriber)
       prevTimestamp = currentTimestamp
