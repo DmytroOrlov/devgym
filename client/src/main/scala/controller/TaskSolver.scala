@@ -70,8 +70,10 @@ object TaskSolver extends JSApp {
         xhr.responseType = "moz-chunked-text"
         xhr.onprogress = { (e: ProgressEvent) =>
           val resp = xhr.response.asInstanceOf[String]
-          println(resp)
-          downstream.onNext(resp)
+          val jsonStart = """{"name":"""
+          resp.split(jsonStart)
+            .filterNot(_.isEmpty)
+            .foreach(s => downstream.onNext(jsonStart + s))
         }
         xhr.onload = (e: dom.Event) => downstream.onComplete()
         xhr.onerror = (e: dom.Event) => downstream.onComplete()
