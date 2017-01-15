@@ -72,7 +72,7 @@ object AddTask extends JSApp {
     jQuery(s"#$buttonId").click(copyValues)
     WebSocketClient.reconnecting(
       url = "getSolutionTemplate",
-      messages = () => Observable.create[String](OverflowStrategy.DropOld(2)) { downstream =>
+      messages = Observable.create[String](OverflowStrategy.DropOld(2)) { downstream =>
         val c = BooleanCancelable()
         referenceEditor.bindOnChangeHandler(() =>
           if (!c.isCanceled && deriveSolutionTemplate.is(":checked"))

@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 import scala.util.Try
 import scala.util.control.NonFatal
 
-class WebSocketClient private(url: String, messages: Either[String, () => Observable[String]]) extends Observable[String] {
+class WebSocketClient private(url: String, messages: => Observable[String]) extends Observable[String] {
 
   def unsafeSubscribeFn(subscriber: Subscriber[String]): Cancelable = {
     val inbound: Observable[String] =
@@ -30,14 +30,12 @@ class WebSocketClient private(url: String, messages: Either[String, () => Observ
             if (webSocket.readyState <= 1) Try(webSocket.close())
           }
 
-          webSocket.onopen = (event: Event) => messages match {
-            case Left(message) => webSocket.send(message)
-            case Right(ms) =>
-              implicit val s = subscriber.scheduler
-              cancelOutbound := ms().subscribe({ m =>
-                webSocket.send(m)
-                FutureUtils.delayedResult(1.second)(Continue)
-              }, _ => closeConnection(), closeConnection)
+          webSocket.onopen = (event: Event) => {
+            implicit val s = subscriber.scheduler
+            cancelOutbound := messages.subscribe({ m =>
+              webSocket.send(m)
+              FutureUtils.delayedResult(1.second)(Continue)
+            }, _ => closeConnection(), closeConnection)
           }
           webSocket.onerror = (event: ErrorEvent) => {
             cancelOutbound.cancel()
@@ -65,8 +63,10 @@ class WebSocketClient private(url: String, messages: Either[String, () => Observ
 }
 
 object WebSocketClient {
-  def reconnecting(url: String, messages: () => Observable[String]) =
-    new WebSocketClient(s"$protocol//$host/$url", Right(messages)) {
+  def reconnecting(url: String, messages: => Observable[String]) = {
+    val host = dom.window.location.host
+    val protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
+    new WebSocketClient(s"$protocol//$host/$url", messages) {
       self =>
       override def unsafeSubscribeFn(subscriber: Subscriber[String]): Cancelable =
         super.unsafeSubscribeFn(new Subscriber[String] {
@@ -88,13 +88,7 @@ object WebSocketClient {
               .unsafeSubscribeFn(subscriber)
         })
     }
-
-  def singleMessage(url: String, message: String) =
-    new WebSocketClient(s"$protocol//$host/$url", Left(message))
-
-  private def host = dom.window.location.host
-
-  private def protocol = if (dom.document.location.protocol == "https:") "wss:" else "ws:"
+  }
 
   case class SocketException(msg: String) extends RuntimeException(msg)
 
