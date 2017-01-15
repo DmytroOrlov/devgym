@@ -10,23 +10,24 @@ import data.TaskDao
 import models.Language._
 import models.NewTask
 import monix.execution.Scheduler
+import monix.execution.Scheduler.Implicits.global
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, Controller, Request, WebSocket}
+import play.api.mvc.{Action, Controller, WebSocket}
 import service.meta.CodeParser
 import service.reflection.DynamicSuiteExecutor
 import shared.model.{Event, SolutionTemplate, TestResult, TestStatus}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 import scala.util.control.NonFatal
 import scala.util.matching.Regex
 
 class AddTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: TaskDao, val messagesApi: MessagesApi)
-                       (implicit system: ActorSystem, s: Scheduler, mat: Materializer)
+                       (implicit system: ActorSystem, mat: Materializer)
   extends Controller with I18nSupport with JSONFormats {
 
   val addTaskForm = Form {
@@ -39,11 +40,11 @@ class AddTask @Inject()(dynamicExecutor: DynamicSuiteExecutor, dao: TaskDao, val
     )(AddTaskForm.apply)(AddTaskForm.unapply)
   }
 
-  def getAddTask = Action { implicit request: Request[_] =>
+  def getAddTask = Action { implicit request =>
     Ok(views.html.addTask(addTaskForm))
   }
 
-  def postNewTask = Action.async { implicit request: Request[_] =>
+  def postNewTask = Action.async { implicit request =>
 
     def addTaskViewWithError(errorKey: String, message: String = "", ex: Option[Throwable] = None) = {
       ex.foreach(e => Logger.error(e.getMessage, e))
@@ -129,7 +130,7 @@ object AddTask {
   def findTraitName(suite: String) = traitDefPattern.findFirstIn(suite).get.split( """\s+""")(1)
 
   implicit class ErrorMessageFuture[A](val future: Future[A]) extends AnyVal {
-    def errorMsg(messageKey: String)(implicit s: Scheduler): Future[A] = future.recoverWith {
+    def errorMsg(messageKey: String)(implicit s: ExecutionContext): Future[A] = future.recoverWith {
       case t: Throwable => Future.failed(new Exception(messageKey, t))
     }
   }

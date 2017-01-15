@@ -7,7 +7,7 @@ GET     /                           controllers.Application.index
 GET     /logout                     controllers.Application.logout
 
 GET     /task/:lang/:year/:id       controllers.TaskSolver.getTask(year: Long, lang: String, id: java.util.UUID)
-GET     /task-stream                controllers.TaskSolver.taskStream
+POST    /task-stream                controllers.TaskSolver.taskStream
 
 GET     /addTask                    controllers.AddTask.getAddTask
 POST    /addTask                    controllers.AddTask.postNewTask

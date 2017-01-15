@@ -2,8 +2,10 @@ package service.reflection
 
 import javax.inject.Singleton
 
+import com.google.inject.ImplementedBy
 import monix.execution.Scheduler
 
+@ImplementedBy(classOf[ScalaDynamicRunner])
 trait DynamicSuiteExecutor {
   def apply(solution: String, suite: String, solutionTrait: String)
            (channel: String => Unit)

@@ -2,12 +2,15 @@ package controller
 
 import java.util.Date
 
-import client.WebSocketClient
 import common.CodeEditor
 import monix.execution.Cancelable
 import monix.execution.Scheduler.Implicits.global
-import monix.reactive.Observable
+import monix.execution.cancelables.BooleanCancelable
 import monix.reactive.observers.Subscriber
+import monix.reactive.{Observable, OverflowStrategy}
+import org.scalajs.dom
+import org.scalajs.dom.XMLHttpRequest
+import org.scalajs.dom.raw.ProgressEvent
 import org.scalajs.jquery.jQuery
 import shared.model._
 
@@ -44,8 +47,7 @@ object TaskSolver extends JSApp {
     def submit() = {
       disableButton()
       loadingIcon.show()
-      val testExecution = new TestExecution()
-      testExecution.subscribe(new TaskSolverReport(
+      testExecution().subscribe(new TaskSolverReport(
         to,
         () => {
           disableButton(false)
@@ -54,25 +56,40 @@ object TaskSolver extends JSApp {
     }
   }
 
-  final class TestExecution extends Observable[Event] {
-    def unsafeSubscribeFn(subscriber: Subscriber[Event]): Cancelable = {
-      val currentTimestamp = System.currentTimeMillis()
-      val prevTimestampCopy = prevTimestamp
+  def testExecution(): Observable[Event] = {
+    def host = dom.window.location.host
 
-      val source: Observable[Event] = {
-        val ws = WebSocketClient.singleMessage(url = "task-stream", message = js.JSON.stringify(obj(
+    def protocol = dom.document.location.protocol
+
+    val currentTimestamp = System.currentTimeMillis()
+    val prevTimestampCopy = prevTimestamp
+    prevTimestamp = currentTimestamp
+    Observable(Line("Submitting...")) ++
+      Observable.create[String](OverflowStrategy.DropOld(100)) { downstream =>
+        val xhr = new XMLHttpRequest()
+        val cancelable = BooleanCancelable(() => xhr.abort())
+        val url = "task-stream"
+        xhr.open("POST", s"$protocol//$host/$url", async = true)
+        var responseLength = 0
+        xhr.onprogress = { (e: ProgressEvent) =>
+          val jsonStart = """{"name":"""
+          xhr.responseText.substring(responseLength).split(jsonStart)
+            .filterNot(_.isEmpty)
+            .foreach(s => downstream.onNext(jsonStart + s))
+          responseLength = xhr.responseText.length
+        }
+        xhr.onload = (e: dom.Event) => downstream.onComplete()
+        xhr.onerror = (e: dom.Event) => downstream.onComplete()
+        xhr.setRequestHeader("Content-type", "application/json")
+        xhr.send(js.JSON.stringify(obj(
           "solution" -> editor.value,
           "year" -> jQuery("#year").`val`().asInstanceOf[String].toLong,
           "lang" -> jQuery("#lang").`val`().asInstanceOf[String],
           "timeuuid" -> jQuery("#timeuuid").`val`().asInstanceOf[String],
           "prevTimestamp" -> prevTimestampCopy,
           "currentTimestamp" -> currentTimestamp)))
-        ws.collect { case IsEvent(e) => e }
-      }
-      val cancelable = (Observable(Line("Submitting...")) ++ source).subscribe(subscriber)
-      prevTimestamp = currentTimestamp
-      cancelable
-    }
+        cancelable
+      }.collect { case IsEvent(e) => e }
   }
 
   object IsEvent {

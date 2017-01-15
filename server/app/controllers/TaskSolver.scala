@@ -4,13 +4,15 @@ import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 import javax.inject.Inject
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import controllers.TaskSolver.{solution, _}
 import data.TaskDao
 import models.{Language, Task}
-import monix.execution.Scheduler
+import monix.execution.FutureUtils.extensions._
+import monix.execution.Scheduler.Implicits.global
 import monix.execution.cancelables.AssignableCancelable
 import monix.reactive.{Observable, OverflowStrategy}
 import org.scalatest.Suite
@@ -20,12 +22,11 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.i18n.{I18nSupport, MessagesApi}
 import play.api.libs.json.{JsValue, Json}
-import play.api.libs.streams.ActorFlow
-import play.api.mvc.{Action, Controller, Request, WebSocket}
-import service._
+import play.api.mvc.{Action, Controller, WebSocket}
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
-import shared.model.{Compiling, Event, Line}
+import shared.model.{Event, Line}
 
+import scala.concurrent.duration.Duration._
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.language.postfixOps
@@ -34,7 +35,7 @@ import scala.util.{Failure, Success}
 
 class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecutor: RuntimeSuiteExecutor,
                            dao: TaskDao, val messagesApi: MessagesApi, cache: CacheApi)
-                          (implicit system: ActorSystem, scheduler: Scheduler, mat: Materializer)
+                          (implicit system: ActorSystem, mat: Materializer)
   extends Controller with I18nSupport with JSONFormats {
 
   val solutionForm = Form {
@@ -46,7 +47,7 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
     )(SolutionForm.apply)(SolutionForm.unapply)
   }
 
-  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request: Request[_] =>
+  def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request =>
     def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
     val task = getCachedTask(year, lang, timeuuid)
@@ -57,13 +58,11 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
     }.recover { case NonFatal(e) => notFound }
   }
 
-  def taskStream: WebSocket = WebSocket.accept { _ =>
-    val clientInputPromise = Promise[JsValue]()
-    val channel: Observable[Event] =
-      Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
+  def taskStream = Action { req =>
+    Ok.chunked(req.body.asJson.fold(Source.empty[JsValue]) { clientInput =>
+      Source.fromPublisher(
+        Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
         val cancelable = AssignableCancelable.single()
-        clientInputPromise.future.onComplete {
-          case Success(clientInput) =>
             val prevTimestamp = (clientInput \ "prevTimestamp").as[Long]
             val currentTimestamp = (clientInput \ "currentTimestamp").as[Long]
             if (Duration(currentTimestamp - prevTimestamp, TimeUnit.MILLISECONDS) < 1.seconds) {
@@ -92,12 +91,9 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
                   downstream.onError(ex)
               }
             }
-          case Failure(ex) => downstream.onError(ex)
-        }
         cancelable
-      }
-    val sink = Sink.foreach[JsValue](js => clientInputPromise.trySuccess(js))
-    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).toReactivePublisher))
+      }.map(Json.toJson(_)).toReactivePublisher)
+    })
   }
 
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
@@ -130,23 +126,36 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
     *
     * @return WebSocket
     */
-  def runtimeTaskStream = WebSocket.accept { req =>
-    ActorFlow.actorRef[JsValue, JsValue] { out =>
-      SimpleWebSocketActor.props(out, (fromClient: JsValue) =>
-        try {
-          val suiteClass = "tasktest.SubArrayWithMaxSumTest"
-          val solutionTrait = "tasktest.SubArrayWithMaxSumSolution"
-          val solution = (fromClient \ "solution").as[String]
-          Future.successful(ObservableRunner(runtimeExecutor(
-            Class.forName(suiteClass).asInstanceOf[Class[Suite]],
-            Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
-            solution), service.testAsync))
-        } catch {
-          case NonFatal(e) => Future.failed(e)
-        },
-        Some(Compiling())
-      )
-    }
+  def runtimeTaskStream = WebSocket.accept { _ =>
+    val clientInputPromise = Promise[JsValue]()
+    val channel: Observable[Event] =
+      Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
+        val cancelable = AssignableCancelable.single()
+        clientInputPromise.future.timeout(1.second).onComplete {
+            case Success(fromClient) =>
+              val (checkNext, onBlockComplete) = service.testAsync { testResult =>
+                downstream.onNext(testResult)
+                downstream.onComplete()
+              }
+              cancelable := monix.eval.Task {
+                val suiteClass = "tasktest.SubArrayWithMaxSumTest"
+                val solutionTrait = "tasktest.SubArrayWithMaxSumSolution"
+                val solution = (fromClient \ "solution").as[String]
+                val block: (String => Unit) => Unit = runtimeExecutor(
+                  Class.forName(suiteClass).asInstanceOf[Class[Suite]],
+                  Class.forName(solutionTrait).asInstanceOf[Class[AnyRef]],
+                  solution)
+                block { next =>
+                  downstream.onNext(Line(next))
+                  checkNext(next)
+                }
+              }.runAsync(onBlockComplete)
+            case Failure(ex) => downstream.onError(ex)
+          }
+        cancelable
+      }
+    val sink = Sink.foreach[JsValue](js => clientInputPromise.trySuccess(js))
+    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).toReactivePublisher))
   }
 }
 
