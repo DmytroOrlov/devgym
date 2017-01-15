@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 import javax.inject.Inject
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
@@ -25,6 +26,7 @@ import play.api.mvc.{Action, Controller, WebSocket}
 import service.reflection.{DynamicSuiteExecutor, RuntimeSuiteExecutor}
 import shared.model.{Event, Line}
 
+import scala.concurrent.duration.Duration._
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.language.postfixOps
@@ -56,13 +58,11 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
     }.recover { case NonFatal(e) => notFound }
   }
 
-  def taskStream: WebSocket = WebSocket.accept { _ =>
-    val clientInputPromise = Promise[JsValue]()
-    val channel: Observable[Event] =
-      Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
+  def taskStream = Action { req =>
+    Ok.chunked(req.body.asJson.fold(Source.empty[JsValue]) { clientInput =>
+      Source.fromPublisher(
+        Observable.create[Event](OverflowStrategy.DropOld(20)) { downstream =>
         val cancelable = AssignableCancelable.single()
-        clientInputPromise.future.timeout(1.second).onComplete {
-          case Success(clientInput) =>
             val prevTimestamp = (clientInput \ "prevTimestamp").as[Long]
             val currentTimestamp = (clientInput \ "currentTimestamp").as[Long]
             if (Duration(currentTimestamp - prevTimestamp, TimeUnit.MILLISECONDS) < 1.seconds) {
@@ -91,12 +91,9 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
                   downstream.onError(ex)
               }
             }
-          case Failure(ex) => downstream.onError(ex)
-        }
         cancelable
-      }
-    val sink = Sink.foreach[JsValue](js => clientInputPromise.trySuccess(js))
-    Flow.fromSinkAndSource(sink, Source.fromPublisher(channel.map(Json.toJson(_)).toReactivePublisher))
+      }.map(Json.toJson(_)).toReactivePublisher)
+    })
   }
 
   private def getCachedTask(year: Long, lang: String, timeuuid: UUID): Future[Option[Task]] = {
