@@ -47,8 +47,7 @@ object TaskSolver extends JSApp {
     def submit() = {
       disableButton()
       loadingIcon.show()
-      val testExecution = new TestExecution
-      testExecution.subscribe(new TaskSolverReport(
+      testExecution().subscribe(new TaskSolverReport(
         to,
         () => {
           disableButton(false)
@@ -57,12 +56,16 @@ object TaskSolver extends JSApp {
     }
   }
 
-  final class TestExecution extends Observable[Event] {
-    def unsafeSubscribeFn(subscriber: Subscriber[Event]): Cancelable = {
-      val currentTimestamp = System.currentTimeMillis()
-      val prevTimestampCopy = prevTimestamp
+  def testExecution(): Observable[Event] = {
+    def host = dom.window.location.host
 
-      val source: Observable[Event] = Observable.create[String](OverflowStrategy.DropOld(100)) { downstream =>
+    def protocol = dom.document.location.protocol
+
+    val currentTimestamp = System.currentTimeMillis()
+    val prevTimestampCopy = prevTimestamp
+    prevTimestamp = currentTimestamp
+    Observable(Line("Submitting...")) ++
+      Observable.create[String](OverflowStrategy.DropOld(100)) { downstream =>
         val xhr = new XMLHttpRequest()
         val cancelable = BooleanCancelable(() => xhr.abort())
         val url = "task-stream"
@@ -87,14 +90,6 @@ object TaskSolver extends JSApp {
           "currentTimestamp" -> currentTimestamp)))
         cancelable
       }.collect { case IsEvent(e) => e }
-      val cancelable = (Observable(Line("Submitting...")) ++ source).subscribe(subscriber)
-      prevTimestamp = currentTimestamp
-      cancelable
-    }
-
-    def host = dom.window.location.host
-
-    def protocol = dom.document.location.protocol
   }
 
   object IsEvent {
