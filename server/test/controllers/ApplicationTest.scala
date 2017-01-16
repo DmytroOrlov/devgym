@@ -18,7 +18,7 @@ class ApplicationTest extends PlaySpec with ConfiguredApp {
   implicit val system = ActorSystem()
   implicit val mat = ActorMaterializer()
 
-  "Application" when {
+  "DevGymApp" when {
     "get logout" should {
       "redirect" in {
         val Some(result) = route(app, FakeRequest(GET, "/logout"))
@@ -128,7 +128,7 @@ class ApplicationRequireDBTest extends PlaySpec with OneAppPerSuite {
   implicit val system = ActorSystem()
   implicit val mat = ActorMaterializer()
 
-  "Application" when {
+  "DevGymApp" when {
     "get root" should {
       "result with index" taggedAs RequireDB in {
         val Some(result) = route(app, FakeRequest(GET, "/"))

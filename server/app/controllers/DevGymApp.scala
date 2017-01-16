@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
-import controllers.Application._
+import controllers.DevGymApp._
 import data.TaskDao
 import models.Language.scalaLang
 import models.Task
@@ -12,7 +12,7 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-class Application @Inject()(dao: TaskDao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
+class DevGymApp @Inject()(dao: TaskDao, val messagesApi: MessagesApi)(implicit ec: ExecutionContext) extends Controller with I18nSupport {
 
   def index = Action.async { implicit request =>
     val tasks = dao.getTasks(scalaLang, lastCount, Task.now)
@@ -24,7 +24,7 @@ class Application @Inject()(dao: TaskDao, val messagesApi: MessagesApi)(implicit
   }
 
   def logout = Action { implicit request =>
-    val redirect = Redirect(routes.Application.index)
+    val redirect = Redirect(routes.DevGymApp.index)
     request.session.get(loginName).fold(redirect.withNewSession) { _ =>
       redirect
         .withNewSession
@@ -33,7 +33,7 @@ class Application @Inject()(dao: TaskDao, val messagesApi: MessagesApi)(implicit
   }
 }
 
-object Application {
+object DevGymApp {
   val logoutDone = "logoutDone"
   val lastCount = 20
 }

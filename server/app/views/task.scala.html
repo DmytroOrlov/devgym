@@ -7,7 +7,7 @@
     <h4>@taskName</h4>
     <div class="description">@taskDescription</div>
     <div class="solution">
-    @form(routes.Application.index()) {
+    @form(routes.DevGymApp.index()) {
         @textarea(solutionForm(solution), 'rows -> "25", 'cols -> "80")
         <input type="hidden" id="@year" value='@solutionForm(year).value' >
         <input type="hidden" id="@lang" value='@solutionForm(lang).value' >

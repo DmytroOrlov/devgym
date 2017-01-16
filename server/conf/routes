@@ -3,8 +3,8 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
-GET     /logout                     controllers.Application.logout
+GET     /                           controllers.DevGymApp.index
+GET     /logout                     controllers.DevGymApp.logout
 
 GET     /task/:lang/:year/:id       controllers.TaskSolver.getTask(year: Long, lang: String, id: java.util.UUID)
 POST    /task-stream                controllers.TaskSolver.taskStream

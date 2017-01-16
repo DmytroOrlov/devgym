@@ -36,7 +36,7 @@ class UserController @Inject()(dao: UserDao, val messagesApi: MessagesApi)(impli
 
   def getRegister = Action { implicit request =>
     request.session.get(loginName).fold(Ok(views.html.register(registerForm))) { _ =>
-      Redirect(routes.Application.index)
+      Redirect(routes.DevGymApp.index)
         .flashing(flashToUser -> messagesApi(alreadyRegistered))
     }
   }
@@ -57,7 +57,7 @@ class UserController @Inject()(dao: UserDao, val messagesApi: MessagesApi)(impli
       form => {
         val hashSalt = toHashSalt(form.password, Random.nextInt().toString)
         dao.create(User(form.name, hashSalt)).map { applied =>
-          if (applied) Redirect(routes.Application.index)
+          if (applied) Redirect(routes.DevGymApp.index)
             .withSession(loginName -> form.name)
             .flashing(flashToUser -> messagesApi(userRegistered))
           else nameBusy
@@ -71,7 +71,7 @@ class UserController @Inject()(dao: UserDao, val messagesApi: MessagesApi)(impli
 
   def getLogin = Action { implicit request =>
     request.session.get(loginName).fold(Ok(views.html.login(loginForm))) { _ =>
-      Redirect(routes.Application.index).flashing(flashToUser -> messagesApi(alreadyLoggedin))
+      Redirect(routes.DevGymApp.index).flashing(flashToUser -> messagesApi(alreadyLoggedin))
     }
   }
 
@@ -87,7 +87,7 @@ class UserController @Inject()(dao: UserDao, val messagesApi: MessagesApi)(impli
 
         dao.find(f.name).map {
           case Some(u) if passwordsMatch(u.password, f.password) =>
-            Redirect(routes.Application.index)
+            Redirect(routes.DevGymApp.index)
               .withSession(loginName -> f.name)
           case _ => BadRequest(views.html.login(loginForm.bindFromRequest()
             .withError(name, messagesApi(nameOrPasswordsNotMatched))))

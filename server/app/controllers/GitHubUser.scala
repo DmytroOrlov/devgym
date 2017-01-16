@@ -53,12 +53,12 @@ class GitHubUser @Inject()(val messagesApi: MessagesApi, @Named("Secret") secret
       token <- access(code)
       userInfo <- fetchUser(token)
     } yield {
-      Redirect(routes.Application.index).withSession(
+      Redirect(routes.DevGymApp.index).withSession(
         loginName -> userInfo.login, userName -> userInfo.name.getOrElse(""), avatarUrl -> userInfo.avatar_url)
     }) recover {
       case NonFatal(e) =>
         Logger.error("GitHub OAuth callback failed.", e)
-        Redirect(routes.Application.index).flashing(flashToUser -> messagesApi(cannotLoginViaGitHub))
+        Redirect(routes.DevGymApp.index).flashing(flashToUser -> messagesApi(cannotLoginViaGitHub))
     }
   }
 }
