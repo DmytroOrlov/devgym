@@ -19,7 +19,7 @@
                     <li>
                         <a href="@routes.DevGymApp.logout()">
                             @session.get(userName).getOrElse(loginName) - @msg("logout")
-                            <img class="github-avatar" src=" @session.get(avatarUrl).getOrElse("")" alt="Avatar of @loginName"/>
+                            @session.get(avatarUrl).map { a => <img class="github-avatar" src="@a"/> }
                         </a>
                     </li>
                 }
