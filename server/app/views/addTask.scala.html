@@ -79,8 +79,8 @@
             <input type="hidden" id="@suite" name="@suite"/>
         }
 
-        <script type="text/javascript" src="@routes.Assets.versioned("client-fastopt.js")"></script>
+        <script src="@routes.Assets.versioned("client-fastopt.js")"></script>
         @codeEditor()
-        <script type="text/javascript" charset="utf-8">controller.AddTask().main();</script>
+        <script>controller.AddTask().main();</script>
     }
 }

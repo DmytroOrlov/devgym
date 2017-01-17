@@ -21,9 +21,7 @@
         <img id="loader" width="25px" src="@routes.Assets.versioned("images/ajax-loader-big.gif")" alt="Wait"/>
     </div>
 
-    <script type="text/javascript" src="@routes.Assets.versioned("client-fastopt.js")"></script>
+    <script src="@routes.Assets.versioned("client-fastopt.js")"></script>
     @codeEditor()
-    <script type="text/javascript" charset="utf-8">
-            controller.TaskSolver().main();
-    </script>
+    <script>controller.TaskSolver().main();</script>
 }
