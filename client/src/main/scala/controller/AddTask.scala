@@ -8,7 +8,7 @@ import monix.execution.Ack.Continue
 import monix.execution.Scheduler.Implicits.global
 import monix.execution.cancelables.BooleanCancelable
 import monix.reactive.{Observable, OverflowStrategy}
-import org.scalajs.jquery._
+import org.scalajs.jquery.jQuery
 import shared.model.{Event, SolutionTemplate}
 
 import scala.language.postfixOps
