@@ -10,8 +10,8 @@ lazy val server = project
   .dependsOn(sharedJvm)
   .configs(UnitTest)
   .settings(
+    scalaVersion in ThisBuild := scalaV,
     inConfig(UnitTest)(Defaults.testTasks),
-    commonSettings,
     testSettings,
     includeFilter in(Assets, LessKeys.less) := "*.less",
     name := "devgym",
@@ -39,7 +39,6 @@ lazy val client = project
   .enablePlugins(ScalaJSPlugin, ScalaJSPlay)
   .dependsOn(sharedJs)
   .settings(
-    commonSettings,
     persistLauncher := false,
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
@@ -52,13 +51,11 @@ lazy val client = project
 lazy val clients = Seq(client)
 
 lazy val shared = crossProject.crossType(CrossType.Pure)
-  .settings(commonSettings)
   .jsConfigure(_ enablePlugins ScalaJSPlay)
 
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 
-lazy val commonSettings = Seq(scalaVersion := scalaV)
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % scalatestV % Test,
