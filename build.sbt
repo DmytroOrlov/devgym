@@ -25,7 +25,7 @@ lazy val server = project
       "org.webjars" % "jquery" % "2.2.4",
       "org.webjars" % "bootstrap" % "3.3.6" exclude("org.webjars", "jquery"),
       "io.monix" %% "monix" % monixV,
-      "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.2"
+      "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.3"
         exclude("org.xerial.snappy", "snappy-java")
         exclude("com.google.guava", "guava"),
       "io.getquill" %% "quill-cassandra" % "1.0.1",
