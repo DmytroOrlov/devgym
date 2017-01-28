@@ -10,12 +10,14 @@ lazy val server = project
   .dependsOn(sharedJvm)
   .configs(UnitTest)
   .settings(
-    scalaVersion in ThisBuild := scalaV,
+    inThisBuild(Seq(
+      version := "1.0-SNAPSHOT",
+      scalaVersion := scalaV
+    )),
     inConfig(UnitTest)(Defaults.testTasks),
     testSettings,
     includeFilter in(Assets, LessKeys.less) := "*.less",
     name := "devgym",
-    version := "1.0-SNAPSHOT",
     testOptions in UnitTest += Tests.Argument("-l", "RequireDB"),
     scalaJSProjects := clients,
     pipelineStages := Seq(scalaJSProd, gzip),
