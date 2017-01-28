@@ -61,11 +61,11 @@ lazy val sharedJs = shared.js
 lazy val commonSettings = Seq(scalaVersion := scalaV)
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scalatest" %% "scalatest" % scalatestV % "test",
-    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
-    "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
+    "org.scalatest" %% "scalatest" % scalatestV % Test,
+    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test,
+    "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % Test,
     "org.mockito" % "mockito-core" % "2.6.2" % Test,
-    "com.storm-enroute" %% "scalameter-core" % "0.7" % "test"
+    "com.storm-enroute" %% "scalameter-core" % "0.7" % Test
   )
 )
 lazy val UnitTest = config("unit") extend Test
