@@ -35,7 +35,7 @@ import scala.reflect.ClassTag
         val timeuuid = new UUID(1, 1)
         val replyTask = Task(year, scalaLang, timeuuid, "array", description, template, "ref", "test suite", "solution trait")
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, MockMessageApi, cache)
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         dao.getTask _ expects(year, scalaLang, timeuuid) returns Future.successful(Some(replyTask))
@@ -51,7 +51,7 @@ import scala.reflect.ClassTag
         //given
         val dao = mock[TaskDao]
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, MockMessageApi, cache)
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         (dao.getTask _).expects(*, *, *).returning(Future.successful(None))
@@ -66,7 +66,7 @@ import scala.reflect.ClassTag
         //given
         val dao = mock[TaskDao]
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, MockMessageApi, cache)
         //when
         (cache.get(_: String)(_: ClassTag[Task])) expects(*, *) returns None
         (dao.getTask _).expects(*, *, *).returns(Future.failed(new RuntimeException))
@@ -81,7 +81,7 @@ import scala.reflect.ClassTag
         //given
         val dao = stub[TaskDao]
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, MockMessageApi, cache)
         val year = new Date()
         val timeuuid = new UUID(1, 1)
         val task = Task(year, scalaLang, timeuuid, "name", "descr", "template", "reference", "suite", "solution trait")
@@ -111,7 +111,7 @@ import scala.reflect.ClassTag
         val year = new Date()
         val timeuuid = new UUID(1, 1)
         val cache = mock[CacheApi]
-        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, new MockMessageApi, cache)
+        val taskSolver = new TaskSolver(mock[DynamicSuiteExecutor], mock[RuntimeSuiteExecutor], dao, MockMessageApi, cache)
         val task = Task(year, scalaLang, timeuuid, "name", "descr", "template", "reference", "suite", "solution trait")
 
         //when

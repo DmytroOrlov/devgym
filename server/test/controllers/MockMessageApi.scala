@@ -5,7 +5,7 @@ import play.api.mvc
 import play.api.mvc.Result
 import play.mvc.Http.RequestHeader
 
-class MockMessageApi extends MessagesApi {
+object MockMessageApi extends MessagesApi {
   val m = Messages(Lang("en"), this)
 
   override def messages: Map[String, Map[String, String]] = ???

@@ -41,7 +41,7 @@ import scala.concurrent.Future
       "authenticate registered user" in {
         //given
         val dao = mock[UserDao]
-        val userController = new UserController(dao, new MockMessageApi)
+        val userController = new UserController(dao, MockMessageApi)
         val password = "testpassword"
         val userName = "testname"
         val passwordWithSalt = UserController.toHashSalt(password, "12345")
@@ -67,7 +67,7 @@ import scala.concurrent.Future
       "register new user" in {
         //given
         val dao = mock[UserDao]
-        val userController = new UserController(dao, new MockMessageApi)
+        val userController = new UserController(dao, MockMessageApi)
         val userName = "testname"
         val password = "testpassword"
         dao.create _ expects * returns Future.successful(true)
@@ -91,5 +91,5 @@ import scala.concurrent.Future
     }
   }
 
-  def controller = new UserController(mock[UserDao], new MockMessageApi)
+  def controller = new UserController(mock[UserDao], MockMessageApi)
 }

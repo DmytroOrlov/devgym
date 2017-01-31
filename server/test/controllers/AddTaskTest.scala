@@ -131,6 +131,6 @@ class AddTaskTest extends PlaySpec with MockFactory with ConfiguredApp {
   }
 
   def withAddTaskController[T](suiteExecutor: DynamicSuiteExecutor, dao: TaskDao = stub[TaskDao])(block: (AddTask) => T): T = {
-    block(new AddTask(suiteExecutor, dao, new MockMessageApi))
+    block(new AddTask(suiteExecutor, dao, MockMessageApi))
   }
 }

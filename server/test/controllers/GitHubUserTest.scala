@@ -25,7 +25,7 @@ import scala.concurrent.Future
     "github calls callback" should {
       "redirect to index having GitHub data in session" in {
         //given
-        val gitHubUser = new GitHubUser(new MockMessageApi, secret) {
+        val gitHubUser = new GitHubUser(MockMessageApi, secret) {
           override def getToken(code: String)(implicit ws: WSClient) = {
             val response = mock[WSResponse]
             response.json _ expects() returns JsObject(accessToken)
@@ -55,7 +55,7 @@ import scala.concurrent.Future
 
       "fails when secret is not valid" in {
         //given
-        val gitHubUser = new GitHubUser(new MockMessageApi, "invalid secret")
+        val gitHubUser = new GitHubUser(MockMessageApi, "invalid secret")
 
         //when
         val result = gitHubCallback(gitHubUser)
@@ -68,7 +68,7 @@ import scala.concurrent.Future
 
       "fails when token is not available" in {
         //given
-        val gitHubUser = new GitHubUser(new MockMessageApi, secret) {
+        val gitHubUser = new GitHubUser(MockMessageApi, secret) {
           override def getToken(code: String)(implicit ws: WSClient) =
             Future.failed(new RuntimeException("test exception"))
         }
@@ -84,7 +84,7 @@ import scala.concurrent.Future
 
       "fails when user is not available" in {
         //given
-        val gitHubUser = new GitHubUser(new MockMessageApi, secret) {
+        val gitHubUser = new GitHubUser(MockMessageApi, secret) {
           override def getToken(code: String)(implicit ws: WSClient) = {
             val response = mock[WSResponse]
             response.json _ expects() returns JsObject(accessToken)
