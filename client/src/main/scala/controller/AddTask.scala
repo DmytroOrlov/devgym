@@ -8,7 +8,7 @@ import monix.execution.Ack.Continue
 import monix.execution.Scheduler.Implicits.global
 import monix.execution.cancelables.BooleanCancelable
 import monix.reactive.{Observable, OverflowStrategy}
-import org.scalajs.jquery._
+import org.scalajs.jquery.jQuery
 import shared.model.{Event, SolutionTemplate}
 
 import scala.language.postfixOps
@@ -72,7 +72,7 @@ object AddTask extends JSApp {
     jQuery(s"#$buttonId").click(copyValues)
     WebSocketClient.reconnecting(
       url = "getSolutionTemplate",
-      messages = () => Observable.create[String](OverflowStrategy.DropOld(2)) { downstream =>
+      messages = Observable.create[String](OverflowStrategy.DropOld(2)) { downstream =>
         val c = BooleanCancelable()
         referenceEditor.bindOnChangeHandler(() =>
           if (!c.isCanceled && deriveSolutionTemplate.is(":checked"))

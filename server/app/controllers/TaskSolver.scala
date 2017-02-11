@@ -8,7 +8,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import controllers.TaskSolver.{solution, _}
+import controllers.TaskSolver._
 import data.TaskDao
 import models.{Language, Task}
 import monix.execution.FutureUtils.extensions._
@@ -48,7 +48,7 @@ class TaskSolver @Inject()(dynamicExecutor: DynamicSuiteExecutor, runtimeExecuto
   }
 
   def getTask(year: Long, lang: String, timeuuid: UUID) = Action.async { implicit request =>
-    def notFound = Redirect(routes.Application.index).flashing(flashToUser -> messagesApi("taskNotFound"))
+    def notFound = Redirect(routes.DevGymApp.index).flashing(flashToUser -> messagesApi("taskNotFound"))
 
     val task = getCachedTask(year, lang, timeuuid)
     task.map {

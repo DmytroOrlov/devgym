@@ -4,14 +4,15 @@ lazy val scalaV = "2.11.8"
 lazy val monixV = "2.1.2"
 lazy val scalatestV = "2.2.6"
 
-lazy val server = (project in file("server"))
+lazy val server = project
   .enablePlugins(PlayScala)
   .aggregate(clients.map(projectToRef): _*)
   .dependsOn(sharedJvm)
   .configs(UnitTest)
-  .settings(inConfig(UnitTest)(Defaults.testTasks): _*)
-  .settings(commonSettings ++ testSettings)
   .settings(
+    inConfig(UnitTest)(Defaults.testTasks),
+    commonSettings,
+    testSettings,
     includeFilter in(Assets, LessKeys.less) := "*.less",
     name := "devgym",
     version := "1.0-SNAPSHOT",
@@ -34,11 +35,11 @@ lazy val server = (project in file("server"))
     )
   )
 
-lazy val client = (project in file("client"))
+lazy val client = project
   .enablePlugins(ScalaJSPlugin, ScalaJSPlay)
   .dependsOn(sharedJs)
-  .settings(commonSettings: _*)
   .settings(
+    commonSettings,
     persistLauncher := false,
     persistLauncher in Test := false,
     libraryDependencies ++= Seq(
@@ -50,8 +51,8 @@ lazy val client = (project in file("client"))
 
 lazy val clients = Seq(client)
 
-lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared"))
-  .settings(commonSettings: _*)
+lazy val shared = crossProject.crossType(CrossType.Pure)
+  .settings(commonSettings)
   .jsConfigure(_ enablePlugins ScalaJSPlay)
 
 lazy val sharedJvm = shared.jvm

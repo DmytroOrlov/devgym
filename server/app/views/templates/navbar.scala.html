@@ -2,7 +2,7 @@
 <header class="navbar dg-task-nav">
     <div class="container-menu">
         <div class="navbar-header">
-            <a class="navbar-brand" href="@routes.Application.index()">@msg("DevGym")</a>
+            <a class="navbar-brand" href="@routes.DevGymApp.index()">@msg("DevGym")</a>
         </div>
         <nav id="bs-navbar" class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
@@ -17,9 +17,9 @@
                     </li>
                 } { loginName =>
                     <li>
-                        <a href="@routes.Application.logout()">
+                        <a href="@routes.DevGymApp.logout()">
                             @session.get(userName).getOrElse(loginName) - @msg("logout")
-                            <img class="github-avatar" src=" @session.get(avatarUrl).getOrElse("")" alt="Avatar of @loginName"/>
+                            @session.get(avatarUrl).map { a => <img class="github-avatar" src="@a"/> }
                         </a>
                     </li>
                 }
