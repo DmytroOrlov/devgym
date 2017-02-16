@@ -63,7 +63,7 @@ lazy val testSettings = Seq(
     "org.scalatest" %% "scalatest" % scalatestV % Test,
     "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0-M2" % Test,
     "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % Test,
-    "org.mockito" % "mockito-core" % "2.6.9" % Test,
+    "org.mockito" % "mockito-core" % "2.7.0" % Test,
     "com.storm-enroute" %% "scalameter-core" % "0.8.2" % Test
   )
 )
