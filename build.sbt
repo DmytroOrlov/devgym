@@ -1,6 +1,6 @@
 import sbt.Project.projectToRef
 
-lazy val scalaV = "2.11.8"
+lazy val scalaV = "2.12.1"
 lazy val monixV = "2.2.1"
 lazy val scalatestV = "2.2.6"
 
