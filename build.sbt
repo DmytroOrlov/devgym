@@ -61,7 +61,7 @@ lazy val sharedJs = shared.js
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % scalatestV % Test,
-    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test,
+    "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0-M2" % Test,
     "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % Test,
     "org.mockito" % "mockito-core" % "2.6.9" % Test,
     "com.storm-enroute" %% "scalameter-core" % "0.8.2" % Test
