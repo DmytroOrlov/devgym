@@ -30,7 +30,7 @@ lazy val server = project
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.3"
         exclude("org.xerial.snappy", "snappy-java")
         exclude("com.google.guava", "guava"),
-      "io.getquill" %% "quill-cassandra" % "1.0.1",
+      "io.getquill" %% "quill-cassandra" % "1.1.1-SNAPSHOT",
       "org.scala-lang" % "scala-compiler" % scalaV,
       "org.scalatest" %% "scalatest" % scalatestV,
       "org.scalameta" %% "scalameta" % "1.4.0"
