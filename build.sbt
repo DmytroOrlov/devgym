@@ -1,8 +1,8 @@
 import sbt.Project.projectToRef
 
-lazy val scalaV = "2.11.8"
-lazy val monixV = "2.1.2"
-lazy val scalatestV = "2.2.6"
+lazy val scalaV = "2.12.1"
+lazy val monixV = "2.2.2"
+lazy val scalatestV = "3.0.1"
 
 lazy val server = (project in file("server"))
   .enablePlugins(PlayScala)
@@ -26,8 +26,12 @@ lazy val server = (project in file("server"))
       "io.monix" %% "monix" % monixV,
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.2"
         exclude("org.xerial.snappy", "snappy-java")
-        exclude("com.google.guava", "guava"),
-      "io.getquill" %% "quill-cassandra" % "1.0.1",
+        exclude("com.google.guava", "guava")
+        exclude("io.monix", "monix_2.11")
+        exclude("io.monix", "monix"),
+      "io.getquill" % "quill-cassandra_2.11" % "1.1.0"
+        exclude("io.monix", "monix")
+        exclude("io.monix", "monix_2.11"),
       "org.scala-lang" % "scala-compiler" % scalaV,
       "org.scalatest" %% "scalatest" % scalatestV,
       "org.scalameta" %% "scalameta" % "1.4.0"
@@ -61,10 +65,10 @@ lazy val commonSettings = Seq(scalaVersion := scalaV)
 lazy val testSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % scalatestV % "test",
-    "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % "test",
-    "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
+    "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0-M2" % "test",
+    "org.scalamock" %% "scalamock-scalatest-support" % "3.5.0" % "test",
     "org.mockito" % "mockito-core" % "2.6.2" % Test,
-    "com.storm-enroute" %% "scalameter-core" % "0.7" % "test"
+    "com.storm-enroute" %% "scalameter-core" % "0.8.2" % "test"
   )
 )
 lazy val UnitTest = config("unit") extend Test
